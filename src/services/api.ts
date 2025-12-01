@@ -1,9 +1,10 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/api";
+// Use environment variable, fallback to localhost for development
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: `${API_URL}/api`,
   headers: {
     "Content-Type": "application/json",
   },
@@ -39,6 +40,7 @@ export const authAPI = {
 
   getCurrentUser: () => api.get("/auth/me"),
 };
+
 export const servicesAPI = {
   getServices: (startDate?: string, endDate?: string) =>
     api.get("/services", { params: { startDate, endDate } }),
@@ -49,7 +51,7 @@ export const servicesAPI = {
     client?: string;
     earnings: number;
     date?: string;
-  }) => api.post("/services", data), // Removed 'time' from interface
+  }) => api.post("/services", data),
 
   getUserStats: (userId?: number) =>
     api.get(`/services/stats/user/${userId || ""}`),
