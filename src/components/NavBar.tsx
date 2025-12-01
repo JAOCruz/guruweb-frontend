@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence, easeInOut, spring } from "framer-motion";
 import { FiMenu, FiX } from "react-icons/fi";
+import { Link } from "react-router-dom";
 
 const NavBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -67,27 +68,30 @@ const NavBar: React.FC = () => {
       animate="visible"
       variants={navVariants}
     >
-      <motion.div
-        className="flex items-center"
-        whileHover={{ scale: 1.05 }}
-        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-      >
-        <div className="text-3xl font-bold text-white">
-          GURÚ
-          <div className="text-xs tracking-widest">SOLUCIONES</div>
-        </div>
-      </motion.div>
+      <Link to="/">
+        <motion.div
+          className="flex items-center"
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+        >
+          <div className="text-3xl font-bold text-white">
+            GURÚ
+            <div className="text-xs tracking-widest">SOLUCIONES</div>
+          </div>
+        </motion.div>
+      </Link>
 
       {/* Desktop Navigation */}
       <div className="hidden items-center gap-8 md:flex">
-        <motion.a
-          href="#"
-          className="text-gray-300 transition hover:text-white"
-          variants={linkVariants}
-          whileHover="hover"
-        >
-          Inicio
-        </motion.a>
+        <Link to="/">
+          <motion.div
+            className="text-gray-300 transition hover:text-white"
+            variants={linkVariants}
+            whileHover="hover"
+          >
+            Inicio
+          </motion.div>
+        </Link>
         <motion.a
           href="#servicios"
           className="text-gray-300 transition hover:text-white"
@@ -104,14 +108,15 @@ const NavBar: React.FC = () => {
         >
           Sobre el Gurú
         </motion.a>
-        <motion.a
-          href="/login"
-          className="text-gray-300 transition hover:text-white"
-          variants={linkVariants}
-          whileHover="hover"
-        >
-          ¿Trabajas con Nosotros?
-        </motion.a>
+        <Link to="/login">
+          <motion.div
+            className="text-gray-300 transition hover:text-white"
+            variants={linkVariants}
+            whileHover="hover"
+          >
+            ¿Trabajas con Nosotros?
+          </motion.div>
+        </Link>
         <motion.a
           href="https://wa.me/18298049017"
           target="_blank"
@@ -147,15 +152,15 @@ const NavBar: React.FC = () => {
             variants={menuVariants}
           >
             <div className="flex w-full flex-col items-center gap-6 bg-gradient-to-b from-blue-950 to-black">
-              <motion.a
-                href="#"
-                className="w-full py-4 text-center text-xl font-medium text-white transition hover:text-blue-300"
-                variants={linkVariants}
-                whileHover="hover"
-                onClick={() => setIsOpen(false)}
-              >
-                Inicio
-              </motion.a>
+              <Link to="/" className="w-full" onClick={() => setIsOpen(false)}>
+                <motion.div
+                  className="w-full py-4 text-center text-xl font-medium text-white transition hover:text-blue-300"
+                  variants={linkVariants}
+                  whileHover="hover"
+                >
+                  Inicio
+                </motion.div>
+              </Link>
               <motion.a
                 href="#servicios"
                 className="w-full py-4 text-center text-xl font-medium text-white transition hover:text-blue-300"
@@ -174,15 +179,19 @@ const NavBar: React.FC = () => {
               >
                 Sobre el Gurú
               </motion.a>
-              <motion.a
-                href="/login"
-                className="w-full py-4 text-center text-xl font-medium text-white transition hover:text-blue-300"
-                variants={linkVariants}
-                whileHover="hover"
+              <Link
+                to="/login"
+                className="w-full"
                 onClick={() => setIsOpen(false)}
               >
-                ¿Trabajas con Nosotros?
-              </motion.a>
+                <motion.div
+                  className="w-full py-4 text-center text-xl font-medium text-white transition hover:text-blue-300"
+                  variants={linkVariants}
+                  whileHover="hover"
+                >
+                  ¿Trabajas con Nosotros?
+                </motion.div>
+              </Link>
               <motion.a
                 href="https://wa.me/18298049017"
                 target="_blank"
