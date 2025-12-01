@@ -15,7 +15,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900">
+    <div className="flex min-h-screen bg-gray-900">
       {/* Background effect - fixed and non-interactive */}
       <div className="hero-bg pointer-events-none fixed inset-0 z-0"></div>
 
@@ -155,7 +155,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
       {/* Main Content Area */}
       <div
-        className="z-10 flex h-screen flex-col"
+        className="z-10 flex min-h-screen flex-col"
         style={{
           marginLeft: sidebarOpen ? "250px" : "80px",
           width: sidebarOpen ? "calc(100% - 250px)" : "calc(100% - 80px)",
@@ -185,7 +185,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </header>
 
         {/* Page Content - Scrollable area - FIX: Solo un overflow aquí */}
-        <main className="flex-1 overflow-y-auto bg-gray-800/90 backdrop-blur-sm">
+        <main className="min-h-0 flex-1 overflow-y-auto bg-gray-800/90 backdrop-blur-sm">
           <div className="mx-auto max-w-full p-6">{children}</div>
         </main>
       </div>
