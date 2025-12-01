@@ -23,7 +23,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center bg-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-gray-900">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-gray-800 p-8">
         <h2 className="text-center text-3xl font-bold text-white">
           Gurú Dashboard
