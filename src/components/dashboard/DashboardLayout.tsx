@@ -102,32 +102,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               {sidebarOpen && <span className="ml-3">Dashboard</span>}
             </NavLink>
             <NavLink
-              to="/dashboard/data"
-              className={({ isActive }) =>
-                `flex items-center rounded-lg px-4 py-3 transition-colors ${
-                  isActive
-                    ? "bg-blue-900/40 text-white"
-                    : "text-gray-300 hover:bg-blue-900/30 hover:text-white"
-                }`
-              }
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 flex-shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              {sidebarOpen && <span className="ml-3">Datos</span>}
-            </NavLink>
-            <NavLink
               to="/dashboard/charts"
               className={({ isActive }) =>
                 `flex items-center rounded-lg px-4 py-3 transition-colors ${
@@ -152,38 +126,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 />
               </svg>
               {sidebarOpen && <span className="ml-3">Gráficos</span>}
-            </NavLink>
-            <NavLink
-              to="/dashboard/flipbooks"
-              className={({ isActive }) =>
-                `flex items-center rounded-lg px-4 py-3 transition-colors ${
-                  isActive
-                    ? "bg-blue-900/40 text-white"
-                    : "text-gray-300 hover:bg-blue-900/30 hover:text-white"
-                }`
-              }
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 flex-shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4h16v16H4z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 8h8v8H8z"
-                />
-              </svg>
-              {sidebarOpen && <span className="ml-3">Guías</span>}
             </NavLink>
           </nav>
 
