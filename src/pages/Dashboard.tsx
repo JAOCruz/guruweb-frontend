@@ -5,9 +5,10 @@ import AdminDataTable from "../components/dashboard/AdminDataTable";
 import EmployeeDataTable from "../components/dashboard/EmployeeDataTable";
 import DataModificationForm from "../components/dashboard/DataModificationForm";
 import DataCharts from "../components/dashboard/DataCharts";
-import FlipbooksSection from "../components/dashboard/FlipbooksSection"; // ← NUEVO IMPORT
+import FlipbooksSection from "../components/dashboard/FlipbooksSection";
 import { servicesAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { USER_COLUMNS, WorkerKey } from "../services/excelService";
 
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
@@ -43,46 +44,57 @@ const Dashboard: React.FC = () => {
   const transformToExcelFormat = () => {
     if (!services.length) return [];
 
+    // Group services by user
     const groupedByUser: Record<string, any[]> = {};
 
     services.forEach((service: any) => {
-      const user = service.data_column;
-      if (!groupedByUser[user]) {
-        groupedByUser[user] = [];
+      // Get user name - normalize to uppercase to match USER_COLUMNS
+      const userName = (
+        service.data_column ||
+        service.username ||
+        "Unknown"
+      ).toUpperCase();
+
+      // Only include if it's a valid USER_COLUMN
+      if (!USER_COLUMNS.includes(userName as WorkerKey)) {
+        console.warn(`Skipping service for unknown user: ${userName}`);
+        return;
       }
-      groupedByUser[user].push(service);
+
+      if (!groupedByUser[userName]) {
+        groupedByUser[userName] = [];
+      }
+      groupedByUser[userName].push(service);
     });
 
     const transformed: any[] = [];
     const maxServices = Math.max(
       ...Object.values(groupedByUser).map((arr: any[]) => arr.length),
+      0,
     );
 
+    // Create rows for each service
     for (let i = 0; i < maxServices; i++) {
       const serviceRow: any = { DETALLE: "SERVICIO" };
       const clientRow: any = { DETALLE: "CLIENTE" };
       const timeRow: any = { DETALLE: "HORA" };
       const earningsRow: any = { DETALLE: "GANANCIA" };
 
-      Object.entries(groupedByUser).forEach(([user, userServices]) => {
+      Object.entries(groupedByUser).forEach(([userName, userServices]) => {
         const service = userServices[i];
         if (service) {
-          serviceRow[user] = service.service_name;
-          serviceRow.id = service.id;
-          clientRow[user] = service.client || "";
-          timeRow[user] = service.time || "";
-          earningsRow[user] = service.earnings;
-        } else {
-          serviceRow[user] = "";
-          clientRow[user] = "";
-          timeRow[user] = "";
-          earningsRow[user] = "";
+          serviceRow[userName] = service.service_name;
+          serviceRow.id = service.id; // Attach ID to service row
+          clientRow[userName] = service.client || "";
+          timeRow[userName] = service.time || "";
+          earningsRow[userName] = Number(service.earnings);
         }
       });
 
       transformed.push(serviceRow, clientRow, timeRow, earningsRow);
     }
 
+    console.log("Transformed data:", transformed);
     return transformed;
   };
 
@@ -117,7 +129,7 @@ const Dashboard: React.FC = () => {
                   {/* Tabla del empleado */}
                   <EmployeeDataTable services={getEmployeeServices()} />
 
-                  {/* Sección de Flipbooks - NUEVO */}
+                  {/* Sección de Flipbooks */}
                   <FlipbooksSection />
                 </>
               )}
@@ -135,7 +147,7 @@ const Dashboard: React.FC = () => {
               />
             ) : (
               <div className="space-y-8">
-                <EmployeeDataTable services={services} />
+                <EmployeeDataTable services={getEmployeeServices()} />
                 {/* Flipbooks también en la vista de datos */}
                 <FlipbooksSection />
               </div>
