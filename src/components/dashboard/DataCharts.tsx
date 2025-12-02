@@ -439,27 +439,13 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
                 <span className="font-bold text-white">${item.value}</span>
               </p>
               <p className="text-sm text-gray-300">
-                Empleado (50%):{" "}
+                Ganancias (50%):{" "}
                 <span className="font-bold text-yellow-400">
                   ${item.employee}
                 </span>
               </p>
-              <p className="text-sm text-gray-300">
-                Admin (50%):{" "}
-                <span className="font-bold text-green-400">${item.admin}</span>
-              </p>
             </div>
           ))}
-
-          <div className="rounded-lg border border-green-700 bg-green-900/20 p-4">
-            <h4 className="mb-2 text-lg font-semibold text-green-400">
-              TOTAL ADMIN
-            </h4>
-            <p className="text-2xl font-bold text-white">
-              ${adminTotal.toFixed(2)}
-            </p>
-            <p className="text-sm text-gray-300">50% de todos los usuarios</p>
-          </div>
         </div>
 
         <div className="h-80">

@@ -39,8 +39,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const response = await authAPI.getCurrentUser();
       setUser(response.data);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Failed to load user:", error);
       localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+
+      // Show error to user if it's not a 401 (401 is handled by interceptor)
+      if (error.response?.status !== 401) {
+        console.error("Authentication error:", error.response?.data?.error || error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -49,9 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (username: string, password: string) => {
     try {
       const response = await authAPI.login(username, password);
-      const { token, user } = response.data;
+      const { token, refreshToken, user } = response.data;
 
       localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refreshToken);
       setUser(user);
       navigate("/dashboard");
     } catch (error: any) {
@@ -59,8 +67,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    // Call logout endpoint to revoke refresh token
+    if (refreshToken) {
+      try {
+        await authAPI.logout(refreshToken);
+      } catch (error) {
+        console.error("Logout error:", error);
+      }
+    }
+
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     setUser(null);
     navigate("/login");
   };
