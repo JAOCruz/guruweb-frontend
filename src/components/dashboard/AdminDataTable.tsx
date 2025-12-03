@@ -13,6 +13,7 @@ interface UserServiceEntry {
   earnings: number;
   client: string;
   time: string;
+  comment?: string;
   id?: number;
 }
 
@@ -24,6 +25,13 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
 }) => {
   const [activeUser, setActiveUser] = useState<WorkerKey | "all">("all");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState<string>("");
+  const [localData, setLocalData] = useState<ExcelRow[]>(data);
+
+  React.useEffect(() => {
+    setLocalData(data);
+  }, [data]);
 
   // Group data by user and type (service or earnings)
   const groupDataByUser = (): GroupedUserData => {
@@ -89,6 +97,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
         const earnings = Number(findDetailValue(index, "GANANCIA", user)) || 0;
         const clientValue = findDetailValue(index, "CLIENTE", user);
         const timeValue = findDetailValue(index, "HORA", user);
+        const commentValue = findDetailValue(index, "NOTA", user);
 
         console.log(`[Row ${index}] ${user}: ${serviceValue} = ${earnings}`);
 
@@ -105,6 +114,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           earnings,
           client: clientValue ? String(clientValue) : "",
           time: timeValue ? String(timeValue) : "",
+          comment: commentValue ? String(commentValue) : "",
           id: serviceId,
         });
       });
@@ -177,6 +187,37 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleEditComment = (serviceId: number | undefined, currentComment: string, user: string, index: number) => {
+    if (!serviceId) return;
+    setEditingCommentId(`${user}-${index}`);
+    setCommentText(currentComment || "");
+  };
+
+  const handleSaveComment = async (serviceId: number | undefined, user: string, index: number) => {
+    if (!serviceId) {
+      alert("No se puede guardar: ID de servicio no encontrado");
+      return;
+    }
+
+    try {
+      await servicesAPI.updateComment(serviceId, commentText);
+      setEditingCommentId(null);
+      setCommentText("");
+
+      if (onServiceDeleted) {
+        onServiceDeleted(); // Refresh data
+      }
+    } catch (error: any) {
+      console.error("Error updating comment:", error);
+      alert(error.response?.data?.error || "Error al guardar el comentario");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setCommentText("");
   };
 
   const groupedData = groupDataByUser();
@@ -285,8 +326,8 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                 {user}
               </h3>
             </div>
-            {/* FIX: Removido overflow-x-auto y overflow-hidden */}
-            <div>
+            {/* Responsive table wrapper */}
+            <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-800 text-base">
                 <thead className="bg-gray-950/70">
                   <tr>
@@ -303,6 +344,9 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                       Ganancia
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
+                      Nota
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
                       Acción
                     </th>
                   </tr>
@@ -310,41 +354,84 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                 <tbody className="divide-y divide-gray-800/50 bg-gray-900/40">
                   {groupedData[user].length > 0 ? (
                     groupedData[user].map(
-                      (item: UserServiceEntry, index: number) => (
-                        <tr
-                          key={`${user}-service-${index}`}
-                          className="hover:bg-blue-900/10"
-                        >
-                          <td className="px-6 py-4 text-base whitespace-nowrap text-gray-200">
-                            {item.service}
-                          </td>
-                          <td className="px-6 py-4 text-base whitespace-nowrap text-gray-200">
-                            {item.client || "—"}
-                          </td>
-                          <td className="px-6 py-4 text-base whitespace-nowrap text-gray-200">
-                            {item.time || "—"}
-                          </td>
-                          <td className="px-6 py-4 text-base font-semibold whitespace-nowrap text-blue-200">
-                            {item.earnings}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <button
-                              onClick={() => handleDelete(item.id)}
-                              disabled={deletingId === item.id}
-                              className="rounded-md border border-red-900/30 bg-red-500/20 px-3 py-1 text-sm text-red-300 hover:bg-red-500/30 disabled:opacity-50"
-                            >
-                              {deletingId === item.id
-                                ? "Eliminando..."
-                                : "Eliminar"}
-                            </button>
-                          </td>
-                        </tr>
-                      ),
+                      (item: UserServiceEntry, index: number) => {
+                        const commentEditId = `${user}-${index}`;
+                        const isEditingComment = editingCommentId === commentEditId;
+
+                        return (
+                          <tr
+                            key={`${user}-service-${index}`}
+                            className="hover:bg-blue-900/10"
+                          >
+                            <td className="px-6 py-4 text-base whitespace-nowrap text-gray-200">
+                              {item.service}
+                            </td>
+                            <td className="px-6 py-4 text-base whitespace-nowrap text-gray-200">
+                              {item.client || "—"}
+                            </td>
+                            <td className="px-6 py-4 text-base whitespace-nowrap text-gray-200">
+                              {item.time || "—"}
+                            </td>
+                            <td className="px-6 py-4 text-base font-semibold whitespace-nowrap text-blue-200">
+                              {item.earnings}
+                            </td>
+                            <td className="px-6 py-4 text-base text-gray-200">
+                              {isEditingComment ? (
+                                <div className="flex items-center gap-2 min-w-[250px]">
+                                  <input
+                                    type="text"
+                                    value={commentText}
+                                    onChange={(e) => setCommentText(e.target.value)}
+                                    className="flex-1 rounded border border-gray-600 bg-gray-800 px-2 py-1 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+                                    placeholder="Agregar nota..."
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => handleSaveComment(item.id, user, index)}
+                                    className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700 whitespace-nowrap"
+                                  >
+                                    Guardar
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="rounded bg-gray-600 px-3 py-1 text-sm text-white hover:bg-gray-700 whitespace-nowrap"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              ) : (
+                                <div
+                                  className="cursor-pointer hover:text-blue-300 min-w-[150px]"
+                                  onClick={() => handleEditComment(item.id, item.comment || "", user, index)}
+                                  title={item.comment || "Click para agregar nota"}
+                                >
+                                  {item.comment || (
+                                    <span className="text-gray-500 italic">
+                                      Agregar nota...
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <button
+                                onClick={() => handleDelete(item.id)}
+                                disabled={deletingId === item.id}
+                                className="rounded-md border border-red-900/30 bg-red-500/20 px-3 py-1 text-sm text-red-300 hover:bg-red-500/30 disabled:opacity-50"
+                              >
+                                {deletingId === item.id
+                                  ? "Eliminando..."
+                                  : "Eliminar"}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      },
                     )
                   ) : (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-6 py-4 text-center text-base text-gray-400"
                       >
                         No hay servicios registrados
@@ -366,6 +453,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                       {userTotals[user].total}
                     </td>
                     <td className="px-6 py-4"></td>
+                    <td className="px-6 py-4"></td>
                   </tr>
                   {/* Profit split rows */}
                   <tr className="bg-gray-900/50">
@@ -382,6 +470,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                       {userTotals[user].adminShare}
                     </td>
                     <td className="px-6 py-4"></td>
+                    <td className="px-6 py-4"></td>
                   </tr>
                   <tr className="bg-gray-900/50">
                     <td className="px-6 py-4 text-base whitespace-nowrap text-gray-300">
@@ -396,6 +485,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                     <td className="neon-text px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
                       {userTotals[user].userShare}
                     </td>
+                    <td className="px-6 py-4"></td>
                     <td className="px-6 py-4"></td>
                   </tr>
                 </tbody>

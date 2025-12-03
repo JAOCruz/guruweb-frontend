@@ -92,7 +92,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
             {displayName}
           </h3>
         </div>
-        <div>
+        <div className="overflow-x-auto">
           <table className="min-w-full table-fixed divide-y divide-gray-800 text-base">
             <thead className="bg-gray-950/70">
               <tr>

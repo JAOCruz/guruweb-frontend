@@ -79,6 +79,7 @@ const Dashboard: React.FC = () => {
       const clientRow: any = { DETALLE: "CLIENTE" };
       const timeRow: any = { DETALLE: "HORA" };
       const earningsRow: any = { DETALLE: "GANANCIA" };
+      const commentRow: any = { DETALLE: "NOTA" };
 
       Object.entries(groupedByUser).forEach(([userName, userServices]) => {
         const service = userServices[i];
@@ -88,10 +89,11 @@ const Dashboard: React.FC = () => {
           clientRow[userName] = service.client || "";
           timeRow[userName] = service.time || "";
           earningsRow[userName] = Number(service.earnings);
+          commentRow[userName] = service.comment || "";
         }
       });
 
-      transformed.push(serviceRow, clientRow, timeRow, earningsRow);
+      transformed.push(serviceRow, clientRow, timeRow, earningsRow, commentRow);
     }
 
     console.log("Transformed data:", transformed);
