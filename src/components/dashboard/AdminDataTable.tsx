@@ -37,7 +37,9 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
       detailType: string,
       user: WorkerKey,
     ): string | number | undefined => {
-      const searchOffsets = [-3, -2, -1, 1, 2, 3];
+      // Search forward first (prioritize rows after current), then backward
+      // This ensures we get the CURRENT service's data, not the previous one's
+      const searchOffsets = [1, 2, 3, -1, -2, -3];
 
       for (const offset of searchOffsets) {
         const candidate = data[currentIndex + offset];
@@ -70,6 +72,9 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
       return undefined;
     };
 
+    console.log("=== ADMIN DATA TABLE - GROUP DATA BY USER ===");
+    console.log("Total data rows:", data.length);
+
     data.forEach((row, index) => {
       if (row.DETALLE !== "SERVICIO") {
         return;
@@ -84,6 +89,8 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
         const earnings = Number(findDetailValue(index, "GANANCIA", user)) || 0;
         const clientValue = findDetailValue(index, "CLIENTE", user);
         const timeValue = findDetailValue(index, "HORA", user);
+
+        console.log(`[Row ${index}] ${user}: ${serviceValue} = ${earnings}`);
 
         let serviceId: number | undefined = undefined;
         if (row.id) {
@@ -101,6 +108,12 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           id: serviceId,
         });
       });
+    });
+
+    console.log("\n=== GROUPED DATA SUMMARY ===");
+    USER_COLUMNS.forEach((user) => {
+      const total = groupedData[user].reduce((sum, s) => sum + s.earnings, 0);
+      console.log(`${user}: ${groupedData[user].length} services, Total: ${total}`);
     });
 
     return groupedData;
