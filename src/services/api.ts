@@ -141,6 +141,9 @@ export const servicesAPI = {
   getAdminStats: () => api.get("/services/stats/admin"),
 
   deleteService: (id: number) => api.delete(`/services/${id}`),
+
+  updateComment: (id: number, comment: string) =>
+    api.patch(`/services/${id}/comment`, { comment }),
 };
 
 export default api;
