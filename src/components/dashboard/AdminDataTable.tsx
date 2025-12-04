@@ -306,8 +306,8 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
               </p>
             </div>
           ))}
-          <div className="glow-animation rounded-lg border border-green-700 bg-green-900/20 p-3">
-            <h4 className="text-md neon-text font-medium">Total Admin</h4>
+          <div className="rounded-lg border border-green-700 bg-green-900/20 p-3">
+            <h4 className="text-md font-medium text-green-400">Total Admin</h4>
             <p className="text-xl font-bold text-white">{adminTotal}</p>
             <p className="text-sm text-gray-300">50% de todos los usuarios</p>
           </div>
@@ -466,7 +466,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                     <td className="px-6 py-4 text-base whitespace-nowrap text-gray-300">
                       —
                     </td>
-                    <td className="neon-text px-6 py-4 text-base font-semibold whitespace-nowrap text-green-400">
+                    <td className="px-6 py-4 text-base font-semibold whitespace-nowrap text-green-400">
                       {userTotals[user].adminShare}
                     </td>
                     <td className="px-6 py-4"></td>
@@ -482,7 +482,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                     <td className="px-6 py-4 text-base whitespace-nowrap text-gray-300">
                       —
                     </td>
-                    <td className="neon-text px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
+                    <td className="px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
                       {userTotals[user].userShare}
                     </td>
                     <td className="px-6 py-4"></td>

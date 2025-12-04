@@ -206,7 +206,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                 >
                   {displayName} (50%)
                 </td>
-                <td className="neon-text px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
+                <td className="px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
                   {userShare.toFixed(2)}
                 </td>
                 <td></td>

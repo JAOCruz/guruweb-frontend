@@ -18,9 +18,16 @@ const Dashboard: React.FC = () => {
     new Date().toISOString().split("T")[0]
   );
   const [dateFilter, setDateFilter] = useState<"all" | "day">("day");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
 
   useEffect(() => {
     fetchData();
+  }, [selectedDate, dateFilter]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
   }, [selectedDate, dateFilter]);
 
   const fetchData = async () => {
@@ -52,13 +59,26 @@ const Dashboard: React.FC = () => {
     );
   };
 
+  // Pagination logic
+  const getPaginatedServices = (servicesList: any[]) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return servicesList.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = (servicesList: any[]) => {
+    return Math.ceil(servicesList.length / itemsPerPage);
+  };
+
   const transformToExcelFormat = () => {
-    if (!services.length) return [];
+    // Apply pagination to services before transformation
+    const paginatedServices = getPaginatedServices(services);
+    if (!paginatedServices.length) return [];
 
     // Group services by user
     const groupedByUser: Record<string, any[]> = {};
 
-    services.forEach((service: any) => {
+    paginatedServices.forEach((service: any) => {
       // Get user name - normalize to uppercase to match USER_COLUMNS
       const userName = (
         service.data_column ||
@@ -127,6 +147,53 @@ const Dashboard: React.FC = () => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + days);
     setSelectedDate(newDate.toISOString().split("T")[0]);
+  };
+
+  const PaginationComponent = ({ totalItems }: { totalItems: number }) => {
+    const totalPages = getTotalPages(services);
+
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex items-center justify-center gap-2 py-4">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="rounded border border-gray-700 bg-gray-800/80 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          ← Anterior
+        </button>
+
+        <div className="flex gap-1">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`rounded px-3 py-2 text-sm ${
+                currentPage === page
+                  ? "bg-blue-600 text-white"
+                  : "border border-gray-700 bg-gray-800/80 text-gray-200 hover:bg-gray-700"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="rounded border border-gray-700 bg-gray-800/80 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Siguiente →
+        </button>
+
+        <span className="ml-4 text-sm text-gray-400">
+          Mostrando {(currentPage - 1) * itemsPerPage + 1}-
+          {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems}
+        </span>
+      </div>
+    );
   };
 
   const DateFilterComponent = () => (
@@ -225,6 +292,10 @@ const Dashboard: React.FC = () => {
               <DateFilterComponent />
 
               {isAdmin && <DataModificationForm onServiceAdded={fetchData} />}
+
+              {/* Pagination */}
+              <PaginationComponent totalItems={isAdmin ? services.length : getEmployeeServices().length} />
+
               {isAdmin ? (
                 <AdminDataTable
                   data={transformToExcelFormat()}
@@ -234,12 +305,15 @@ const Dashboard: React.FC = () => {
               ) : (
                 <>
                   {/* Tabla del empleado */}
-                  <EmployeeDataTable services={getEmployeeServices()} />
+                  <EmployeeDataTable services={getPaginatedServices(getEmployeeServices())} />
 
                   {/* Sección de Flipbooks */}
                   <FlipbooksSection />
                 </>
               )}
+
+              {/* Pagination */}
+              <PaginationComponent totalItems={isAdmin ? services.length : getEmployeeServices().length} />
             </div>
           }
         />
@@ -250,6 +324,9 @@ const Dashboard: React.FC = () => {
               {/* Date Filter */}
               <DateFilterComponent />
 
+              {/* Pagination */}
+              <PaginationComponent totalItems={isAdmin ? services.length : getEmployeeServices().length} />
+
               {isAdmin ? (
                 <AdminDataTable
                   data={transformToExcelFormat()}
@@ -258,11 +335,14 @@ const Dashboard: React.FC = () => {
                 />
               ) : (
                 <>
-                  <EmployeeDataTable services={getEmployeeServices()} />
+                  <EmployeeDataTable services={getPaginatedServices(getEmployeeServices())} />
                   {/* Flipbooks también en la vista de datos */}
                   <FlipbooksSection />
                 </>
               )}
+
+              {/* Pagination */}
+              <PaginationComponent totalItems={isAdmin ? services.length : getEmployeeServices().length} />
             </div>
           }
         />
