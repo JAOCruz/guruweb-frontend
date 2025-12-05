@@ -142,7 +142,7 @@ const Dashboard: React.FC = () => {
         const service = userServices[i];
         if (service) {
           serviceRow[userName] = service.service_name;
-          serviceRow.id = service.id; // Attach ID to service row
+          serviceRow[`${userName}_id`] = service.id; // Attach ID per user
           clientRow[userName] = service.client || "";
           timeRow[userName] = service.time || "";
           earningsRow[userName] = Number(service.earnings);

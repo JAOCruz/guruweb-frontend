@@ -63,17 +63,25 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
       user: WorkerKey,
     ): number | undefined => {
       const searchOffsets = [-3, -2, -1, 0, 1, 2, 3];
+      const userIdKey = `${user}_id`;
 
       for (const offset of searchOffsets) {
         const candidate = data[currentIndex + offset];
         if (
           candidate &&
-          candidate.id &&
           candidate.DETALLE === "SERVICIO" &&
           candidate[user]
         ) {
-          const id = candidate.id;
-          return typeof id === "number" ? id : parseInt(String(id), 10);
+          // Check user-specific ID first
+          if (candidate[userIdKey]) {
+            const id = candidate[userIdKey];
+            return typeof id === "number" ? id : parseInt(String(id), 10);
+          }
+          // Fallback to generic id
+          if (candidate.id) {
+            const id = candidate.id;
+            return typeof id === "number" ? id : parseInt(String(id), 10);
+          }
         }
       }
 
@@ -102,7 +110,12 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
         console.log(`[Row ${index}] ${user}: ${serviceValue} = ${earnings}`);
 
         let serviceId: number | undefined = undefined;
-        if (row.id) {
+        // Check for user-specific ID first (e.g., HENGI_id)
+        const userIdKey = `${user}_id`;
+        if (row[userIdKey]) {
+          serviceId =
+            typeof row[userIdKey] === "number" ? row[userIdKey] : parseInt(String(row[userIdKey]), 10);
+        } else if (row.id) {
           serviceId =
             typeof row.id === "number" ? row.id : parseInt(String(row.id), 10);
         } else {
