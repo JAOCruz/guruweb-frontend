@@ -91,7 +91,7 @@ const CustomTick = (props: any) => {
 
   return (
     <g transform={`translate(${x},${y})`}>
-      <text x={0} y={0} textAnchor="middle" fill="#999" fontSize={10}>
+      <text x={0} y={15} textAnchor="middle" fill="#999" fontSize={10}>
         {lines.map((line, index) => (
           <tspan x={0} dy={index === 0 ? 0 : 12} key={index}>
             {line}
