@@ -71,6 +71,37 @@ const ALL_SERVICES = [
   "SERVICIO COMPRA IMPUESTOS",
 ];
 
+// Custom tick component for wrapping text
+const CustomTick = (props: any) => {
+  const { x, y, payload } = props;
+  const words = payload.value.split(" ");
+  const maxWidth = 12; // characters per line
+  const lines: string[] = [];
+  let currentLine = "";
+
+  words.forEach((word: string) => {
+    if ((currentLine + word).length <= maxWidth) {
+      currentLine += (currentLine ? " " : "") + word;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  });
+  if (currentLine) lines.push(currentLine);
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text x={0} y={0} textAnchor="middle" fill="#999" fontSize={10}>
+        {lines.map((line, index) => (
+          <tspan x={0} dy={index === 0 ? 0 : 12} key={index}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+    </g>
+  );
+};
+
 const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
   const { isAdmin } = useAuth();
   const [showAllServices, setShowAllServices] = useState(false);
@@ -173,13 +204,10 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
     return Object.entries(frequency)
       .filter(([_, count]) => showAllServices || count > 0)
       .map(([name, count]) => {
-        // Create shorter display name
+        // Create shorter display name - remove "SERVICIO " prefix only
         let shortName = name;
         if (name.startsWith("SERVICIO ")) {
-          shortName = name.substring(9); // Remove "SERVICIO " prefix
-        }
-        if (shortName.length > 15) {
-          shortName = shortName.substring(0, 15) + "...";
+          shortName = name.substring(9);
         }
         return {
           name: shortName,
@@ -318,17 +346,15 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={barData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis
                 dataKey="name"
                 stroke="#999"
-                angle={0}
-                textAnchor="middle"
-                height={60}
+                height={100}
                 interval={0}
-                tick={{ fontSize: 10 }}
+                tick={<CustomTick />}
               />
               <YAxis stroke="#999" />
               <Tooltip
