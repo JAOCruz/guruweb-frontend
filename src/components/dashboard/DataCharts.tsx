@@ -30,12 +30,12 @@ interface DataChartsProps {
   services: Service[];
 }
 
-const NEON_COLORS = ["#61dafb", "#3c82f6", "#1ca0fb", "#0073e6", "#0e4377"];
+const NEON_COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"];
 const USER_COLORS: Record<string, string> = {
-  HENGI: "#61dafb",
-  MARLENI: "#3c82f6",
-  ISRAEL: "#1ca0fb",
-  THAICAR: "#0073e6",
+  HENGI: "#3b82f6",    // Blue
+  MARLENI: "#ef4444",   // Red
+  ISRAEL: "#10b981",    // Green
+  THAICAR: "#f59e0b",   // Orange
 };
 
 const ALL_SERVICES = [
@@ -172,11 +172,21 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
 
     return Object.entries(frequency)
       .filter(([_, count]) => showAllServices || count > 0)
-      .map(([name, count]) => ({
-        name: name.length > 30 ? name.substring(0, 30) + "..." : name,
-        fullName: name,
-        Veces: count,
-      }));
+      .map(([name, count]) => {
+        // Create shorter display name
+        let shortName = name;
+        if (name.startsWith("SERVICIO ")) {
+          shortName = name.substring(9); // Remove "SERVICIO " prefix
+        }
+        if (shortName.length > 20) {
+          shortName = shortName.substring(0, 20) + "...";
+        }
+        return {
+          name: shortName,
+          fullName: name,
+          Veces: count,
+        };
+      });
   };
 
   // Distribution by user with employee/admin split
@@ -304,27 +314,29 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
               : "Mostrar todos los servicios"}
           </button>
         </div>
-        <div className="h-80">
+        <div className="h-96">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={barData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis
                 dataKey="name"
                 stroke="#999"
-                angle={-45}
+                angle={-35}
                 textAnchor="end"
                 height={100}
+                interval={0}
+                tick={{ fontSize: 11 }}
               />
               <YAxis stroke="#999" />
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="rounded-lg border border-blue-900/30 bg-gray-900/95 p-3">
-                        <p className="text-sm text-gray-300">
+                      <div className="rounded-lg border border-blue-900/30 bg-gray-900/95 p-3 max-w-xs">
+                        <p className="text-sm text-gray-300 break-words">
                           {payload[0].payload.fullName}
                         </p>
                         <p className="text-lg font-bold text-blue-400">
