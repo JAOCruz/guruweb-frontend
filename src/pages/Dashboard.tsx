@@ -71,14 +71,13 @@ const Dashboard: React.FC = () => {
   };
 
   const transformToExcelFormat = () => {
-    // Apply pagination to services before transformation
-    const paginatedServices = getPaginatedServices(services);
-    if (!paginatedServices.length) return [];
+    // Don't paginate admin view - show all services for accurate totals
+    if (!services.length) return [];
 
     // Group services by user
     const groupedByUser: Record<string, any[]> = {};
 
-    paginatedServices.forEach((service: any) => {
+    services.forEach((service: any) => {
       // Get user name - normalize to uppercase to match USER_COLUMNS
       const userName = (
         service.data_column ||
@@ -293,9 +292,6 @@ const Dashboard: React.FC = () => {
 
               {isAdmin && <DataModificationForm onServiceAdded={fetchData} />}
 
-              {/* Pagination */}
-              <PaginationComponent totalItems={isAdmin ? services.length : getEmployeeServices().length} />
-
               {isAdmin ? (
                 <AdminDataTable
                   data={transformToExcelFormat()}
@@ -304,16 +300,19 @@ const Dashboard: React.FC = () => {
                 />
               ) : (
                 <>
+                  {/* Pagination for employees */}
+                  <PaginationComponent totalItems={getEmployeeServices().length} />
+
                   {/* Tabla del empleado */}
                   <EmployeeDataTable services={getPaginatedServices(getEmployeeServices())} />
 
                   {/* Sección de Flipbooks */}
                   <FlipbooksSection />
+
+                  {/* Pagination for employees */}
+                  <PaginationComponent totalItems={getEmployeeServices().length} />
                 </>
               )}
-
-              {/* Pagination */}
-              <PaginationComponent totalItems={isAdmin ? services.length : getEmployeeServices().length} />
             </div>
           }
         />
@@ -324,9 +323,6 @@ const Dashboard: React.FC = () => {
               {/* Date Filter */}
               <DateFilterComponent />
 
-              {/* Pagination */}
-              <PaginationComponent totalItems={isAdmin ? services.length : getEmployeeServices().length} />
-
               {isAdmin ? (
                 <AdminDataTable
                   data={transformToExcelFormat()}
@@ -335,14 +331,18 @@ const Dashboard: React.FC = () => {
                 />
               ) : (
                 <>
+                  {/* Pagination for employees */}
+                  <PaginationComponent totalItems={getEmployeeServices().length} />
+
                   <EmployeeDataTable services={getPaginatedServices(getEmployeeServices())} />
+
                   {/* Flipbooks también en la vista de datos */}
                   <FlipbooksSection />
+
+                  {/* Pagination for employees */}
+                  <PaginationComponent totalItems={getEmployeeServices().length} />
                 </>
               )}
-
-              {/* Pagination */}
-              <PaginationComponent totalItems={isAdmin ? services.length : getEmployeeServices().length} />
             </div>
           }
         />
