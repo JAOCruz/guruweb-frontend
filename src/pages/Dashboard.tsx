@@ -13,6 +13,7 @@ import { USER_COLUMNS, WorkerKey } from "../services/excelService";
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
   const [services, setServices] = useState([]);
+  const [allServices, setAllServices] = useState([]); // For charts - unfiltered
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
@@ -20,6 +21,19 @@ const Dashboard: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<"all" | "day">("day");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
+
+  // Fetch all services for charts (unfiltered)
+  useEffect(() => {
+    const fetchAllServices = async () => {
+      try {
+        const response = await servicesAPI.getServices(); // No date filter
+        setAllServices(response.data);
+      } catch (error) {
+        console.error("Error fetching all services:", error);
+      }
+    };
+    fetchAllServices();
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -43,6 +57,10 @@ const Dashboard: React.FC = () => {
       const response = await servicesAPI.getServices(startDate, endDate);
       console.log("Services data:", response.data);
       setServices(response.data);
+
+      // Also refresh all services for charts
+      const allResponse = await servicesAPI.getServices();
+      setAllServices(allResponse.data);
     } catch (error) {
       console.error("Error fetching services:", error);
     } finally {
@@ -55,6 +73,15 @@ const Dashboard: React.FC = () => {
     if (isAdmin) return services;
 
     return services.filter(
+      (service: any) => service.data_column === user?.dataColumn,
+    );
+  };
+
+  // Filter all services for current employee (for charts)
+  const getAllEmployeeServices = () => {
+    if (isAdmin) return allServices;
+
+    return allServices.filter(
       (service: any) => service.data_column === user?.dataColumn,
     );
   };
@@ -349,7 +376,7 @@ const Dashboard: React.FC = () => {
         <Route
           path="/charts"
           element={
-            <DataCharts services={isAdmin ? services : getEmployeeServices()} />
+            <DataCharts services={getAllEmployeeServices()} />
           }
         />
       </Routes>

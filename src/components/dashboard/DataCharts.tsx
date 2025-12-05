@@ -178,8 +178,8 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
         if (name.startsWith("SERVICIO ")) {
           shortName = name.substring(9); // Remove "SERVICIO " prefix
         }
-        if (shortName.length > 20) {
-          shortName = shortName.substring(0, 20) + "...";
+        if (shortName.length > 15) {
+          shortName = shortName.substring(0, 15) + "...";
         }
         return {
           name: shortName,
@@ -318,17 +318,17 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={barData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis
                 dataKey="name"
                 stroke="#999"
-                angle={-35}
-                textAnchor="end"
-                height={100}
+                angle={0}
+                textAnchor="middle"
+                height={60}
                 interval={0}
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 10 }}
               />
               <YAxis stroke="#999" />
               <Tooltip
