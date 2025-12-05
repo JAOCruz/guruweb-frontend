@@ -33,9 +33,13 @@ interface DataChartsProps {
 const NEON_COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"];
 const USER_COLORS: Record<string, string> = {
   HENGI: "#3b82f6",    // Blue
+  Hengi: "#3b82f6",    // Blue
   MARLENI: "#ef4444",   // Red
+  Marleni: "#ef4444",   // Red
   ISRAEL: "#10b981",    // Green
+  Israel: "#10b981",    // Green
   THAICAR: "#f59e0b",   // Orange
+  Thaicar: "#f59e0b",   // Orange
 };
 
 const ALL_SERVICES = [
@@ -147,35 +151,43 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
   const groupByDateAndUser = () => {
     const grouped: Record<
       string,
-      Record<string, { employee: number; admin: number }>
+      {
+        actualDate: Date;
+        users: Record<string, { employee: number; admin: number }>;
+      }
     > = {};
 
     filteredServices.forEach((service) => {
-      const date = new Date(service.date).toLocaleDateString("es-DO", {
-        month: "short",
-        day: "numeric",
-      });
+      const actualDate = new Date(service.date);
+      const dateKey = actualDate.toISOString().split("T")[0]; // Use ISO date as key for grouping
       const user = service.data_column;
       const earnings = Number(service.earnings);
 
-      if (!grouped[date]) {
-        grouped[date] = {};
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {
+          actualDate: actualDate,
+          users: {},
+        };
       }
 
-      if (!grouped[date][user]) {
-        grouped[date][user] = { employee: 0, admin: 0 };
+      if (!grouped[dateKey].users[user]) {
+        grouped[dateKey].users[user] = { employee: 0, admin: 0 };
       }
 
-      grouped[date][user].employee += earnings * 0.5;
-      grouped[date][user].admin += earnings * 0.5;
+      grouped[dateKey].users[user].employee += earnings * 0.5;
+      grouped[dateKey].users[user].admin += earnings * 0.5;
     });
 
     return Object.entries(grouped)
-      .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-      .map(([date, users]) => {
-        const entry: any = { name: date };
+      .sort((a, b) => a[1].actualDate.getTime() - b[1].actualDate.getTime())
+      .map(([dateKey, data]) => {
+        const formattedDate = data.actualDate.toLocaleDateString("es-DO", {
+          month: "short",
+          day: "numeric",
+        });
+        const entry: any = { name: formattedDate };
 
-        Object.entries(users).forEach(([user, split]) => {
+        Object.entries(data.users).forEach(([user, split]) => {
           entry[`${user} (Empleado)`] = Number(split.employee.toFixed(2));
           entry[`${user} (Admin)`] = Number(split.admin.toFixed(2));
         });
