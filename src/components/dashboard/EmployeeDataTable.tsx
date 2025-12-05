@@ -21,6 +21,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [commentText, setCommentText] = useState<string>("");
   const [localServices, setLocalServices] = useState<Service[]>(services);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // Update local services when props change
   React.useEffect(() => {
@@ -57,8 +58,26 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
     setCommentText("");
   };
 
+  const handleDelete = async (serviceId: number) => {
+    if (!window.confirm("¿Estás seguro de que quieres eliminar este servicio?")) {
+      return;
+    }
+
+    try {
+      setDeletingId(serviceId);
+      await servicesAPI.deleteService(serviceId);
+      // Update local state
+      setLocalServices(localServices.filter((s) => s.id !== serviceId));
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      alert("Error al eliminar el servicio");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   // Calculate totals
-  const total = services.reduce(
+  const total = localServices.reduce(
     (acc, service) => acc + Number(service.earnings),
     0,
   );
@@ -96,7 +115,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
           <table className="min-w-full table-fixed divide-y divide-gray-800 text-base">
             <thead className="bg-gray-950/70">
               <tr>
-                <th className="w-[25%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
+                <th className="w-[20%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
                   Servicio
                 </th>
                 <th className="w-[15%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
@@ -105,11 +124,14 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                 <th className="w-[10%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
                   Hora
                 </th>
-                <th className="w-[15%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
+                <th className="w-[13%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
                   Ganancia
                 </th>
-                <th className="w-[35%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
+                <th className="w-[30%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
                   Nota
+                </th>
+                <th className="w-[12%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
+                  Acciones
                 </th>
               </tr>
             </thead>
@@ -118,7 +140,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                 localServices.map((service) => (
                   <tr key={service.id} className="hover:bg-blue-900/10">
                     <td
-                      className="w-[25%] truncate px-6 py-4 text-base text-gray-200"
+                      className="w-[20%] truncate px-6 py-4 text-base text-gray-200"
                       title={service.service_name}
                     >
                       {service.service_name}
@@ -132,10 +154,10 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                     <td className="w-[10%] px-6 py-4 text-base whitespace-nowrap text-gray-200">
                       {service.time || "—"}
                     </td>
-                    <td className="w-[15%] px-6 py-4 text-base font-semibold whitespace-nowrap text-blue-200">
+                    <td className="w-[13%] px-6 py-4 text-base font-semibold whitespace-nowrap text-blue-200">
                       {Number(service.earnings).toFixed(2)}
                     </td>
-                    <td className="w-[35%] px-6 py-4 text-base text-gray-200">
+                    <td className="w-[30%] px-6 py-4 text-base text-gray-200">
                       {editingCommentId === service.id ? (
                         <div className="flex items-center gap-2">
                           <input
@@ -173,12 +195,21 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                         </div>
                       )}
                     </td>
+                    <td className="w-[12%] px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleDelete(service.id)}
+                        disabled={deletingId === service.id}
+                        className="rounded border border-red-900/30 bg-red-500/20 px-3 py-1 text-sm text-red-300 hover:bg-red-500/30 disabled:opacity-50"
+                      >
+                        {deletingId === service.id ? "Eliminando..." : "Eliminar"}
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-6 py-4 text-center text-base text-gray-400"
                   >
                     No hay servicios registrados
@@ -197,6 +228,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                   {total.toFixed(2)}
                 </td>
                 <td></td>
+                <td></td>
               </tr>
 
               <tr className="bg-gray-900/50">
@@ -209,6 +241,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                 <td className="px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
                   {userShare.toFixed(2)}
                 </td>
+                <td></td>
                 <td></td>
               </tr>
             </tbody>
