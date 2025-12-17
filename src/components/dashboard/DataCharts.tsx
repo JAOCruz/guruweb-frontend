@@ -28,6 +28,7 @@ interface Service {
 
 interface DataChartsProps {
   services: Service[];
+  employeePercentage: number;
 }
 
 const NEON_COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"];
@@ -106,7 +107,10 @@ const CustomTick = (props: any) => {
   );
 };
 
-const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
+const DataCharts: React.FC<DataChartsProps> = ({
+  services,
+  employeePercentage,
+}) => {
   const { isAdmin } = useAuth();
   const [showAllServices, setShowAllServices] = useState(false);
   const [dateFilter, setDateFilter] = useState<"all" | "specific" | "range">(
@@ -174,8 +178,11 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
         grouped[dateKey].users[user] = { employee: 0, admin: 0 };
       }
 
-      grouped[dateKey].users[user].employee += earnings * 0.5;
-      grouped[dateKey].users[user].admin += earnings * 0.5;
+      const employeeDecimal = employeePercentage / 100;
+      const adminDecimal = 1 - employeeDecimal;
+
+      grouped[dateKey].users[user].employee += earnings * employeeDecimal;
+      grouped[dateKey].users[user].admin += earnings * adminDecimal;
     });
 
     return Object.entries(grouped)
@@ -244,9 +251,12 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
         userTotals[user] = { total: 0, employee: 0, admin: 0 };
       }
 
+      const employeeDecimal = employeePercentage / 100;
+      const adminDecimal = 1 - employeeDecimal;
+
       userTotals[user].total += earnings;
-      userTotals[user].employee += earnings * 0.5;
-      userTotals[user].admin += earnings * 0.5;
+      userTotals[user].employee += earnings * employeeDecimal;
+      userTotals[user].admin += earnings * adminDecimal;
     });
 
     const pieData = Object.entries(userTotals).map(([name, totals]) => ({
@@ -400,7 +410,7 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
       {/* Line Chart - Earnings by Date with Employee/Admin Split */}
       <div className="rounded-lg border border-blue-900/30 bg-gray-900/80 p-6 backdrop-blur-sm">
         <h3 className="bevel-text mb-4 text-xl font-semibold">
-          Ganancias por Fecha (Empleado 50% / Admin 50%)
+          Ganancias por Fecha (Empleado {employeePercentage.toFixed(0)}% / Admin {(100 - employeePercentage).toFixed(0)}%)
         </h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
@@ -489,7 +499,7 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
                 <span className="font-bold text-white">${item.value}</span>
               </p>
               <p className="text-sm text-gray-300">
-                Ganancias (50%):{" "}
+                Ganancias ({employeePercentage.toFixed(0)}%):{" "}
                 <span className="font-bold text-yellow-400">
                   ${item.employee}
                 </span>

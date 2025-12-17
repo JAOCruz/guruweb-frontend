@@ -79,14 +79,16 @@ api.interceptors.response.use(
           refreshToken,
         });
 
-        const { token: newAccessToken, refreshToken: newRefreshToken } = response.data;
+        const { token: newAccessToken, refreshToken: newRefreshToken } =
+          response.data;
 
         // Store new tokens
         localStorage.setItem("token", newAccessToken);
         localStorage.setItem("refreshToken", newRefreshToken);
 
         // Update the authorization header
-        api.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
+        api.defaults.headers.common["Authorization"] =
+          `Bearer ${newAccessToken}`;
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         // Process queued requests
@@ -116,8 +118,7 @@ export const authAPI = {
 
   getCurrentUser: () => api.get("/auth/me"),
 
-  logout: (refreshToken: string) =>
-    api.post("/auth/logout", { refreshToken }),
+  logout: (refreshToken: string) => api.post("/auth/logout", { refreshToken }),
 
   refresh: (refreshToken: string) =>
     api.post("/auth/refresh", { refreshToken }),
@@ -144,6 +145,15 @@ export const servicesAPI = {
 
   updateComment: (id: number, comment: string) =>
     api.patch(`/services/${id}/comment`, { comment }),
+};
+
+export const settingsAPI = {
+  getAllSettings: () => api.get("/settings"),
+
+  getEmployeePercentage: () => api.get("/settings/employee-percentage"),
+
+  updateEmployeePercentage: (percentage: number, startDate?: string) =>
+    api.put("/settings/employee-percentage", { percentage, startDate }),
 };
 
 export default api;

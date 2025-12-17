@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import AdminDataTable from "../components/dashboard/AdminDataTable";
 import EmployeeDataTable from "../components/dashboard/EmployeeDataTable";
 import DataModificationForm from "../components/dashboard/DataModificationForm";
 import DataCharts from "../components/dashboard/DataCharts";
 import FlipbooksSection from "../components/dashboard/FlipbooksSection";
-import { servicesAPI } from "../services/api";
+import Settings from "../components/dashboard/Settings";
+import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { USER_COLUMNS, WorkerKey } from "../services/excelService";
 
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
+  const location = useLocation();
   const [services, setServices] = useState([]);
   const [allServices, setAllServices] = useState([]); // For charts - unfiltered
   const [loading, setLoading] = useState(true);
@@ -20,7 +22,22 @@ const Dashboard: React.FC = () => {
   );
   const [dateFilter, setDateFilter] = useState<"all" | "day">("day");
   const [currentPage, setCurrentPage] = useState(1);
+  const [employeePercentage, setEmployeePercentage] = useState<number>(50); // Default 50%
   const itemsPerPage = 15;
+
+  // Fetch employee percentage setting - refetch when route changes
+  useEffect(() => {
+    const fetchEmployeePercentage = async () => {
+      try {
+        const response = await settingsAPI.getEmployeePercentage();
+        setEmployeePercentage(response.data.percentage);
+      } catch (error) {
+        console.error("Error fetching employee percentage:", error);
+        // Keep default 50% if fetch fails
+      }
+    };
+    fetchEmployeePercentage();
+  }, [location.pathname]); // Refetch when navigating between routes
 
   // Fetch all services for charts (unfiltered)
   useEffect(() => {
@@ -324,6 +341,7 @@ const Dashboard: React.FC = () => {
                   data={transformToExcelFormat()}
                   onSort={() => {}}
                   onServiceDeleted={fetchData}
+                  employeePercentage={employeePercentage}
                 />
               ) : (
                 <>
@@ -331,7 +349,10 @@ const Dashboard: React.FC = () => {
                   <PaginationComponent totalItems={getEmployeeServices().length} />
 
                   {/* Tabla del empleado */}
-                  <EmployeeDataTable services={getPaginatedServices(getEmployeeServices())} />
+                  <EmployeeDataTable
+                    services={getPaginatedServices(getEmployeeServices())}
+                    employeePercentage={employeePercentage}
+                  />
 
                   {/* Sección de Flipbooks */}
                   <FlipbooksSection />
@@ -355,13 +376,17 @@ const Dashboard: React.FC = () => {
                   data={transformToExcelFormat()}
                   onSort={() => {}}
                   onServiceDeleted={fetchData}
+                  employeePercentage={employeePercentage}
                 />
               ) : (
                 <>
                   {/* Pagination for employees */}
                   <PaginationComponent totalItems={getEmployeeServices().length} />
 
-                  <EmployeeDataTable services={getPaginatedServices(getEmployeeServices())} />
+                  <EmployeeDataTable
+                    services={getPaginatedServices(getEmployeeServices())}
+                    employeePercentage={employeePercentage}
+                  />
 
                   {/* Flipbooks también en la vista de datos */}
                   <FlipbooksSection />
@@ -376,7 +401,22 @@ const Dashboard: React.FC = () => {
         <Route
           path="/charts"
           element={
-            <DataCharts services={getAllEmployeeServices()} />
+            <DataCharts
+              services={getAllEmployeeServices()}
+              employeePercentage={employeePercentage}
+            />
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            isAdmin ? (
+              <Settings />
+            ) : (
+              <div className="text-center text-white p-8">
+                <p className="text-xl">Acceso denegado. Solo administradores pueden ver esta página.</p>
+              </div>
+            )
           }
         />
       </Routes>

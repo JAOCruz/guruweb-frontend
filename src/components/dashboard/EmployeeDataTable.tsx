@@ -14,9 +14,13 @@ interface Service {
 
 interface EmployeeDataTableProps {
   services: Service[];
+  employeePercentage: number;
 }
 
-const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
+const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({
+  services,
+  employeePercentage,
+}) => {
   const { user } = useAuth();
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [commentText, setCommentText] = useState<string>("");
@@ -62,7 +66,8 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
     (acc, service) => acc + Number(service.earnings),
     0,
   );
-  const userShare = total * 0.5;
+  const employeeDecimal = employeePercentage / 100;
+  const userShare = total * employeeDecimal;
 
   return (
     <div className="space-y-6">
@@ -77,7 +82,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
             <p className="text-2xl font-bold text-white">{total.toFixed(2)}</p>
           </div>
           <div className="rounded-lg border border-green-700 bg-green-900/20 p-4">
-            <p className="text-sm text-gray-400">Tu Parte (50%)</p>
+            <p className="text-sm text-gray-400">Tu Parte ({employeePercentage.toFixed(0)}%)</p>
             <p className="text-2xl font-bold text-green-400">
               {userShare.toFixed(2)}
             </p>
@@ -204,7 +209,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                   className="px-6 py-4 text-base whitespace-nowrap text-gray-300"
                   colSpan={3}
                 >
-                  {displayName} (50%)
+                  {displayName} ({employeePercentage.toFixed(0)}%)
                 </td>
                 <td className="px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
                   {userShare.toFixed(2)}

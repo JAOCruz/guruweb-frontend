@@ -6,6 +6,7 @@ interface AdminDataTableProps {
   data: ExcelRow[];
   onSort: (column: string, direction: "asc" | "desc") => void;
   onServiceDeleted?: () => void;
+  employeePercentage: number;
 }
 
 interface UserServiceEntry {
@@ -22,6 +23,7 @@ type GroupedUserData = Record<WorkerKey, UserServiceEntry[]>;
 const AdminDataTable: React.FC<AdminDataTableProps> = ({
   data,
   onServiceDeleted,
+  employeePercentage,
 }) => {
   const [activeUser, setActiveUser] = useState<WorkerKey | "all">("all");
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -154,10 +156,13 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
         0,
       );
 
+      const employeeDecimal = employeePercentage / 100;
+      const adminDecimal = 1 - employeeDecimal;
+
       totals[user] = {
         total,
-        adminShare: Number((total * 0.5).toFixed(2)),
-        userShare: Number((total * 0.5).toFixed(2)),
+        adminShare: Number((total * adminDecimal).toFixed(2)),
+        userShare: Number((total * employeeDecimal).toFixed(2)),
       };
     });
 
@@ -306,13 +311,13 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                 </span>
               </p>
               <p className="text-sm text-gray-300">
-                Admin (50%):{" "}
+                Admin ({(100 - employeePercentage).toFixed(0)}%):{" "}
                 <span className="font-bold text-green-400">
                   {userTotals[user].adminShare}
                 </span>
               </p>
               <p className="text-sm text-gray-300">
-                Usuario (50%):{" "}
+                Usuario ({employeePercentage.toFixed(0)}%):{" "}
                 <span className="font-bold text-yellow-400">
                   {userTotals[user].userShare}
                 </span>
@@ -322,7 +327,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           <div className="rounded-lg border border-green-700 bg-green-900/20 p-3">
             <h4 className="text-md font-medium text-green-400">Total Admin</h4>
             <p className="text-xl font-bold text-white">{adminTotal}</p>
-            <p className="text-sm text-gray-300">50% de todos los usuarios</p>
+            <p className="text-sm text-gray-300">{(100 - employeePercentage).toFixed(0)}% de todos los usuarios</p>
           </div>
         </div>
       </div>
@@ -471,7 +476,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                   {/* Profit split rows */}
                   <tr className="bg-gray-900/50">
                     <td className="px-6 py-4 text-base whitespace-nowrap text-gray-300">
-                      Admin (50%)
+                      Admin ({(100 - employeePercentage).toFixed(0)}%)
                     </td>
                     <td className="px-6 py-4 text-base whitespace-nowrap text-gray-300">
                       —
@@ -487,7 +492,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                   </tr>
                   <tr className="bg-gray-900/50">
                     <td className="px-6 py-4 text-base whitespace-nowrap text-gray-300">
-                      {user} (50%)
+                      {user} ({employeePercentage.toFixed(0)}%)
                     </td>
                     <td className="px-6 py-4 text-base whitespace-nowrap text-gray-300">
                       —
