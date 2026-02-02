@@ -23,41 +23,49 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900">
-      <div className="w-full max-w-md space-y-8 rounded-lg bg-gray-800 p-8">
-        <h2 className="text-center text-3xl font-bold text-white">
-          Gurú Dashboard
-        </h2>
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
+      <div className="w-full max-w-md space-y-8 rounded-2xl border border-slate-800 bg-slate-900/50 p-8 shadow-xl backdrop-blur-sm">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20">
+            <span className="text-3xl font-bold text-white">G</span>
+          </div>
+          <h2 className="text-3xl font-bold text-white">Gurú Dashboard</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Ingresa a tu panel de control
+          </p>
+        </div>
 
         {error && (
-          <div className="rounded border border-red-500 bg-red-500/20 px-4 py-3 text-red-300">
+          <div className="rounded border border-red-500/50 bg-red-500/10 px-4 py-3 text-red-300">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300">
+            <label className="mb-2 block text-sm font-medium text-slate-300">
               Usuario
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white"
+              className="block w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white placeholder-slate-500 transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              placeholder="Ingresa tu usuario"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300">
+            <label className="mb-2 block text-sm font-medium text-slate-300">
               Contraseña
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-600 bg-gray-700 px-3 py-2 text-white"
+              className="block w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white placeholder-slate-500 transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              placeholder="••••••••"
               required
             />
           </div>
@@ -65,7 +73,7 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] hover:shadow-blue-500/40 disabled:opacity-50 disabled:hover:scale-100"
           >
             {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
           </button>

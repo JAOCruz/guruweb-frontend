@@ -28,19 +28,14 @@ interface Service {
 
 interface DataChartsProps {
   services: Service[];
-  employeePercentage: number;
 }
 
-const NEON_COLORS = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6"];
+const NEON_COLORS = ["#61dafb", "#3c82f6", "#1ca0fb", "#0073e6", "#0e4377"];
 const USER_COLORS: Record<string, string> = {
-  HENGI: "#3b82f6",    // Blue
-  Hengi: "#3b82f6",    // Blue
-  MARLENI: "#ef4444",   // Red
-  Marleni: "#ef4444",   // Red
-  ISRAEL: "#10b981",    // Green
-  Israel: "#10b981",    // Green
-  THAICAR: "#f59e0b",   // Orange
-  Thaicar: "#f59e0b",   // Orange
+  HENGI: "#61dafb",
+  MARLENI: "#3c82f6",
+  ISRAEL: "#1ca0fb",
+  THAICAR: "#0073e6",
 };
 
 const ALL_SERVICES = [
@@ -76,41 +71,7 @@ const ALL_SERVICES = [
   "SERVICIO COMPRA IMPUESTOS",
 ];
 
-// Custom tick component for wrapping text
-const CustomTick = (props: any) => {
-  const { x, y, payload } = props;
-  const words = payload.value.split(" ");
-  const maxWidth = 12; // characters per line
-  const lines: string[] = [];
-  let currentLine = "";
-
-  words.forEach((word: string) => {
-    if ((currentLine + word).length <= maxWidth) {
-      currentLine += (currentLine ? " " : "") + word;
-    } else {
-      if (currentLine) lines.push(currentLine);
-      currentLine = word;
-    }
-  });
-  if (currentLine) lines.push(currentLine);
-
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <text x={0} y={15} textAnchor="middle" fill="#999" fontSize={10}>
-        {lines.map((line, index) => (
-          <tspan x={0} dy={index === 0 ? 0 : 12} key={index}>
-            {line}
-          </tspan>
-        ))}
-      </text>
-    </g>
-  );
-};
-
-const DataCharts: React.FC<DataChartsProps> = ({
-  services,
-  employeePercentage,
-}) => {
+const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
   const { isAdmin } = useAuth();
   const [showAllServices, setShowAllServices] = useState(false);
   const [dateFilter, setDateFilter] = useState<"all" | "specific" | "range">(
@@ -155,46 +116,35 @@ const DataCharts: React.FC<DataChartsProps> = ({
   const groupByDateAndUser = () => {
     const grouped: Record<
       string,
-      {
-        actualDate: Date;
-        users: Record<string, { employee: number; admin: number }>;
-      }
+      Record<string, { employee: number; admin: number }>
     > = {};
 
     filteredServices.forEach((service) => {
-      const actualDate = new Date(service.date);
-      const dateKey = actualDate.toISOString().split("T")[0]; // Use ISO date as key for grouping
+      const date = new Date(service.date).toLocaleDateString("es-DO", {
+        month: "short",
+        day: "numeric",
+      });
       const user = service.data_column;
       const earnings = Number(service.earnings);
 
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = {
-          actualDate: actualDate,
-          users: {},
-        };
+      if (!grouped[date]) {
+        grouped[date] = {};
       }
 
-      if (!grouped[dateKey].users[user]) {
-        grouped[dateKey].users[user] = { employee: 0, admin: 0 };
+      if (!grouped[date][user]) {
+        grouped[date][user] = { employee: 0, admin: 0 };
       }
 
-      const employeeDecimal = employeePercentage / 100;
-      const adminDecimal = 1 - employeeDecimal;
-
-      grouped[dateKey].users[user].employee += earnings * employeeDecimal;
-      grouped[dateKey].users[user].admin += earnings * adminDecimal;
+      grouped[date][user].employee += earnings * 0.5;
+      grouped[date][user].admin += earnings * 0.5;
     });
 
     return Object.entries(grouped)
-      .sort((a, b) => a[1].actualDate.getTime() - b[1].actualDate.getTime())
-      .map(([dateKey, data]) => {
-        const formattedDate = data.actualDate.toLocaleDateString("es-DO", {
-          month: "short",
-          day: "numeric",
-        });
-        const entry: any = { name: formattedDate };
+      .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+      .map(([date, users]) => {
+        const entry: any = { name: date };
 
-        Object.entries(data.users).forEach(([user, split]) => {
+        Object.entries(users).forEach(([user, split]) => {
           entry[`${user} (Empleado)`] = Number(split.employee.toFixed(2));
           entry[`${user} (Admin)`] = Number(split.admin.toFixed(2));
         });
@@ -222,18 +172,11 @@ const DataCharts: React.FC<DataChartsProps> = ({
 
     return Object.entries(frequency)
       .filter(([_, count]) => showAllServices || count > 0)
-      .map(([name, count]) => {
-        // Create shorter display name - remove "SERVICIO " prefix only
-        let shortName = name;
-        if (name.startsWith("SERVICIO ")) {
-          shortName = name.substring(9);
-        }
-        return {
-          name: shortName,
-          fullName: name,
-          Veces: count,
-        };
-      });
+      .map(([name, count]) => ({
+        name: name.length > 30 ? name.substring(0, 30) + "..." : name,
+        fullName: name,
+        Veces: count,
+      }));
   };
 
   // Distribution by user with employee/admin split
@@ -251,12 +194,9 @@ const DataCharts: React.FC<DataChartsProps> = ({
         userTotals[user] = { total: 0, employee: 0, admin: 0 };
       }
 
-      const employeeDecimal = employeePercentage / 100;
-      const adminDecimal = 1 - employeeDecimal;
-
       userTotals[user].total += earnings;
-      userTotals[user].employee += earnings * employeeDecimal;
-      userTotals[user].admin += earnings * adminDecimal;
+      userTotals[user].employee += earnings * 0.5;
+      userTotals[user].admin += earnings * 0.5;
     });
 
     const pieData = Object.entries(userTotals).map(([name, totals]) => ({
@@ -364,27 +304,27 @@ const DataCharts: React.FC<DataChartsProps> = ({
               : "Mostrar todos los servicios"}
           </button>
         </div>
-        <div className="h-96">
+        <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={barData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#444" />
               <XAxis
                 dataKey="name"
                 stroke="#999"
+                angle={-45}
+                textAnchor="end"
                 height={100}
-                interval={0}
-                tick={<CustomTick />}
               />
               <YAxis stroke="#999" />
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="rounded-lg border border-blue-900/30 bg-gray-900/95 p-3 max-w-xs">
-                        <p className="text-sm text-gray-300 break-words">
+                      <div className="rounded-lg border border-blue-900/30 bg-gray-900/95 p-3">
+                        <p className="text-sm text-gray-300">
                           {payload[0].payload.fullName}
                         </p>
                         <p className="text-lg font-bold text-blue-400">
@@ -410,7 +350,7 @@ const DataCharts: React.FC<DataChartsProps> = ({
       {/* Line Chart - Earnings by Date with Employee/Admin Split */}
       <div className="rounded-lg border border-blue-900/30 bg-gray-900/80 p-6 backdrop-blur-sm">
         <h3 className="bevel-text mb-4 text-xl font-semibold">
-          Ganancias por Fecha (Empleado {employeePercentage.toFixed(0)}% / Admin {(100 - employeePercentage).toFixed(0)}%)
+          Ganancias por Fecha (Empleado 50% / Admin 50%)
         </h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
@@ -499,13 +439,27 @@ const DataCharts: React.FC<DataChartsProps> = ({
                 <span className="font-bold text-white">${item.value}</span>
               </p>
               <p className="text-sm text-gray-300">
-                Ganancias ({employeePercentage.toFixed(0)}%):{" "}
+                Empleado (50%):{" "}
                 <span className="font-bold text-yellow-400">
                   ${item.employee}
                 </span>
               </p>
+              <p className="text-sm text-gray-300">
+                Admin (50%):{" "}
+                <span className="font-bold text-green-400">${item.admin}</span>
+              </p>
             </div>
           ))}
+
+          <div className="rounded-lg border border-green-700 bg-green-900/20 p-4">
+            <h4 className="mb-2 text-lg font-semibold text-green-400">
+              TOTAL ADMIN
+            </h4>
+            <p className="text-2xl font-bold text-white">
+              ${adminTotal.toFixed(2)}
+            </p>
+            <p className="text-sm text-gray-300">50% de todos los usuarios</p>
+          </div>
         </div>
 
         <div className="h-80">

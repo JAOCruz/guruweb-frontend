@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "../../context/AuthContext";
-import { servicesAPI } from "../../services/api";
 
 interface Service {
   id: number;
@@ -9,65 +8,24 @@ interface Service {
   time: string | null;
   earnings: number;
   date: string;
-  comment?: string | null;
 }
 
 interface EmployeeDataTableProps {
   services: Service[];
-  employeePercentage: number;
 }
 
-const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({
-  services,
-  employeePercentage,
-}) => {
+const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
   const { user } = useAuth();
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
-  const [commentText, setCommentText] = useState<string>("");
-  const [localServices, setLocalServices] = useState<Service[]>(services);
-
-  // Update local services when props change
-  React.useEffect(() => {
-    setLocalServices(services);
-  }, [services]);
 
   // Get display name from user context
   const displayName = user?.dataColumn || user?.username || "Usuario";
-
-  const handleEditComment = (service: Service) => {
-    setEditingCommentId(service.id);
-    setCommentText(service.comment || "");
-  };
-
-  const handleSaveComment = async (serviceId: number) => {
-    try {
-      await servicesAPI.updateComment(serviceId, commentText);
-      // Update local state
-      setLocalServices(
-        localServices.map((s) =>
-          s.id === serviceId ? { ...s, comment: commentText } : s,
-        ),
-      );
-      setEditingCommentId(null);
-      setCommentText("");
-    } catch (error) {
-      console.error("Error updating comment:", error);
-      alert("Error al guardar el comentario");
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingCommentId(null);
-    setCommentText("");
-  };
 
   // Calculate totals
   const total = services.reduce(
     (acc, service) => acc + Number(service.earnings),
     0,
   );
-  const employeeDecimal = employeePercentage / 100;
-  const userShare = total * employeeDecimal;
+  const userShare = total * 0.5;
 
   return (
     <div className="space-y-6">
@@ -82,7 +40,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({
             <p className="text-2xl font-bold text-white">{total.toFixed(2)}</p>
           </div>
           <div className="rounded-lg border border-green-700 bg-green-900/20 p-4">
-            <p className="text-sm text-gray-400">Tu Parte ({employeePercentage.toFixed(0)}%)</p>
+            <p className="text-sm text-gray-400">Tu Parte (50%)</p>
             <p className="text-2xl font-bold text-green-400">
               {userShare.toFixed(2)}
             </p>
@@ -97,93 +55,52 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({
             {displayName}
           </h3>
         </div>
-        <div className="overflow-x-auto">
+        <div>
           <table className="min-w-full table-fixed divide-y divide-gray-800 text-base">
             <thead className="bg-gray-950/70">
               <tr>
-                <th className="w-[25%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
+                <th className="w-[40%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
                   Servicio
                 </th>
-                <th className="w-[15%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
+                <th className="w-[25%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
                   Cliente
                 </th>
-                <th className="w-[10%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
+                <th className="w-[15%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
                   Hora
                 </th>
-                <th className="w-[15%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
-                  Ganancia
-                </th>
-                <th className="w-[35%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
-                  Nota
+                <th className="w-[20%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
+                  Ganancia Total
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800/50 bg-gray-900/40">
-              {localServices.length > 0 ? (
-                localServices.map((service) => (
+              {services.length > 0 ? (
+                services.map((service) => (
                   <tr key={service.id} className="hover:bg-blue-900/10">
                     <td
-                      className="w-[25%] truncate px-6 py-4 text-base text-gray-200"
+                      className="w-[40%] truncate px-6 py-4 text-base text-gray-200"
                       title={service.service_name}
                     >
                       {service.service_name}
                     </td>
                     <td
-                      className="w-[15%] truncate px-6 py-4 text-base text-gray-200"
+                      className="w-[25%] truncate px-6 py-4 text-base text-gray-200"
                       title={service.client || "—"}
                     >
                       {service.client || "—"}
                     </td>
-                    <td className="w-[10%] px-6 py-4 text-base whitespace-nowrap text-gray-200">
+                    <td className="w-[15%] px-6 py-4 text-base whitespace-nowrap text-gray-200">
                       {service.time || "—"}
                     </td>
-                    <td className="w-[15%] px-6 py-4 text-base font-semibold whitespace-nowrap text-blue-200">
+                    <td className="w-[20%] px-6 py-4 text-base font-semibold whitespace-nowrap text-blue-200">
                       {Number(service.earnings).toFixed(2)}
-                    </td>
-                    <td className="w-[35%] px-6 py-4 text-base text-gray-200">
-                      {editingCommentId === service.id ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                            className="flex-1 rounded border border-gray-600 bg-gray-800 px-2 py-1 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
-                            placeholder="Agregar nota..."
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => handleSaveComment(service.id)}
-                            className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-                          >
-                            Guardar
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="rounded bg-gray-600 px-3 py-1 text-sm text-white hover:bg-gray-700"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      ) : (
-                        <div
-                          className="cursor-pointer truncate hover:text-blue-300"
-                          onClick={() => handleEditComment(service)}
-                          title={service.comment || "Click para agregar nota"}
-                        >
-                          {service.comment || (
-                            <span className="text-gray-500 italic">
-                              Agregar nota...
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     className="px-6 py-4 text-center text-base text-gray-400"
                   >
                     No hay servicios registrados
@@ -201,7 +118,6 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({
                 <td className="metallic-3d-text px-6 py-4 text-base font-bold tracking-[0.2em] whitespace-nowrap text-blue-200">
                   {total.toFixed(2)}
                 </td>
-                <td></td>
               </tr>
 
               <tr className="bg-gray-900/50">
@@ -209,12 +125,11 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({
                   className="px-6 py-4 text-base whitespace-nowrap text-gray-300"
                   colSpan={3}
                 >
-                  {displayName} ({employeePercentage.toFixed(0)}%)
+                  {displayName} (50%)
                 </td>
-                <td className="px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
+                <td className="neon-text px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
                   {userShare.toFixed(2)}
                 </td>
-                <td></td>
               </tr>
             </tbody>
           </table>

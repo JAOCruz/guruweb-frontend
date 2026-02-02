@@ -68,8 +68,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
       detailType: string,
       user: WorkerKey,
     ) => {
-      // Changed from [1, 2, 3, -1, -2, -3] to forward-only including 4 for "NOTA"
-      const searchOffsets = [1, 2, 3, 4];
+      const searchOffsets = [1, 2, 3, -1, -2, -3];
       for (const offset of searchOffsets) {
         const candidate = data[currentIndex + offset];
         if (candidate && candidate.DETALLE === detailType)
