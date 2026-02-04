@@ -37,26 +37,36 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const getEmployeeServices = () => {
+    if (isAdmin) return services;
+    const dataCol = (user?.dataColumn || "").toUpperCase();
+    return services.filter(
+      (s: any) => (s.data_column || "").toUpperCase() === dataCol,
+    );
+  };
+
   const transformToExcelFormat = () => {
     if (!services.length) return [];
 
-    // Initialize groupedByUser with ALL USER_COLUMNS, even if they have no services
+    // Initialize groupedByUser with ALL USER_COLUMNS (UPPERCASE)
     const groupedByUser: Record<string, any[]> = {};
-    USER_COLUMNS.forEach((user) => {
-      groupedByUser[user] = [];
+    USER_COLUMNS.forEach((u) => {
+      groupedByUser[u] = [];
     });
 
     services.forEach((service: any) => {
-      const user = service.data_column;
-      if (groupedByUser[user]) {
-        groupedByUser[user].push(service);
+      // Handle case-insensitive mapping
+      const dataCol = (service.data_column || "").toUpperCase();
+      const match = USER_COLUMNS.find((u) => u === dataCol);
+      if (match) {
+        groupedByUser[match].push(service);
       }
     });
 
     const transformed: any[] = [];
     const maxServices = Math.max(
       ...Object.values(groupedByUser).map((arr: any[]) => arr.length),
-      0, // Ensure at least 0
+      0,
     );
 
     for (let i = 0; i < maxServices; i++) {
@@ -66,26 +76,25 @@ const Dashboard: React.FC = () => {
       const earningsRow: any = { DETALLE: "GANANCIA" };
       const commentRow: any = { DETALLE: "NOTA" };
 
-      // IMPORTANT: Iterate over ALL USER_COLUMNS, not just those with data
-      USER_COLUMNS.forEach((user) => {
-        const userServices = groupedByUser[user] || [];
+      USER_COLUMNS.forEach((u) => {
+        const userServices = groupedByUser[u] || [];
         const service = userServices[i];
 
         if (service) {
-          serviceRow[user] = service.service_name;
-          serviceRow[`${user}_id`] = service.id;
+          serviceRow[u] = service.service_name;
+          serviceRow[`${u}_id`] = service.id;
           serviceRow.id = service.id;
 
-          clientRow[user] = service.client || "";
-          timeRow[user] = service.time || "";
-          earningsRow[user] = service.earnings;
-          commentRow[user] = service.comment || "";
+          clientRow[u] = service.client || "";
+          timeRow[u] = service.time || "";
+          earningsRow[u] = service.earnings;
+          commentRow[u] = service.comment || "";
         } else {
-          serviceRow[user] = "";
-          clientRow[user] = "";
-          timeRow[user] = "";
-          earningsRow[user] = "";
-          commentRow[user] = "";
+          serviceRow[u] = "";
+          clientRow[u] = "";
+          timeRow[u] = "";
+          earningsRow[u] = "";
+          commentRow[u] = "";
         }
       });
 
