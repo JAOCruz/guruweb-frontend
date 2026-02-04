@@ -12,18 +12,20 @@ const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Default value for employee share percentage
   const employeePercentage = 50;
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [startDate, endDate]); // Re-fetch when dates change
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await servicesAPI.getServices();
+      const response = await servicesAPI.getServices(startDate, endDate);
       // console.log("Services data:", response.data);
       setServices(response.data);
     } catch (error) {
@@ -107,6 +109,46 @@ const Dashboard: React.FC = () => {
           path="/"
           element={
             <div className="space-y-8">
+              {/* Date Filter Section */}
+              <div className="rounded-2xl border border-slate-700 bg-slate-800 p-4 shadow-xl">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <h3 className="text-lg font-bold text-white">
+                    Filtrar por Fecha
+                  </h3>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-slate-400">Desde</label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs text-slate-400">Hasta</label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    {(startDate || endDate) && (
+                      <button
+                        onClick={() => {
+                          setStartDate("");
+                          setEndDate("");
+                        }}
+                        className="self-end rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600"
+                      >
+                        Limpiar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {isAdmin && <DataModificationForm onServiceAdded={fetchData} />}
 
               {/* Using AdminDataTable for both, but with restricted view for Employees */}
@@ -148,6 +190,7 @@ const Dashboard: React.FC = () => {
             <DataCharts services={services} />
           }
         />
+        <Route path="/flipbooks" element={<FlipbooksSection />} />
       </Routes>
     </DashboardLayout>
   );
