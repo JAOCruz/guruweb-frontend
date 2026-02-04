@@ -14,8 +14,10 @@ const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const getTodayString = () => new Date().toISOString().split("T")[0];
+
+  const [startDate, setStartDate] = useState(getTodayString());
+  const [endDate, setEndDate] = useState(getTodayString());
 
   // Default value for employee share percentage
   const employeePercentage = 50;
