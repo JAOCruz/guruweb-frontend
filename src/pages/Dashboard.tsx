@@ -7,6 +7,7 @@ import DataCharts from "../components/dashboard/DataCharts";
 import FlipbooksSection from "../components/dashboard/FlipbooksSection";
 import { servicesAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { USER_COLUMNS, WorkerKey } from "../services/excelService";
 
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
@@ -38,36 +39,39 @@ const Dashboard: React.FC = () => {
   const transformToExcelFormat = () => {
     if (!services.length) return [];
 
+    // Initialize groupedByUser with ALL USER_COLUMNS, even if they have no services
     const groupedByUser: Record<string, any[]> = {};
+    USER_COLUMNS.forEach((user) => {
+      groupedByUser[user] = [];
+    });
 
     services.forEach((service: any) => {
       const user = service.data_column;
-      if (!groupedByUser[user]) {
-        groupedByUser[user] = [];
+      if (groupedByUser[user]) {
+        groupedByUser[user].push(service);
       }
-      groupedByUser[user].push(service);
     });
 
     const transformed: any[] = [];
     const maxServices = Math.max(
       ...Object.values(groupedByUser).map((arr: any[]) => arr.length),
+      0, // Ensure at least 0
     );
 
-    // If maxServices is -Infinity (empty array), use 0
-    const count = maxServices === -Infinity ? 0 : maxServices;
-
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < maxServices; i++) {
       const serviceRow: any = { DETALLE: "SERVICIO" };
       const clientRow: any = { DETALLE: "CLIENTE" };
       const timeRow: any = { DETALLE: "HORA" };
       const earningsRow: any = { DETALLE: "GANANCIA" };
-      const commentRow: any = { DETALLE: "NOTA" }; // Added to support comments
+      const commentRow: any = { DETALLE: "NOTA" };
 
-      Object.entries(groupedByUser).forEach(([user, userServices]) => {
+      // IMPORTANT: Iterate over ALL USER_COLUMNS, not just those with data
+      USER_COLUMNS.forEach((user) => {
+        const userServices = groupedByUser[user] || [];
         const service = userServices[i];
+
         if (service) {
           serviceRow[user] = service.service_name;
-          // IMPORTANT: Store the ID so AdminDataTable can find it
           serviceRow[`${user}_id`] = service.id;
           serviceRow.id = service.id;
 
