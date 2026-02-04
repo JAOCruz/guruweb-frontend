@@ -165,6 +165,12 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
+              {isAdmin && (
+                <div className="mb-6">
+                  <DataModificationForm onServiceAdded={fetchData} />
+                </div>
+              )}
+
               {isAdmin ? (
                 <AdminDataTable
                   data={transformToExcelFormat()}
