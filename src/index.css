@@ -28,8 +28,16 @@ body {
   font-weight: 800;
 }
 
-/* Neon Glow Effect */
+/* Neon Glow Effect (Base - default to white) */
 .neon-text {
+  color: #ffffff;
+  text-shadow:
+    0 0 7px rgba(255, 255, 255, 0.5),
+    0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Specific Neon Colors */
+.neon-yellow {
   color: #fbbf24; /* amber-400 */
   text-shadow:
     0 0 7px rgba(251, 191, 36, 0.5),

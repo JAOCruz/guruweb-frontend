@@ -310,15 +310,15 @@ const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
               data={barData}
               margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
               <XAxis
                 dataKey="name"
-                stroke="#999"
+                stroke="#cbd5e1"
                 angle={-45}
                 textAnchor="end"
                 height={100}
               />
-              <YAxis stroke="#999" />
+              <YAxis stroke="#cbd5e1" />
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {

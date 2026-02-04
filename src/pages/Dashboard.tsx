@@ -151,15 +151,26 @@ const Dashboard: React.FC = () => {
                       />
                     </div>
                     {(startDate || endDate) && (
-                      <button
-                        onClick={() => {
-                          setStartDate("");
-                          setEndDate("");
-                        }}
-                        className="self-end rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600"
-                      >
-                        Limpiar
-                      </button>
+                      <div className="flex gap-2 self-end">
+                        <button
+                          onClick={() => {
+                            setStartDate(getTodayString());
+                            setEndDate(getTodayString());
+                          }}
+                          className="rounded-lg bg-blue-600/20 px-4 py-2 text-sm text-blue-300 transition-colors hover:bg-blue-600/30"
+                        >
+                          Hoy
+                        </button>
+                        <button
+                          onClick={() => {
+                            setStartDate("");
+                            setEndDate("");
+                          }}
+                          className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600"
+                        >
+                          Limpiar
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
