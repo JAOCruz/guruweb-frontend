@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import AdminDataTable from "../components/dashboard/AdminDataTable";
+import EmployeeDataTable from "../components/dashboard/EmployeeDataTable";
 import DataModificationForm from "../components/dashboard/DataModificationForm";
 import DataCharts from "../components/dashboard/DataCharts";
 import FlipbooksSection from "../components/dashboard/FlipbooksSection";
@@ -153,20 +154,20 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              {isAdmin && <DataModificationForm onServiceAdded={fetchData} />}
-
-              {/* Using AdminDataTable for both, but with restricted view for Employees */}
-              <AdminDataTable
-                data={transformToExcelFormat()}
-                onSort={() => {}}
-                onServiceDeleted={fetchData}
-                employeePercentage={employeePercentage}
-                isEmployeeView={!isAdmin}
-                currentEmployee={user?.dataColumn || undefined}
-              />
-
-              {/* Show Flipbooks for everyone */}
-              {!isAdmin && <FlipbooksSection />}
+              {isAdmin ? (
+                <AdminDataTable
+                  data={transformToExcelFormat()}
+                  onSort={() => {}}
+                  onServiceDeleted={fetchData}
+                  employeePercentage={employeePercentage}
+                  isEmployeeView={false}
+                />
+              ) : (
+                <div className="space-y-8">
+                  <EmployeeDataTable services={getEmployeeServices()} />
+                  <FlipbooksSection />
+                </div>
+              )}
             </div>
           }
         />
@@ -174,14 +175,16 @@ const Dashboard: React.FC = () => {
           path="/data"
           element={
             <div className="space-y-8">
-              <AdminDataTable
-                data={transformToExcelFormat()}
-                onSort={() => {}}
-                onServiceDeleted={fetchData}
-                employeePercentage={employeePercentage}
-                isEmployeeView={!isAdmin}
-                currentEmployee={user?.dataColumn || undefined}
-              />
+              {isAdmin ? (
+                <AdminDataTable
+                  data={transformToExcelFormat()}
+                  onSort={() => {}}
+                  onServiceDeleted={fetchData}
+                  employeePercentage={employeePercentage}
+                />
+              ) : (
+                <EmployeeDataTable services={getEmployeeServices()} />
+              )}
               {!isAdmin && <FlipbooksSection />}
             </div>
           }
