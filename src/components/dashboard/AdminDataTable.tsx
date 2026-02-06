@@ -246,17 +246,17 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
   const usersToRender = activeUser === "all" ? USER_COLUMNS : [activeUser];
 
   return (
-    <div className="animate-in fade-in space-y-6 duration-500">
+    <div className="animate-in fade-in space-y-8 duration-500">
       {/* 1. HEADER: Tabs y Botón IA */}
-      <div className="flex flex-col items-center justify-between gap-4 border-b border-slate-800 pb-4 md:flex-row">
+      <div className="flex flex-col items-center justify-between gap-6 border-b border-white/5 pb-6 md:flex-row">
         {/* Tabs de Usuario */}
         {!isEmployeeView && (
           <div className="scrollbar-hide flex w-full gap-2 overflow-x-auto pb-2 md:w-auto md:pb-0">
             <button
               onClick={() => setActiveUser("all")}
-              className={`rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+              className={`rounded-lg px-4 py-1.5 text-xs font-bold tracking-wide whitespace-nowrap uppercase transition-all ${
                 activeUser === "all"
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-900/40"
+                  ? "bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.4)]"
                   : "bg-slate-800 text-slate-400 hover:bg-slate-700"
               }`}
             >
@@ -266,9 +266,9 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
               <button
                 key={user}
                 onClick={() => setActiveUser(user)}
-                className={`rounded-xl px-4 py-2 text-sm font-medium transition-all ${
+                className={`rounded-lg px-4 py-1.5 text-xs font-bold tracking-wide whitespace-nowrap uppercase transition-all ${
                   activeUser === user
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-900/40"
+                    ? "bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.4)]"
                     : "bg-slate-800 text-slate-400 hover:bg-slate-700"
                 }`}
               >
@@ -281,109 +281,104 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
         {/* Botón IA */}
         <button
           onClick={handleGenerateInsights}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-purple-900/30 transition-all hover:scale-105 hover:from-indigo-500 hover:to-purple-500"
+          className="flex items-center gap-2 rounded-xl border border-transparent bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_15px_rgba(147,51,234,0.5)] transition-all duration-300 hover:bg-purple-500"
         >
-          <Sparkles size={16} /> Insights IA
+          <Sparkles size={16} />
+          Insights IA
         </button>
       </div>
 
-      {/* 2. RESUMEN CARDS (Estilo Moderno) */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {!isEmployeeView && (
-          <div className="rounded-2xl border border-slate-700/50 bg-slate-800/50 p-4 backdrop-blur-sm">
-            <h4 className="mb-1 text-xs font-bold text-slate-400 uppercase">
-              Total Admin
-            </h4>
-            <p className="text-3xl font-bold text-emerald-400">${adminTotal}</p>
-          </div>
-        )}
-
-        {usersToRender.map((user) => (
-          <div
-            key={`stat-${user}`}
-            className="rounded-2xl border border-slate-700 bg-slate-800 p-4 shadow-sm"
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-bold text-white">{user}</span>
-              <span className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-300">
-                {groupedData[user].length} serv.
-              </span>
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Total:</span>
-                <span className="font-medium text-white">
-                  ${userTotals[user].total}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Admin:</span>
-                <span className="font-medium text-blue-400">
-                  ${userTotals[user].adminShare}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Usuario:</span>
-                <span className="font-medium text-yellow-400">
-                  ${userTotals[user].userShare}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* 3. TABLAS / LISTAS DE SERVICIOS */}
+      {/* 2. TABLAS / LISTAS DE SERVICIOS */}
       {usersToRender.map((user) => (
         <div
           key={user}
-          className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-xl"
+          className="overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] shadow-xl"
         >
           {/* Header de la Tabla */}
-          <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950/50 px-6 py-4">
-            <h3 className="text-lg font-bold tracking-wide text-slate-200">
+          <div className="flex items-center justify-between border-b border-slate-700/50 bg-[#1A233A] p-5">
+            <h3 className="font-bold tracking-wide text-white uppercase">
               {user}
             </h3>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="font-bold tracking-widest text-slate-400 uppercase">
+                Total:{" "}
+                <span className="text-blue-400">${userTotals[user].total}</span>
+              </span>
+              <span className="font-bold tracking-widest text-slate-400 uppercase">
+                Admin:{" "}
+                <span className="text-emerald-400">
+                  ${userTotals[user].adminShare}
+                </span>
+              </span>
+            </div>
           </div>
 
           {/* VISTA ESCRITORIO (Tabla) */}
           <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-left text-sm text-slate-400">
-              <thead className="bg-slate-950/30 text-xs font-semibold text-slate-500 uppercase">
+            <table className="w-full text-left">
+              <thead className="bg-[#111827] text-[10px] font-bold tracking-wider text-slate-400 uppercase">
                 <tr>
-                  <th className="px-6 py-4">Hora</th>
-                  <th className="px-6 py-4">Servicio</th>
-                  <th className="px-6 py-4">Cliente</th>
-                  <th className="px-6 py-4">Ganancia</th>
-                  <th className="w-1/3 px-6 py-4">Nota</th>
-                  <th className="px-6 py-4 text-center">Acción</th>
+                  <th className="p-5">Hora</th>
+                  <th className="p-5">Servicio / Cliente</th>
+                  <th className="p-5">Ganancia</th>
+                  <th className="p-5">Participación</th>
+                  <th className="p-5">Nota</th>
+                  <th className="p-5 text-center">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-700/50">
                 {groupedData[user].length > 0 ? (
                   groupedData[user].map((item, idx) => {
                     const isEditing = editingCommentId === `${user}-${idx}`;
                     return (
                       <tr
                         key={`${user}-${idx}`}
-                        className="group transition-colors hover:bg-slate-800/50"
+                        className="transition-colors hover:bg-slate-800/50"
                       >
-                        <td className="px-6 py-4 font-mono">
+                        <td className="p-5 font-mono text-xs text-slate-400">
                           {item.time || "--:--"}
                         </td>
-                        <td className="px-6 py-4 font-medium text-slate-200">
-                          {item.service}
+                        <td className="p-5">
+                          <div className="text-sm font-bold text-slate-200">
+                            {item.service}
+                          </div>
+                          <div className="mt-1 text-xs text-blue-400">
+                            {item.client || "Cliente General"}
+                          </div>
                         </td>
-                        <td className="px-6 py-4">{item.client || "—"}</td>
-                        <td className="px-6 py-4 font-bold text-emerald-400">
+                        <td className="p-5 font-mono font-bold text-emerald-400">
                           ${item.earnings}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="p-5">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                              Admin:{" "}
+                              <span className="text-blue-400">
+                                $
+                                {(
+                                  item.earnings *
+                                  (1 - employeePercentage / 100)
+                                ).toFixed(2)}
+                              </span>
+                            </span>
+                            <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                              User:{" "}
+                              <span className="text-yellow-400">
+                                $
+                                {(
+                                  item.earnings *
+                                  (employeePercentage / 100)
+                                ).toFixed(2)}
+                              </span>
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-5">
                           {isEditing ? (
                             <div className="flex gap-2">
                               <input
                                 autoFocus
-                                className="w-full rounded border border-slate-600 bg-slate-800 px-2 py-1 text-white focus:border-blue-500 focus:outline-none"
+                                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none"
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
                               />
@@ -391,15 +386,15 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                                 onClick={() =>
                                   handleSaveComment(item.id, user, idx)
                                 }
-                                className="text-green-400"
+                                className="rounded-lg bg-blue-600/20 p-1.5 text-blue-400 transition-all hover:bg-blue-600 hover:text-white"
                               >
-                                <Check size={18} />
+                                <Check size={14} />
                               </button>
                               <button
                                 onClick={() => setEditingCommentId(null)}
-                                className="text-red-400"
+                                className="rounded-lg bg-red-600/20 p-1.5 text-red-400 transition-all hover:bg-red-600 hover:text-white"
                               >
-                                <X size={18} />
+                                <X size={14} />
                               </button>
                             </div>
                           ) : (
@@ -410,30 +405,31 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                                   item.comment || "",
                                 )
                               }
-                              className="group/edit flex cursor-pointer items-center gap-2 hover:text-blue-400"
+                              className="group/edit flex cursor-pointer items-center gap-2 text-xs text-slate-400 transition-colors hover:text-blue-400"
                             >
-                              <span className="max-w-[200px] truncate">
-                                {item.comment || (
-                                  <span className="text-slate-600 italic">
-                                    Agregar nota...
-                                  </span>
-                                )}
+                              <span className="max-w-[150px] truncate italic">
+                                {item.comment || "Agregar nota..."}
                               </span>
                             </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            disabled={deletingId === item.id}
-                            className="rounded p-2 text-slate-600 opacity-0 transition-all group-hover:opacity-100 hover:bg-red-400/10 hover:text-red-400"
-                          >
-                            {deletingId === item.id ? (
-                              <Loader2 className="animate-spin" size={16} />
-                            ) : (
-                              <Trash2 size={16} />
-                            )}
-                          </button>
+                        <td className="p-5 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button className="rounded-lg bg-slate-800 p-2 text-blue-400 transition-colors hover:bg-slate-700">
+                              <MessageCircle size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              disabled={deletingId === item.id}
+                              className="rounded-lg bg-slate-800 p-2 text-slate-500 transition-all hover:bg-red-900/40 hover:text-red-400"
+                            >
+                              {deletingId === item.id ? (
+                                <Loader2 className="animate-spin" size={16} />
+                              ) : (
+                                <Trash2 size={16} />
+                              )}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -442,7 +438,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                   <tr>
                     <td
                       colSpan={6}
-                      className="px-6 py-8 text-center text-slate-600"
+                      className="p-8 text-center text-sm text-slate-500 italic"
                     >
                       Sin servicios registrados hoy
                     </td>

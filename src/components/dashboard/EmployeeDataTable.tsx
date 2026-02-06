@@ -28,72 +28,68 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
   const userShare = total * 0.5;
 
   return (
-    <div className="space-y-6">
-      {/* Summary Card */}
-      <div className="perspective-container rounded-lg border border-blue-700 bg-blue-900/20 p-6">
-        <h3 className="metallic-3d-text mb-4 text-2xl font-semibold">
-          Resumen de {displayName}
-        </h3>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-lg border border-gray-700 bg-gray-800/80 p-4">
-            <p className="text-sm text-gray-400">Total Ganado</p>
-            <p className="text-2xl font-bold text-white">{total.toFixed(2)}</p>
-          </div>
-          <div className="rounded-lg border border-green-700 bg-green-900/20 p-4">
-            <p className="text-sm text-gray-400">Tu Parte (50%)</p>
-            <p className="text-2xl font-bold text-green-400">
-              {userShare.toFixed(2)}
-            </p>
-          </div>
+    <div className="animate-in fade-in space-y-8 duration-500">
+      {/* Summary Section / Stats */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="group relative overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] p-6 shadow-lg transition-all duration-300 hover:border-blue-500/30">
+          <p className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
+            Total Ganancias
+          </p>
+          <h3 className="font-display text-3xl font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]">
+            ${total.toFixed(2)}
+          </h3>
+          <div className="absolute -right-10 -bottom-10 h-24 w-24 rounded-full bg-blue-500/10 blur-3xl" />
+        </div>
+        <div className="group relative overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] p-6 shadow-lg transition-all duration-300 hover:border-emerald-500/30">
+          <p className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
+            Tu Participación (50%)
+          </p>
+          <h3 className="font-display text-3xl font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]">
+            ${userShare.toFixed(2)}
+          </h3>
+          <div className="absolute -right-10 -bottom-10 h-24 w-24 rounded-full bg-emerald-500/10 blur-3xl" />
         </div>
       </div>
 
       {/* Services Table */}
-      <div className="rounded-2xl border border-blue-900/30 bg-gray-900/70 shadow-lg backdrop-blur-md">
-        <div className="border-b border-blue-900/30 bg-gray-950/80 px-6 py-4">
-          <h3 className="metallic-3d-text text-2xl font-semibold tracking-[0.25em] uppercase">
-            {displayName}
+      <div className="overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] shadow-xl">
+        <div className="border-b border-slate-700/50 bg-[#1A233A] p-5">
+          <h3 className="font-bold tracking-wide text-white uppercase">
+            Servicios: {displayName}
           </h3>
         </div>
-        <div>
-          <table className="min-w-full table-fixed divide-y divide-gray-800 text-base">
-            <thead className="bg-gray-950/70">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-[#111827] text-[10px] font-bold tracking-wider text-slate-400 uppercase">
               <tr>
-                <th className="w-[40%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
-                  Servicio
-                </th>
-                <th className="w-[25%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
-                  Cliente
-                </th>
-                <th className="w-[15%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
-                  Hora
-                </th>
-                <th className="w-[20%] px-6 py-4 text-left text-sm font-semibold tracking-[0.2em] text-blue-300 uppercase">
-                  Ganancia Total
-                </th>
+                <th className="p-5">Servicio</th>
+                <th className="p-5">Cliente</th>
+                <th className="p-5">Hora</th>
+                <th className="p-5">Ganancia Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/50 bg-gray-900/40">
+            <tbody className="divide-y divide-slate-700/50 font-sans">
               {services.length > 0 ? (
                 services.map((service) => (
-                  <tr key={service.id} className="hover:bg-blue-900/10">
-                    <td
-                      className="w-[40%] truncate px-6 py-4 text-base text-gray-200"
-                      title={service.service_name}
-                    >
-                      {service.service_name}
+                  <tr
+                    key={service.id}
+                    className="transition-colors hover:bg-slate-800/50"
+                  >
+                    <td className="p-5">
+                      <div className="text-sm font-bold text-slate-200">
+                        {service.service_name}
+                      </div>
                     </td>
-                    <td
-                      className="w-[25%] truncate px-6 py-4 text-base text-gray-200"
-                      title={service.client || "—"}
-                    >
-                      {service.client || "—"}
+                    <td className="p-5">
+                      <div className="text-xs text-blue-400">
+                        {service.client || "—"}
+                      </div>
                     </td>
-                    <td className="w-[15%] px-6 py-4 text-base whitespace-nowrap text-gray-200">
+                    <td className="p-5 font-mono text-xs text-slate-400">
                       {service.time || "—"}
                     </td>
-                    <td className="w-[20%] px-6 py-4 text-base font-semibold whitespace-nowrap text-blue-200">
-                      {Number(service.earnings).toFixed(2)}
+                    <td className="p-5 font-mono font-bold text-emerald-400">
+                      ${Number(service.earnings).toFixed(2)}
                     </td>
                   </tr>
                 ))
@@ -101,37 +97,29 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                 <tr>
                   <td
                     colSpan={4}
-                    className="px-6 py-4 text-center text-base text-gray-400"
+                    className="p-8 text-center text-sm text-slate-500 italic"
                   >
-                    No hay servicios registrados
+                    No hay servicios registrados hoy
                   </td>
                 </tr>
               )}
-              {/* Total row */}
-              <tr className="bg-gray-900/80">
-                <td
-                  className="metallic-3d-text px-6 py-4 text-base font-bold tracking-[0.2em] whitespace-nowrap"
-                  colSpan={3}
-                >
-                  TOTAL
-                </td>
-                <td className="metallic-3d-text px-6 py-4 text-base font-bold tracking-[0.2em] whitespace-nowrap text-blue-200">
-                  {total.toFixed(2)}
-                </td>
-              </tr>
-
-              <tr className="bg-gray-900/50">
-                <td
-                  className="px-6 py-4 text-base whitespace-nowrap text-gray-300"
-                  colSpan={3}
-                >
-                  {displayName} (50%)
-                </td>
-                <td className="neon-text px-6 py-4 text-base font-semibold whitespace-nowrap text-yellow-400">
-                  {userShare.toFixed(2)}
-                </td>
-              </tr>
             </tbody>
+            {/* Table Footer / Summary Row */}
+            {services.length > 0 && (
+              <tfoot className="border-t border-slate-700/50 bg-[#111827]/50">
+                <tr>
+                  <td
+                    colSpan={3}
+                    className="p-5 text-right text-xs font-bold tracking-widest text-slate-400 uppercase"
+                  >
+                    Total del Día
+                  </td>
+                  <td className="p-5 font-mono text-lg font-bold text-white">
+                    ${total.toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       </div>

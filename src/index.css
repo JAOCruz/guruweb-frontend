@@ -2,12 +2,11 @@
 
 html,
 body {
-  height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+  min-height: 100dvh; /* Use dynamic viewport height for mobile browsers */
   width: 100%;
   background-color: #0f172a; /* slate-950 */
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent body scroll completely, let layout handle it */
 }
 
 /* 3D Perspective Container */

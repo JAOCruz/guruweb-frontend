@@ -6,9 +6,11 @@ import EmployeeDataTable from "../components/dashboard/EmployeeDataTable";
 import DataModificationForm from "../components/dashboard/DataModificationForm";
 import DataCharts from "../components/dashboard/DataCharts";
 import FlipbooksSection from "../components/dashboard/FlipbooksSection";
+import StatsCard from "../components/dashboard/StatsCard";
 import { servicesAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { USER_COLUMNS, WorkerKey } from "../services/excelService";
+import { Zap } from "lucide-react";
+import { USER_COLUMNS } from "../services/excelService";
 
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
@@ -125,56 +127,121 @@ const Dashboard: React.FC = () => {
           path="/"
           element={
             <div className="space-y-8">
-              {/* Date Filter Section */}
-              <div className="rounded-2xl border border-slate-700 bg-slate-800 p-4 shadow-xl">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <h3 className="text-lg font-bold text-white">
-                    Filtrar por Fecha
-                  </h3>
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs text-slate-400">Desde</label>
+              {/* Header / Top Bar for Page */}
+              <div className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+                <div>
+                  <h2 className="font-display mb-2 text-3xl font-bold text-white">
+                    Resumen Operativo
+                  </h2>
+                  <p className="text-sm text-slate-400">
+                    Gestiona y visualiza el rendimiento en tiempo real.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* Date Filter Integrated into Header style */}
+                  <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-2 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-1.5">
+                      <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                        Desde
+                      </span>
                       <input
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        className="cursor-pointer border-none bg-transparent p-0 text-sm text-white focus:outline-none"
                       />
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs text-slate-400">Hasta</label>
+                    <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-1.5">
+                      <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                        Hasta
+                      </span>
                       <input
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        className="cursor-pointer border-none bg-transparent p-0 text-sm text-white focus:outline-none"
                       />
                     </div>
-                    {(startDate || endDate) && (
-                      <div className="flex gap-2 self-end">
-                        <button
-                          onClick={() => {
-                            setStartDate(getTodayString());
-                            setEndDate(getTodayString());
-                          }}
-                          className="rounded-lg bg-blue-600/20 px-4 py-2 text-sm text-blue-300 transition-colors hover:bg-blue-600/30"
-                        >
-                          Hoy
-                        </button>
-                        <button
-                          onClick={() => {
-                            setStartDate("");
-                            setEndDate("");
-                          }}
-                          className="rounded-lg bg-slate-700 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-600"
-                        >
-                          Limpiar
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          setStartDate(getTodayString());
+                          setEndDate(getTodayString());
+                        }}
+                        className="rounded-xl border border-blue-500/20 bg-blue-600/20 px-3 py-1.5 text-[10px] font-bold tracking-widest text-blue-400 uppercase transition-all hover:bg-blue-600 hover:text-white"
+                      >
+                        Hoy
+                      </button>
+                      <button
+                        onClick={() => {
+                          setStartDate("");
+                          setEndDate("");
+                        }}
+                        className="rounded-xl border border-slate-600 bg-slate-700/50 px-3 py-1.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-700 hover:text-white"
+                      >
+                        Limpiar
+                      </button>
+                    </div>
                   </div>
+                  <button className="flex items-center gap-2 rounded-2xl bg-purple-600 px-5 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(147,51,234,0.5)] transition-all duration-300 hover:bg-purple-500">
+                    <Zap size={16} />
+                    Insights IA
+                  </button>
                 </div>
               </div>
+
+              {/* STATS SECTION */}
+              {isAdmin && (
+                <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <StatsCard
+                    label="Total Admin"
+                    value={`$${services.reduce((acc, s: any) => acc + (s.earnings || 0), 0).toLocaleString()}`}
+                    subValue={`${services.length} serv.`}
+                    color="text-emerald-400"
+                    delay={0.1}
+                  />
+                  {/* Dynamic stats for workers could go here, for now using placeholders matching the requested design concept */}
+                  <StatsCard
+                    label="Hengi"
+                    value={`$${services
+                      .filter(
+                        (s: any) =>
+                          (s.data_column || "").toUpperCase() === "HENGI",
+                      )
+                      .reduce((acc, s: any) => acc + (s.earnings || 0), 0)
+                      .toLocaleString()}`}
+                    subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "HENGI").length} serv.`}
+                    color="text-blue-400"
+                    delay={0.2}
+                  />
+                  <StatsCard
+                    label="Marleni"
+                    value={`$${services
+                      .filter(
+                        (s: any) =>
+                          (s.data_column || "").toUpperCase() === "MARLENI",
+                      )
+                      .reduce((acc, s: any) => acc + (s.earnings || 0), 0)
+                      .toLocaleString()}`}
+                    subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "MARLENI").length} serv.`}
+                    color="text-purple-400"
+                    delay={0.3}
+                  />
+                  <StatsCard
+                    label="Israel"
+                    value={`$${services
+                      .filter(
+                        (s: any) =>
+                          (s.data_column || "").toUpperCase() === "ISRAEL",
+                      )
+                      .reduce((acc, s: any) => acc + (s.earnings || 0), 0)
+                      .toLocaleString()}`}
+                    subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "ISRAEL").length} serv.`}
+                    color="text-pink-400"
+                    delay={0.4}
+                  />
+                </div>
+              )}
 
               {isAdmin && (
                 <div className="mb-6">
