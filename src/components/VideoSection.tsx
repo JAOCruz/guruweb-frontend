@@ -77,7 +77,7 @@ const VideoSection: React.FC = () => {
                   <Play size={20} fill="currentColor" />
                 </div>
                 <span className="font-[Space_Grotesk] text-lg font-bold tracking-wide">
-                  Dejale el trabajo sucio al Gurú, haz click aquí ya!
+                  Déjale el trabajo sucio al Gurú, haz click aquí ya!
                 </span>
               </div>
             </motion.a>
