@@ -11,6 +11,7 @@ import { servicesAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap } from "lucide-react";
 import { USER_COLUMNS } from "../services/excelService";
+import { formatCurrency } from "../utils";
 
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
@@ -195,7 +196,12 @@ const Dashboard: React.FC = () => {
                 <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <StatsCard
                     label="Total Admin"
-                    value={`$${services.reduce((acc, s: any) => acc + (s.earnings || 0), 0).toLocaleString()}`}
+                    value={formatCurrency(
+                      services.reduce(
+                        (acc, s: any) => acc + (Number(s.earnings) || 0),
+                        0,
+                      ),
+                    )}
                     subValue={`${services.length} serv.`}
                     color="text-emerald-400"
                     delay={0.1}
@@ -203,39 +209,51 @@ const Dashboard: React.FC = () => {
                   {/* Dynamic stats for workers could go here, for now using placeholders matching the requested design concept */}
                   <StatsCard
                     label="Hengi"
-                    value={`$${services
-                      .filter(
-                        (s: any) =>
-                          (s.data_column || "").toUpperCase() === "HENGI",
-                      )
-                      .reduce((acc, s: any) => acc + (s.earnings || 0), 0)
-                      .toLocaleString()}`}
+                    value={formatCurrency(
+                      services
+                        .filter(
+                          (s: any) =>
+                            (s.data_column || "").toUpperCase() === "HENGI",
+                        )
+                        .reduce(
+                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          0,
+                        ),
+                    )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "HENGI").length} serv.`}
                     color="text-blue-400"
                     delay={0.2}
                   />
                   <StatsCard
                     label="Marleni"
-                    value={`$${services
-                      .filter(
-                        (s: any) =>
-                          (s.data_column || "").toUpperCase() === "MARLENI",
-                      )
-                      .reduce((acc, s: any) => acc + (s.earnings || 0), 0)
-                      .toLocaleString()}`}
+                    value={formatCurrency(
+                      services
+                        .filter(
+                          (s: any) =>
+                            (s.data_column || "").toUpperCase() === "MARLENI",
+                        )
+                        .reduce(
+                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          0,
+                        ),
+                    )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "MARLENI").length} serv.`}
                     color="text-purple-400"
                     delay={0.3}
                   />
                   <StatsCard
                     label="Israel"
-                    value={`$${services
-                      .filter(
-                        (s: any) =>
-                          (s.data_column || "").toUpperCase() === "ISRAEL",
-                      )
-                      .reduce((acc, s: any) => acc + (s.earnings || 0), 0)
-                      .toLocaleString()}`}
+                    value={formatCurrency(
+                      services
+                        .filter(
+                          (s: any) =>
+                            (s.data_column || "").toUpperCase() === "ISRAEL",
+                        )
+                        .reduce(
+                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          0,
+                        ),
+                    )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "ISRAEL").length} serv.`}
                     color="text-pink-400"
                     delay={0.4}

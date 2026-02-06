@@ -1,5 +1,5 @@
-import React from "react";
 import { useAuth } from "../../context/AuthContext";
+import { formatCurrency } from "../../utils";
 
 interface Service {
   id: number;
@@ -35,8 +35,8 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
           <p className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
             Total Ganancias
           </p>
-          <h3 className="font-display text-3xl font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]">
-            ${total.toFixed(2)}
+          <h3 className="font-display font-mono text-3xl font-bold text-blue-400 drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]">
+            {formatCurrency(total)}
           </h3>
           <div className="absolute -right-10 -bottom-10 h-24 w-24 rounded-full bg-blue-500/10 blur-3xl" />
         </div>
@@ -44,8 +44,8 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
           <p className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
             Tu Participación (50%)
           </p>
-          <h3 className="font-display text-3xl font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]">
-            ${userShare.toFixed(2)}
+          <h3 className="font-display font-mono text-3xl font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]">
+            {formatCurrency(userShare)}
           </h3>
           <div className="absolute -right-10 -bottom-10 h-24 w-24 rounded-full bg-emerald-500/10 blur-3xl" />
         </div>
@@ -89,7 +89,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                       {service.time || "—"}
                     </td>
                     <td className="p-5 font-mono font-bold text-emerald-400">
-                      ${Number(service.earnings).toFixed(2)}
+                      {formatCurrency(service.earnings)}
                     </td>
                   </tr>
                 ))
@@ -115,7 +115,7 @@ const EmployeeDataTable: React.FC<EmployeeDataTableProps> = ({ services }) => {
                     Total del Día
                   </td>
                   <td className="p-5 font-mono text-lg font-bold text-white">
-                    ${total.toFixed(2)}
+                    {formatCurrency(total)}
                   </td>
                 </tr>
               </tfoot>

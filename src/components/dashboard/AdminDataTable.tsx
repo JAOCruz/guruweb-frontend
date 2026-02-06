@@ -11,6 +11,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
+import { formatCurrency } from "../../utils";
 
 // --- TIPOS ---
 interface AdminDataTableProps {
@@ -130,11 +131,14 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
   const calculateUserTotals = () => {
     const totals: any = {};
     USER_COLUMNS.forEach((user) => {
-      const total = groupedData[user].reduce((acc, s) => acc + s.earnings, 0);
+      const total = groupedData[user].reduce(
+        (acc, s) => acc + (Number(s.earnings) || 0),
+        0,
+      );
       totals[user] = {
         total,
-        adminShare: Number((total * (1 - employeePercentage / 100)).toFixed(2)),
-        userShare: Number((total * (employeePercentage / 100)).toFixed(2)),
+        adminShare: total * (1 - employeePercentage / 100),
+        userShare: total * (employeePercentage / 100),
       };
     });
     return totals;
@@ -299,15 +303,17 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
             <h3 className="font-bold tracking-wide text-white uppercase">
               {user}
             </h3>
-            <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-4 font-mono text-xs">
               <span className="font-bold tracking-widest text-slate-400 uppercase">
                 Total:{" "}
-                <span className="text-blue-400">${userTotals[user].total}</span>
+                <span className="text-blue-400">
+                  {formatCurrency(userTotals[user].total)}
+                </span>
               </span>
               <span className="font-bold tracking-widest text-slate-400 uppercase">
                 Admin:{" "}
                 <span className="text-emerald-400">
-                  ${userTotals[user].adminShare}
+                  {formatCurrency(userTotals[user].adminShare)}
                 </span>
               </span>
             </div>
@@ -347,28 +353,25 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                           </div>
                         </td>
                         <td className="p-5 font-mono font-bold text-emerald-400">
-                          ${item.earnings}
+                          {formatCurrency(item.earnings)}
                         </td>
                         <td className="p-5">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-1 font-mono">
                             <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
                               Admin:{" "}
                               <span className="text-blue-400">
-                                $
-                                {(
+                                {formatCurrency(
                                   item.earnings *
-                                  (1 - employeePercentage / 100)
-                                ).toFixed(2)}
+                                    (1 - employeePercentage / 100),
+                                )}
                               </span>
                             </span>
                             <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
                               User:{" "}
                               <span className="text-yellow-400">
-                                $
-                                {(
-                                  item.earnings *
-                                  (employeePercentage / 100)
-                                ).toFixed(2)}
+                                {formatCurrency(
+                                  item.earnings * (employeePercentage / 100),
+                                )}
                               </span>
                             </span>
                           </div>
