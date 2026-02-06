@@ -29,25 +29,25 @@ const TestimonialsSection: React.FC = () => {
     {
       id: 1,
       rating: 5,
-      text: "Mi compañero y yo quedamos muy a gusto con sus servicios. ¡Gracias!",
+      text: "Son muy profesionales, una vez me estaban por cerrar procuraduria y esa gente me ayudaron muy amablemente a crear el documento sin errores y bastantee rapidos, excelentee atencion",
       author: "Cliente Satisfecho",
     },
     {
       id: 2,
       rating: 5,
-      text: "El equipo de Guru es muy eficiente, me recibieron rápido y sin errores.",
+      text: "Recuerdo una vez estaba haciendo una maestria en italia, ellos me ayudaron a traducir y apoatillar los documentos por ahi mismo, no tuve que hablar mucho, excelentee manejoo",
       author: "Usuario de Redacción",
     },
     {
       id: 3,
       rating: 5,
-      text: "Cuando recibí el servicio de Guru Soluciones quedé convencido de que el documento estaba perfecto. Muy recomendado.",
+      text: "Estaba cerca de la feria, me dijeron que vaya donde un tal guru que me ayuda con la correccion de documentos con maquina de escribir... que mayimbe mano!",
       author: "Profesional Legal",
     },
     {
       id: 4,
       rating: 5,
-      text: "En Guru me mandaron rápido logrando irme de viaje a tiempo. ¡Excelente servicio!",
+      text: "Soy abogado de muchos años en el oficio, te cuento es bastante comodo mandar a pedir una certificacion de estatus juridico o la redaccion de expedientes con ellos, no tengo que moverme de mi casa para nada compadre, bendiciones de lo alto para su negocioo!",
       author: "Familia Unida",
     },
   ];
