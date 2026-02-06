@@ -71,7 +71,7 @@ const LocationSection: React.FC = () => {
               ></iframe>
 
               {/* HUD Overlay */}
-              <div className="absolute top-6 left-6 rounded-xl border border-blue-500/20 bg-[#020617]/80 p-4 shadow-2xl backdrop-blur-md">
+              <div className="absolute bottom-8 left-8 rounded-xl border border-blue-500/20 bg-[#020617]/80 p-4 shadow-2xl backdrop-blur-md">
                 <div className="mb-1 font-[Space_Grotesk] text-xs font-bold tracking-widest text-blue-400 uppercase">
                   Punto de Acceso
                 </div>
