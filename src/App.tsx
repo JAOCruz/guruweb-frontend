@@ -1,4 +1,3 @@
-import NavBar from "../src/components/NavBar";
 import HeroSection from "../src/components/HeroSection";
 import VideoSection from "../src/components/VideoSection";
 import AboutSection from "../src/components/AboutSection";
@@ -28,8 +27,7 @@ function App() {
         backgroundAttachment: "fixed",
       }}
     >
-      <NavBar />
-      <div className="pt-20 md:pt-24">
+      <div className="pt-0">
         <HeroSection />
         <AboutSection />
         <VideoSection />

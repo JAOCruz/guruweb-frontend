@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Star, Quote } from "lucide-react";
 
 const TestimonialsSection: React.FC = () => {
   const containerVariants = {
@@ -7,19 +8,19 @@ const TestimonialsSection: React.FC = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1,
+        staggerChildren: 0.15,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.5,
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1],
       },
     },
   };
@@ -29,76 +30,109 @@ const TestimonialsSection: React.FC = () => {
       id: 1,
       rating: 5,
       text: "Mi compañero y yo quedamos muy a gusto con sus servicios. ¡Gracias!",
+      author: "Cliente Satisfecho",
     },
     {
       id: 2,
       rating: 5,
       text: "El equipo de Guru es muy eficiente, me recibieron rápido y sin errores.",
+      author: "Usuario de Redacción",
     },
     {
       id: 3,
       rating: 5,
-      text: "Me adscriben consiste mucho enviar el digite los contratos, sin embargo, cuando recibí el servicio de Guru Soluciones quedé completado de que el documento estaba perfecto.",
+      text: "Cuando recibí el servicio de Guru Soluciones quedé convencido de que el documento estaba perfecto. Muy recomendado.",
+      author: "Profesional Legal",
     },
     {
       id: 4,
       rating: 5,
-      text: "Tenía un dejo con mi hijo y su última instancia me fijo que fallaba el permiso, pero gracias a Dios en Guru me mandaron rápido logrando irme de viaje.",
+      text: "En Guru me mandaron rápido logrando irme de viaje a tiempo. ¡Excelente servicio!",
+      author: "Familia Unida",
     },
   ];
 
   return (
-    <motion.div
-      className="px-8 py-20"
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.1 }}
-      variants={containerVariants}
-    >
-      <div className="mx-auto max-w-7xl">
-        <motion.div className="mb-12 text-center" variants={itemVariants}>
-          <div className="mb-4 flex items-center justify-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-blue-400"></div>
-            <span className="text-sm tracking-wider text-gray-400">
-              Testimonios
+    <section className="relative overflow-hidden bg-[#020617] py-24">
+      {/* Decorative vertical lines */}
+      <div className="pointer-events-none absolute top-0 right-10 h-full w-[1px] bg-gradient-to-b from-transparent via-blue-500/20 to-transparent" />
+      <div className="pointer-events-none absolute top-0 left-10 h-full w-[1px] bg-gradient-to-b from-transparent via-blue-500/20 to-transparent" />
+
+      <div className="mx-auto max-w-7xl px-6">
+        <motion.div
+          className="mb-20 text-center"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={containerVariants}
+        >
+          <motion.div
+            variants={itemVariants}
+            className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 font-[Space_Grotesk] text-xs font-bold tracking-[0.2em] text-blue-400 uppercase"
+          >
+            Feedback
+          </motion.div>
+          <motion.h2
+            className="mb-6 font-[Outfit] text-5xl font-extrabold tracking-tighter text-white md:text-7xl"
+            variants={itemVariants}
+          >
+            Lo que dicen{" "}
+            <span className="text-glow-blue text-blue-500">
+              nuestros clientes
             </span>
-          </div>
-          <h2 className="section-title-neon mb-4 text-4xl font-bold">
-            Lo que dicen nuestros clientes
-          </h2>
-          <p className="mx-auto max-w-2xl text-lg text-gray-300">
-            Descubre por qué nuestros clientes confían en nosotros para sus
-            necesidades legales
-          </p>
+          </motion.h2>
         </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <motion.div
+          className="grid gap-8 md:grid-cols-2"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={containerVariants}
+        >
           {testimonials.map((testimonial) => (
             <motion.div
               key={testimonial.id}
-              className="rounded-2xl border border-gray-800 bg-gradient-to-br from-gray-950 to-blue-950 p-8 text-left transition hover:border-blue-500"
               variants={itemVariants}
-              whileHover={{
-                y: -5,
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2)",
-                transition: { duration: 0.3 },
-              }}
+              whileHover={{ y: -5 }}
+              className="group relative overflow-hidden rounded-3xl border border-white/5 bg-slate-900/40 p-10 shadow-2xl backdrop-blur-xl"
             >
-              <div className="mb-4 flex gap-1">
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <span key={i} className="text-xl text-yellow-400">
-                    ★
+              {/* Massive Quote Icon Background */}
+              <Quote
+                size={120}
+                className="absolute -top-10 -right-10 rotate-12 text-blue-500/5"
+              />
+
+              <div className="relative z-10">
+                <div className="mb-6 flex gap-1">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={18}
+                      className="fill-blue-500 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                    />
+                  ))}
+                </div>
+
+                <p className="mb-8 font-[Outfit] text-xl leading-relaxed text-slate-200 italic md:text-2xl">
+                  "{testimonial.text}"
+                </p>
+
+                <div className="flex items-center gap-4">
+                  <div className="h-[1px] w-10 bg-blue-500/50" />
+                  <span className="font-[Space_Grotesk] text-xs font-bold tracking-widest text-blue-400 uppercase">
+                    {testimonial.author}
                   </span>
-                ))}
+                </div>
               </div>
-              <p className="leading-relaxed text-gray-300">
-                {testimonial.text}
-              </p>
+
+              {/* Hover Accent */}
+              <div className="absolute bottom-0 left-0 h-1 w-full origin-left scale-x-0 transform bg-gradient-to-r from-blue-600 to-cyan-400 transition-transform duration-500 group-hover:scale-x-100" />
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
-    </motion.div>
+    </section>
   );
 };
 

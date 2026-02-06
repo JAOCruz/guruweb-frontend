@@ -1,5 +1,17 @@
 import React from "react";
 import { motion } from "framer-motion";
+import {
+  ShieldCheck,
+  UserCheck,
+  FileText,
+  Languages,
+  Camera,
+  Printer,
+  Landmark,
+  ShoppingBag,
+  Send,
+  ArrowRight,
+} from "lucide-react";
 
 const ServicesSection: React.FC = () => {
   const containerVariants = {
@@ -7,19 +19,19 @@ const ServicesSection: React.FC = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1,
+        staggerChildren: 0.1,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.5,
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1],
       },
     },
   };
@@ -30,146 +42,170 @@ const ServicesSection: React.FC = () => {
       name: "Digitación de Contratos",
       description:
         "Digitalización profesional de contratos legales con máxima precisión y eficiencia.",
-      image: "/digitacion_contratos.png",
+      icon: <FileText size={28} />,
+      color: "from-blue-500 to-cyan-400",
     },
     {
       id: 2,
       name: "Abogado Notario",
       description:
         "Servicios de notarización y asesoría legal por abogados certificados.",
-      image: "/abogado_notario.png",
+      icon: <UserCheck size={28} />,
+      color: "from-purple-500 to-blue-400",
     },
     {
       id: 3,
       name: "Solicitud de Certificaciones",
       description:
         "Gestión de certificaciones digitales y legales en instituciones públicas.",
-      image: "/solicitud_certificaciones.png",
+      icon: <ShieldCheck size={28} />,
+      color: "from-cyan-500 to-blue-400",
     },
     {
       id: 4,
       name: "Traducción e Intérprete Judicial",
       description:
         "Servicios de traducción profesional para documentos legales en múltiples idiomas.",
-      image: "/traduccion.png",
+      icon: <Languages size={28} />,
+      color: "from-blue-600 to-indigo-500",
     },
     {
       id: 5,
       name: "Fotos 2x2",
       description:
         "Servicio de fotografía profesional para documentos oficiales y trámites legales.",
-      image: "/fotos_2x2.png",
+      icon: <Camera size={28} />,
+      color: "from-indigo-500 to-purple-500",
     },
     {
       id: 6,
       name: "Servicio de Impresión",
       description:
         "Impresión de alta calidad para documentos legales, contratos y certificaciones.",
-      image: "/impresion.png",
+      icon: <Printer size={28} />,
+      color: "from-blue-400 to-cyan-300",
     },
     {
       id: 7,
       name: "Compra de Impuestos",
       description:
         "Gestión y compra de impuestos internos con asesoría especializada para tus trámites fiscales.",
-      image: "/compra_impuestos.png",
+      icon: <Landmark size={28} />,
+      color: "from-cyan-400 to-blue-500",
     },
     {
       id: 8,
       name: "Artículos / Tienda",
       description:
         "Accede a nuestra tienda virtual con artículos y productos especializados para trámites legales.",
-      image: "/articulos_tienda.png",
+      icon: <ShoppingBag size={28} />,
+      color: "from-purple-400 to-indigo-500",
     },
     {
       id: 9,
       name: "Mensajería Express",
       description:
         "Servicio de mensajería rápida y segura para el depósito y entrega de documentos importantes.",
-      image: "/mensajeria.png",
+      icon: <Send size={28} />,
+      color: "from-blue-500 to-indigo-400",
     },
   ];
 
   return (
-    <motion.div
-      className="px-8 py-20"
+    <section
       id="servicios"
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.1 }}
-      variants={containerVariants}
+      className="relative overflow-hidden bg-[#020617] py-24"
     >
-      <div className="mx-auto max-w-7xl">
-        <motion.div className="mb-16 text-center" variants={itemVariants}>
-          <div className="mb-4 flex items-center justify-center gap-2"></div>
-          <h2 className="section-title-neon mb-6 text-4xl font-bold md:text-6xl">
-            Nuestros Servicios
-          </h2>
-          <p className="mx-auto max-w-2xl text-lg text-gray-300">
+      <div className="mx-auto max-w-7xl px-6">
+        <motion.div
+          className="mb-20 text-center"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={containerVariants}
+        >
+          <motion.div
+            variants={itemVariants}
+            className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 font-[Space_Grotesk] text-xs font-bold tracking-[0.2em] text-blue-400 uppercase"
+          >
+            Especialidades
+          </motion.div>
+          <motion.h2
+            className="mb-6 font-[Outfit] text-5xl font-extrabold tracking-tighter text-white md:text-7xl"
+            variants={itemVariants}
+          >
+            Nuestros{" "}
+            <span className="text-glow-blue text-blue-500">Servicios</span>
+          </motion.h2>
+          <motion.p
+            className="mx-auto max-w-2xl font-[Outfit] text-xl text-slate-400"
+            variants={itemVariants}
+          >
             En Gurú Soluciones nos especializamos en una variedad de servicios
-            legales para satisfacer todas tus necesidades documentales.
-          </p>
+            legales para satisfacer todas tus necesidades documentales con
+            precisión quirúrgica.
+          </motion.p>
         </motion.div>
 
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+          variants={containerVariants}
+        >
           {services.map((service) => (
             <motion.div
               key={service.id}
-              className="group overflow-hidden rounded-xl bg-gradient-to-b from-blue-900/50 to-black/50 p-1 backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-xl"
               variants={itemVariants}
+              whileHover={{ y: -5 }}
+              className="group relative"
             >
-              <div className="relative h-full rounded-lg border border-blue-800/30 bg-black/20 p-6">
-                <div className="mb-6 flex items-center justify-between">
-                  <h3 className="text-2xl font-bold text-white">
-                    {service.name}
-                  </h3>
+              {/* Card Glow Background */}
+              <div
+                className={`absolute -inset-0.5 bg-gradient-to-r ${service.color} rounded-2xl opacity-0 blur transition duration-500 group-hover:opacity-20`}
+              />
+
+              <div className="relative flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-sm">
+                <div
+                  className={`h-14 w-14 rounded-xl bg-gradient-to-br ${service.color} mb-6 flex items-center justify-center text-white shadow-lg shadow-blue-500/10`}
+                >
+                  {service.icon}
                 </div>
-                <p className="mb-6 text-gray-300">{service.description}</p>
-                <div className="mt-auto flex justify-center">
-                  <img
-                    src={service.image}
-                    alt={service.name}
-                    className="max-h-[200px] w-auto object-contain transition-all group-hover:scale-105"
-                  />
+
+                <h3 className="mb-4 font-[Outfit] text-2xl font-bold text-white transition-colors group-hover:text-blue-400">
+                  {service.name}
+                </h3>
+
+                <p className="mb-8 flex-grow font-[Outfit] text-slate-400">
+                  {service.description}
+                </p>
+
+                <div className="flex items-center gap-2 font-[Space_Grotesk] text-xs font-bold tracking-widest text-blue-400 uppercase opacity-0 transition-opacity group-hover:opacity-100">
+                  Saber más <ArrowRight size={14} />
                 </div>
               </div>
             </motion.div>
           ))}
-        </div>
-        <div className="mt-10 flex justify-center">
+        </motion.div>
+
+        <div className="mt-20 flex justify-center">
           <motion.a
             href="https://wa.me/18298049017"
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-4 rounded-lg border-2 border-blue-500 bg-transparent px-6 py-3 text-white transition hover:bg-blue-500"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
-            whileHover={{
-              scale: 1.05,
-              backgroundColor: "rgba(59, 130, 246, 0.2)",
-            }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            className="group relative bg-transparent px-10 py-5 focus:outline-none"
           >
-            <motion.div
-              animate={{ x: [0, 5, 0] }}
-              transition={{
-                repeat: Infinity,
-                repeatType: "loop" as const,
-                duration: 1.5,
-              }}
-              className="transition group-hover:translate-x-1"
-            >
-              <span className="text-5xl"> 👉🏾 </span>
-            </motion.div>
-            <span className="text-xl">
-              {" "}
-              Dejale el trabajo sucio al Gurú, haz click aquí ya!
+            <div className="absolute inset-0 skew-x-[-12deg] rounded-xl border border-blue-500/50 bg-blue-600/10 transition-all duration-300 group-hover:bg-blue-600 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]" />
+            <span className="relative font-[Space_Grotesk] text-lg font-bold tracking-widest text-white">
+              CONTACTAR AHORA
             </span>
           </motion.a>
         </div>
       </div>
-    </motion.div>
+    </section>
   );
 };
 
