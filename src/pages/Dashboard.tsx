@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LoadingScreen from "../components/LoadingScreen";
 import { Routes, Route } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import AdminDataTable from "../components/dashboard/AdminDataTable";
@@ -110,15 +111,7 @@ const Dashboard: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex h-full items-center justify-center">
-          <div className="text-center">
-            <div className="mb-4 text-2xl text-white">Cargando...</div>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
+    return <LoadingScreen />;
   }
 
   return (
