@@ -122,7 +122,7 @@ const Dashboard: React.FC = () => {
           element={
             <div className="space-y-8">
               {/* Header / Top Bar for Page */}
-              <div className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+              <div className="mb-10 flex flex-col items-start justify-between gap-6 xl:flex-row xl:items-center">
                 <div>
                   <h2 className="font-display mb-2 text-3xl font-bold text-white">
                     Resumen Operativo
@@ -131,7 +131,7 @@ const Dashboard: React.FC = () => {
                     Gestiona y visualiza el rendimiento en tiempo real.
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
                   {/* Date Filter Integrated into Header style */}
                   <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-2 backdrop-blur-sm">
                     <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-1.5">
@@ -186,7 +186,7 @@ const Dashboard: React.FC = () => {
 
               {/* STATS SECTION */}
               {isAdmin && (
-                <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
                   <StatsCard
                     label="Total Admin"
                     value={formatCurrency(
@@ -199,7 +199,34 @@ const Dashboard: React.FC = () => {
                     color="text-emerald-400"
                     delay={0.1}
                   />
-                  {/* Dynamic stats for workers could go here, for now using placeholders matching the requested design concept */}
+
+                  {/* Total Users (Sum of their earnings/shares) - calculating as sum of filtered specific users */}
+                  <StatsCard
+                    label="Total Users"
+                    value={formatCurrency(
+                      services
+                        .filter((s: any) =>
+                          ["HENGI", "MARLENI", "ISRAEL", "THAICAR"].includes(
+                            (s.data_column || "").toUpperCase(),
+                          ),
+                        )
+                        .reduce(
+                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          0,
+                        ),
+                    )}
+                    subValue={`${
+                      services.filter((s: any) =>
+                        ["HENGI", "MARLENI", "ISRAEL", "THAICAR"].includes(
+                          (s.data_column || "").toUpperCase(),
+                        ),
+                      ).length
+                    } serv.`}
+                    color="text-yellow-400"
+                    delay={0.15}
+                  />
+
+                  {/* Dynamic stats for workers */}
                   <StatsCard
                     label="Hengi"
                     value={formatCurrency(
@@ -250,6 +277,23 @@ const Dashboard: React.FC = () => {
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "ISRAEL").length} serv.`}
                     color="text-pink-400"
                     delay={0.4}
+                  />
+                  <StatsCard
+                    label="Thaicar"
+                    value={formatCurrency(
+                      services
+                        .filter(
+                          (s: any) =>
+                            (s.data_column || "").toUpperCase() === "THAICAR",
+                        )
+                        .reduce(
+                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          0,
+                        ),
+                    )}
+                    subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "THAICAR").length} serv.`}
+                    color="text-cyan-400"
+                    delay={0.5}
                   />
                 </div>
               )}

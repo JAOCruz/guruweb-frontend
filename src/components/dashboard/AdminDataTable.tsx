@@ -456,30 +456,30 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
             {groupedData[user].map((item, idx) => (
               <div key={`${user}-m-${idx}`} className="bg-slate-900 p-4">
                 <div className="mb-2 flex items-start justify-between">
-                  <div>
-                    <p className="text-base font-bold text-white">
+                  <div className="min-w-0 flex-1 pr-2">
+                    <p className="truncate text-base font-bold text-white">
                       {item.service}
                     </p>
-                    <p className="text-sm text-slate-500">
+                    <p className="truncate text-sm text-slate-500">
                       {item.client || "Cliente General"}
                     </p>
                   </div>
-                  <span className="text-lg font-bold text-emerald-400">
-                    ${item.earnings}
+                  <span className="text-lg font-bold whitespace-nowrap text-emerald-400">
+                    {formatCurrency(item.earnings)}
                   </span>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-mono text-xs text-slate-500">
-                    <span>{item.time}</span>
+                  <div className="flex min-w-0 flex-1 items-center gap-2 font-mono text-xs text-slate-500">
+                    <span className="whitespace-nowrap">{item.time}</span>
                     {item.comment && (
-                      <span className="max-w-[150px] truncate rounded bg-slate-800 px-2 py-0.5 text-slate-300">
+                      <span className="max-w-[120px] truncate rounded bg-slate-800 px-2 py-0.5 text-slate-300 sm:max-w-[200px]">
                         {item.comment}
                       </span>
                     )}
                   </div>
                   <button
                     onClick={() => handleDelete(item.id)}
-                    className="text-slate-600 hover:text-red-400"
+                    className="ml-2 flex-shrink-0 text-slate-600 hover:text-red-400"
                   >
                     <Trash2 size={18} />
                   </button>
