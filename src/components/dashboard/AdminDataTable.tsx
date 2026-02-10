@@ -299,11 +299,11 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           className="overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] shadow-xl"
         >
           {/* Header de la Tabla */}
-          <div className="flex items-center justify-between border-b border-slate-700/50 bg-[#1A233A] p-5">
+          <div className="flex flex-col gap-3 border-b border-slate-700/50 bg-[#1A233A] p-5 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="font-bold tracking-wide text-white uppercase">
               {user}
             </h3>
-            <div className="flex items-center gap-4 font-mono text-xs">
+            <div className="flex flex-col gap-1 font-mono text-xs sm:flex-row sm:gap-4">
               <span className="font-bold tracking-widest text-slate-400 uppercase">
                 Total:{" "}
                 <span className="text-blue-400">
@@ -455,12 +455,12 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           <div className="divide-y divide-slate-800 md:hidden">
             {groupedData[user].map((item, idx) => (
               <div key={`${user}-m-${idx}`} className="bg-slate-900 p-4">
-                <div className="mb-2 flex items-start justify-between">
+                <div className="xs:flex-row xs:items-start xs:justify-between mb-2 flex flex-col gap-2">
                   <div className="min-w-0 flex-1 pr-2">
-                    <p className="truncate text-base font-bold text-white">
+                    <p className="text-base leading-tight font-bold break-words whitespace-normal text-white">
                       {item.service}
                     </p>
-                    <p className="truncate text-sm text-slate-500">
+                    <p className="mt-0.5 text-sm whitespace-normal text-slate-500">
                       {item.client || "Cliente General"}
                     </p>
                   </div>
@@ -468,11 +468,11 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                     {formatCurrency(item.earnings)}
                   </span>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex min-w-0 flex-1 items-center gap-2 font-mono text-xs text-slate-500">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-y-2">
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 font-mono text-xs text-slate-500">
                     <span className="whitespace-nowrap">{item.time}</span>
                     {item.comment && (
-                      <span className="max-w-[120px] truncate rounded bg-slate-800 px-2 py-0.5 text-slate-300 sm:max-w-[200px]">
+                      <span className="max-w-full rounded bg-slate-800 px-2 py-0.5 break-words whitespace-normal text-slate-300">
                         {item.comment}
                       </span>
                     )}
