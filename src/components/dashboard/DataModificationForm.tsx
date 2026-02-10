@@ -95,11 +95,11 @@ const DataModificationForm: React.FC<DataModificationFormProps> = ({
 
   return (
     <div className="overflow-hidden rounded-lg border border-slate-700 bg-slate-800 shadow-xl">
-      <div className="flex items-center justify-between border-b border-slate-700 bg-slate-900/50 px-4 py-3">
-        <h3 className="text-lg font-bold text-white">Modificar Datos</h3>
+      <div className="flex items-center justify-between gap-2 border-b border-slate-700 bg-slate-900/50 px-3 py-3 sm:px-4">
+        <h3 className="min-w-0 text-sm font-bold text-white sm:text-lg">Modificar Datos</h3>
         <button
           onClick={() => setIsFormOpen(!isFormOpen)}
-          className="rounded-lg border border-blue-900/30 bg-blue-600/20 px-4 py-2 text-sm text-blue-300 hover:bg-blue-600/30"
+          className="flex-shrink-0 rounded-lg border border-blue-900/30 bg-blue-600/20 px-3 py-1.5 text-xs text-blue-300 hover:bg-blue-600/30 sm:px-4 sm:py-2 sm:text-sm"
         >
           {isFormOpen ? "Cancelar" : "Agregar Servicio"}
         </button>

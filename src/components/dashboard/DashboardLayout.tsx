@@ -49,7 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden bg-[#0B1120] font-sans text-slate-200 selection:bg-blue-500/30">
+    <div className="flex w-full min-h-screen overflow-x-hidden bg-[#0B1120] font-sans text-slate-200 selection:bg-blue-500/30">
       {/* INJECT FONTS & GLOBAL DASHBOARD STYLES */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
@@ -168,7 +168,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
       {/* Main Content Area */}
       <div
-        className={`relative z-10 flex min-h-screen flex-1 flex-col transition-all duration-300 ease-in-out ${
+        className={`relative z-10 flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden transition-all duration-300 ease-in-out ${
           isMobile ? "ml-0" : sidebarOpen ? "ml-64" : "ml-20"
         }`}
       >
@@ -200,8 +200,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="dashboard-body h-full p-3 md:p-8">
-          <div className="mx-auto max-w-7xl">{children}</div>
+        <main className="dashboard-body h-full min-w-0 p-3 md:p-8">
+          <div className="mx-auto min-w-0 max-w-7xl">{children}</div>
         </main>
       </div>
     </div>

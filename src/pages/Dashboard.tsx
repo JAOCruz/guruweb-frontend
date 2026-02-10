@@ -131,10 +131,10 @@ const Dashboard: React.FC = () => {
                     Gestiona y visualiza el rendimiento en tiempo real.
                   </p>
                 </div>
-                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
+                <div className="flex w-full flex-col gap-3 xl:w-auto">
                   {/* Date Filter Integrated into Header style */}
-                  <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-1.5 backdrop-blur-sm sm:p-2 md:w-auto">
-                    <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/50 px-2 py-1.5 sm:flex-none sm:gap-2 sm:px-3">
+                  <div className="flex w-full flex-col gap-1.5 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-1.5 backdrop-blur-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:p-2">
+                    <div className="flex min-w-0 items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/50 px-2 py-1.5 sm:gap-2 sm:px-3">
                       <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
                         Desde
                       </span>
@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
                         className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-xs text-white focus:outline-none sm:text-sm"
                       />
                     </div>
-                    <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/50 px-2 py-1.5 sm:flex-none sm:gap-2 sm:px-3">
+                    <div className="flex min-w-0 items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/50 px-2 py-1.5 sm:gap-2 sm:px-3">
                       <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
                         Hasta
                       </span>
@@ -177,7 +177,7 @@ const Dashboard: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  <button className="flex items-center gap-2 rounded-2xl bg-purple-600 px-5 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(147,51,234,0.5)] transition-all duration-300 hover:bg-purple-500">
+                  <button className="flex w-full items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(147,51,234,0.5)] transition-all duration-300 hover:bg-purple-500 sm:w-auto">
                     <Zap size={16} />
                     Insights IA
                   </button>
@@ -186,7 +186,7 @@ const Dashboard: React.FC = () => {
 
               {/* STATS SECTION */}
               {isAdmin && (
-                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+                <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
                   <StatsCard
                     label="Total Admin"
                     value={formatCurrency(

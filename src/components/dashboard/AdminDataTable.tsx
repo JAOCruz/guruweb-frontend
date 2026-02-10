@@ -299,11 +299,11 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           className="overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] shadow-xl"
         >
           {/* Header de la Tabla */}
-          <div className="flex flex-col gap-3 border-b border-slate-700/50 bg-[#1A233A] p-5 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="font-bold tracking-wide text-white uppercase">
+          <div className="flex flex-col gap-2 border-b border-slate-700/50 bg-[#1A233A] p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-5">
+            <h3 className="text-sm font-bold tracking-wide text-white uppercase sm:text-base">
               {user}
             </h3>
-            <div className="flex flex-col gap-1 font-mono text-xs sm:flex-row sm:gap-4">
+            <div className="flex gap-3 font-mono text-xs sm:gap-4">
               <span className="font-bold tracking-widest text-slate-400 uppercase">
                 Total:{" "}
                 <span className="text-blue-400">
@@ -453,39 +453,52 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
 
           {/* VISTA MÓVIL (Tarjetas) */}
           <div className="divide-y divide-slate-800 md:hidden">
-            {groupedData[user].map((item, idx) => (
-              <div key={`${user}-m-${idx}`} className="bg-slate-900 p-4">
-                <div className="xs:flex-row xs:items-start xs:justify-between mb-2 flex flex-col gap-2">
-                  <div className="min-w-0 flex-1 pr-2">
-                    <p className="text-base leading-tight font-bold break-words whitespace-normal text-white">
-                      {item.service}
-                    </p>
-                    <p className="mt-0.5 text-sm whitespace-normal text-slate-500">
-                      {item.client || "Cliente General"}
-                    </p>
+            {groupedData[user].length > 0 ? (
+              groupedData[user].map((item, idx) => (
+                <div key={`${user}-m-${idx}`} className="bg-slate-900 p-3">
+                  {/* Row 1: Service name + earnings */}
+                  <div className="mb-1 flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm leading-tight font-bold break-words text-white">
+                        {item.service}
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {item.client || "Cliente General"}
+                      </p>
+                    </div>
+                    <span className="flex-shrink-0 text-base font-bold text-emerald-400">
+                      {formatCurrency(item.earnings)}
+                    </span>
                   </div>
-                  <span className="text-lg font-bold whitespace-nowrap text-emerald-400">
-                    {formatCurrency(item.earnings)}
-                  </span>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-y-2">
-                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 font-mono text-xs text-slate-500">
-                    <span className="whitespace-nowrap">{item.time}</span>
-                    {item.comment && (
-                      <span className="max-w-full rounded bg-slate-800 px-2 py-0.5 break-words whitespace-normal text-slate-300">
-                        {item.comment}
-                      </span>
-                    )}
+                  {/* Row 2: Time, comment, delete */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 font-mono text-xs text-slate-500">
+                      <span className="whitespace-nowrap">{item.time || "--:--"}</span>
+                      {item.comment && (
+                        <span className="truncate rounded bg-slate-800 px-1.5 py-0.5 text-slate-300">
+                          {item.comment}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      disabled={deletingId === item.id}
+                      className="flex-shrink-0 rounded p-1 text-slate-600 hover:text-red-400"
+                    >
+                      {deletingId === item.id ? (
+                        <Loader2 className="animate-spin" size={16} />
+                      ) : (
+                        <Trash2 size={16} />
+                      )}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="ml-2 flex-shrink-0 text-slate-600 hover:text-red-400"
-                  >
-                    <Trash2 size={18} />
-                  </button>
                 </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-sm text-slate-500 italic">
+                Sin servicios registrados hoy
               </div>
-            ))}
+            )}
           </div>
         </div>
       ))}
