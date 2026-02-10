@@ -173,7 +173,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         }`}
       >
         {/* TOP BAR */}
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-white/5 bg-[#0B1120]/80 px-8 backdrop-blur-xl">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-[#0B1120]/80 px-4 backdrop-blur-xl md:h-20 md:px-8">
           <div className="flex items-center gap-4">
             <button
               onClick={toggleSidebar}
@@ -181,7 +181,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             >
               <Menu size={24} />
             </button>
-            <h2 className="font-display text-2xl font-bold text-white">
+            <h2 className="font-display text-lg font-bold text-white md:text-2xl">
               {isAdmin ? "Panel Admin" : "Panel Usuario"}
               {!isAdmin && user?.dataColumn && (
                 <span className="ml-3 hidden rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 font-sans text-sm font-medium text-blue-500 md:inline-block">
@@ -200,7 +200,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="dashboard-body h-full p-4 md:p-8">
+        <main className="dashboard-body h-full p-3 md:p-8">
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
       </div>

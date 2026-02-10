@@ -21,7 +21,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className="group relative overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] p-6 shadow-lg transition-all duration-300 hover:border-blue-500/30"
+      className="group relative overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] p-4 shadow-lg transition-all duration-300 hover:border-blue-500/30 sm:p-6"
     >
       <div className="absolute top-0 right-0 p-2 opacity-50">
         {subValue && (
@@ -30,11 +30,11 @@ const StatsCard: React.FC<StatsCardProps> = ({
           </span>
         )}
       </div>
-      <p className="mb-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
+      <p className="mb-2 text-xs font-bold tracking-widest text-slate-400 uppercase sm:mb-3">
         {label}
       </p>
       <h3
-        className={`font-display text-3xl font-bold ${color} drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]`}
+        className={`font-display text-2xl font-bold sm:text-3xl ${color} truncate drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]`}
       >
         {value}
       </h3>

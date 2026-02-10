@@ -124,7 +124,7 @@ const Dashboard: React.FC = () => {
               {/* Header / Top Bar for Page */}
               <div className="mb-10 flex flex-col items-start justify-between gap-6 xl:flex-row xl:items-center">
                 <div>
-                  <h2 className="font-display mb-2 text-3xl font-bold text-white">
+                  <h2 className="font-display mb-2 text-2xl font-bold text-white md:text-3xl">
                     Resumen Operativo
                   </h2>
                   <p className="text-sm text-slate-400">
@@ -133,8 +133,8 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
                   {/* Date Filter Integrated into Header style */}
-                  <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-2 backdrop-blur-sm sm:w-auto">
-                    <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-1.5">
+                  <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-1.5 backdrop-blur-sm sm:p-2 md:w-auto">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/50 px-2 py-1.5 sm:flex-none sm:gap-2 sm:px-3">
                       <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
                         Desde
                       </span>
@@ -142,10 +142,10 @@ const Dashboard: React.FC = () => {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="cursor-pointer border-none bg-transparent p-0 text-sm text-white focus:outline-none"
+                        className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-xs text-white focus:outline-none sm:text-sm"
                       />
                     </div>
-                    <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-1.5">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/50 px-2 py-1.5 sm:flex-none sm:gap-2 sm:px-3">
                       <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
                         Hasta
                       </span>
@@ -153,7 +153,7 @@ const Dashboard: React.FC = () => {
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="cursor-pointer border-none bg-transparent p-0 text-sm text-white focus:outline-none"
+                        className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-xs text-white focus:outline-none sm:text-sm"
                       />
                     </div>
                     <div className="flex gap-1">

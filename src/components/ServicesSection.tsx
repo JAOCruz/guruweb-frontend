@@ -116,7 +116,7 @@ const ServicesSection: React.FC = () => {
       id="servicios"
       className="relative overflow-hidden bg-[#020617] py-24"
     >
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <motion.div
           className="mb-20 text-center"
           initial="hidden"
@@ -131,14 +131,14 @@ const ServicesSection: React.FC = () => {
             Especialidades
           </motion.div>
           <motion.h2
-            className="mb-6 font-[Outfit] text-5xl font-extrabold tracking-tighter text-white md:text-7xl"
+            className="mb-6 font-[Outfit] text-3xl font-extrabold tracking-tighter text-white sm:text-5xl md:text-7xl"
             variants={itemVariants}
           >
             Nuestros{" "}
             <span className="text-glow-blue text-blue-500">Servicios</span>
           </motion.h2>
           <motion.p
-            className="mx-auto max-w-2xl font-[Outfit] text-xl text-slate-400"
+            className="mx-auto max-w-2xl font-[Outfit] text-base text-slate-400 sm:text-xl"
             variants={itemVariants}
           >
             En Gurú Soluciones nos especializamos en una variedad de servicios
@@ -166,18 +166,18 @@ const ServicesSection: React.FC = () => {
                 className={`absolute -inset-0.5 bg-gradient-to-r ${service.color} rounded-2xl opacity-0 blur transition duration-500 group-hover:opacity-20`}
               />
 
-              <div className="relative flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/40 p-8 backdrop-blur-sm">
+              <div className="relative flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm sm:p-8">
                 <div
-                  className={`h-14 w-14 rounded-xl bg-gradient-to-br ${service.color} mb-6 flex items-center justify-center text-white shadow-lg shadow-blue-500/10`}
+                  className={`h-12 w-12 rounded-xl bg-gradient-to-br ${service.color} mb-4 flex items-center justify-center text-white shadow-lg shadow-blue-500/10 sm:mb-6 sm:h-14 sm:w-14`}
                 >
                   {service.icon}
                 </div>
 
-                <h3 className="mb-4 font-[Outfit] text-2xl font-bold text-white transition-colors group-hover:text-blue-400">
+                <h3 className="mb-3 font-[Outfit] text-xl font-bold text-white transition-colors group-hover:text-blue-400 sm:mb-4 sm:text-2xl">
                   {service.name}
                 </h3>
 
-                <p className="mb-8 flex-grow font-[Outfit] text-slate-400">
+                <p className="mb-6 flex-grow font-[Outfit] text-sm text-slate-400 sm:mb-8 sm:text-base">
                   {service.description}
                 </p>
 
