@@ -8,7 +8,8 @@ import DataModificationForm from "../components/dashboard/DataModificationForm";
 import DataCharts from "../components/dashboard/DataCharts";
 import FlipbooksSection from "../components/dashboard/FlipbooksSection";
 import StatsCard from "../components/dashboard/StatsCard";
-import { servicesAPI } from "../services/api";
+import Settings from "./Settings";
+import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap } from "lucide-react";
 import { USER_COLUMNS } from "../services/excelService";
@@ -16,28 +17,40 @@ import { formatCurrency } from "../utils";
 
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
-  const [services, setServices] = useState([]);
+  const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const getTodayString = () => new Date().toISOString().split("T")[0];
 
   const [startDate, setStartDate] = useState(getTodayString());
   const [endDate, setEndDate] = useState(getTodayString());
 
-  // Default value for employee share percentage
-  const employeePercentage = 50;
+  // Fetch employee percentage from settings
+  const [employeePercentage, setEmployeePercentage] = useState(50);
 
   useEffect(() => {
     fetchData();
+    fetchEmployeePercentage();
   }, [startDate, endDate]); // Re-fetch when dates change
+
+  const fetchEmployeePercentage = async () => {
+    try {
+      const response = await settingsAPI.getCurrentPercentage();
+      setEmployeePercentage(response.data.percentage);
+    } catch (error) {
+      console.error("Error fetching employee percentage:", error);
+      // Keep default 50% if fetch fails
+    }
+  };
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const response = await servicesAPI.getServices(startDate, endDate);
       // console.log("Services data:", response.data);
-      setServices(response.data);
+      setServices(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching services:", error);
+      setServices([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -191,7 +204,7 @@ const Dashboard: React.FC = () => {
                     label="Total Admin"
                     value={formatCurrency(
                       services.reduce(
-                        (acc, s: any) => acc + (Number(s.earnings) || 0),
+                        (acc, s: any) => acc + (Number(s.earnings) || 0) * (1 - employeePercentage / 100),
                         0,
                       ),
                     )}
@@ -200,7 +213,7 @@ const Dashboard: React.FC = () => {
                     delay={0.1}
                   />
 
-                  {/* Total Users (Sum of their earnings/shares) - calculating as sum of filtered specific users */}
+                  {/* Total Users (Sum of their earnings/shares) - 50% split */}
                   <StatsCard
                     label="Total Users"
                     value={formatCurrency(
@@ -211,7 +224,7 @@ const Dashboard: React.FC = () => {
                           ),
                         )
                         .reduce(
-                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
                           0,
                         ),
                     )}
@@ -226,7 +239,7 @@ const Dashboard: React.FC = () => {
                     delay={0.15}
                   />
 
-                  {/* Dynamic stats for workers */}
+                  {/* Dynamic stats for workers - showing their 50% share */}
                   <StatsCard
                     label="Hengi"
                     value={formatCurrency(
@@ -236,7 +249,7 @@ const Dashboard: React.FC = () => {
                             (s.data_column || "").toUpperCase() === "HENGI",
                         )
                         .reduce(
-                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
                           0,
                         ),
                     )}
@@ -253,7 +266,7 @@ const Dashboard: React.FC = () => {
                             (s.data_column || "").toUpperCase() === "MARLENI",
                         )
                         .reduce(
-                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
                           0,
                         ),
                     )}
@@ -270,7 +283,7 @@ const Dashboard: React.FC = () => {
                             (s.data_column || "").toUpperCase() === "ISRAEL",
                         )
                         .reduce(
-                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
                           0,
                         ),
                     )}
@@ -287,7 +300,7 @@ const Dashboard: React.FC = () => {
                             (s.data_column || "").toUpperCase() === "THAICAR",
                         )
                         .reduce(
-                          (acc, s: any) => acc + (Number(s.earnings) || 0),
+                          (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
                           0,
                         ),
                     )}
@@ -348,6 +361,10 @@ const Dashboard: React.FC = () => {
           }
         />
         <Route path="/flipbooks" element={<FlipbooksSection />} />
+        <Route
+          path="/settings"
+          element={isAdmin ? <Settings /> : <div className="text-center text-slate-400 py-8">No tienes acceso a esta página</div>}
+        />
       </Routes>
     </DashboardLayout>
   );

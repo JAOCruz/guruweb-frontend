@@ -9,6 +9,7 @@ import {
   BarChart3,
   BookOpen,
   LogOut,
+  Settings,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -140,6 +141,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             sidebarOpen={sidebarOpen}
             isMobile={isMobile}
           />
+          {isAdmin && (
+            <NavItem
+              to="/dashboard/settings"
+              icon={<Settings size={18} />}
+              label="Configuración"
+              sidebarOpen={sidebarOpen}
+              isMobile={isMobile}
+            />
+          )}
         </nav>
 
         <div className="border-t border-slate-800 p-4">

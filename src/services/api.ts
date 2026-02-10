@@ -62,4 +62,18 @@ export const servicesAPI = {
     api.put(`/services/${id}/comment`, { comment }),
 };
 
+export const settingsAPI = {
+  getCurrentPercentage: () => api.get("/settings/current"),
+
+  getPercentageForDate: (date?: string) =>
+    api.get("/settings/percentage", { params: { date } }),
+
+  getHistory: () => api.get("/settings/history"),
+
+  updateEmployeePercentage: (percentage: number, effectiveDate: string) =>
+    api.post("/settings/percentage", { percentage, effectiveDate }),
+
+  deleteSetting: (id: number) => api.delete(`/settings/${id}`),
+};
+
 export default api;
