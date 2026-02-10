@@ -133,7 +133,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center xl:w-auto">
                   {/* Date Filter Integrated into Header style */}
-                  <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-2 backdrop-blur-sm">
+                  <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-2 backdrop-blur-sm sm:w-auto">
                     <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-1.5">
                       <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
                         Desde

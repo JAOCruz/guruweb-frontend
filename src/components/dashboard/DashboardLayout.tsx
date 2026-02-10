@@ -200,7 +200,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="dashboard-body h-full p-8">
+        <main className="dashboard-body h-full p-4 md:p-8">
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
       </div>
