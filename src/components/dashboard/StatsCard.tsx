@@ -34,7 +34,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
         {label}
       </p>
       <h3
-        className={`font-display text-2xl font-bold sm:text-3xl ${color} truncate drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]`}
+        className={`font-display text-xl font-bold sm:text-2xl ${color} drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]`}
       >
         {value}
       </h3>

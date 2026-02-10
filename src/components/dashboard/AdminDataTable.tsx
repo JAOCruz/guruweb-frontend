@@ -255,7 +255,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
       <div className="flex flex-col items-center justify-between gap-6 border-b border-white/5 pb-6 md:flex-row">
         {/* Tabs de Usuario */}
         {!isEmployeeView && (
-          <div className="scrollbar-hide flex w-full gap-2 overflow-x-auto pb-2 md:w-auto md:pb-0">
+          <div className="flex w-full flex-wrap gap-2 md:w-auto">
             <button
               onClick={() => setActiveUser("all")}
               className={`rounded-lg px-4 py-1.5 text-xs font-bold tracking-wide whitespace-nowrap uppercase transition-all ${
