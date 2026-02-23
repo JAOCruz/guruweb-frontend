@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, MousePointer2, Menu } from "lucide-react";
+import { ChevronRight, MousePointer2, Menu, X } from "lucide-react";
 
 const HeroSection = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Parallax Effect Logic
   useEffect(() => {
@@ -129,11 +130,47 @@ const HeroSection = () => {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <div className="text-white md:hidden">
-            <Menu />
-          </div>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="relative z-[60] rounded-full bg-blue-900/30 p-3 text-white md:hidden"
+            style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+          >
+            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
         </div>
       </motion.nav>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[55] flex flex-col items-center justify-center bg-[#020617]/98 backdrop-blur-md md:hidden">
+          <div className="flex w-full flex-col items-center gap-2 px-8">
+            {[
+              { name: 'Inicio', href: '#' },
+              { name: 'Servicios', href: '#servicios' },
+              { name: 'Sobre el Gurú', href: '#sobre-guru' },
+              { name: '¿Trabajas con Nosotros?', href: '/login' },
+            ].map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full border-b border-white/10 py-5 text-center font-[Outfit] text-2xl font-medium text-white transition hover:text-blue-400"
+              >
+                {item.name}
+              </a>
+            ))}
+            <a
+              href="https://wa.me/18298049017"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileMenuOpen(false)}
+              className="mt-8 rounded-lg border-2 border-blue-500 bg-blue-600/20 px-10 py-4 text-xl font-semibold text-white transition hover:bg-blue-600"
+            >
+              Contáctanos
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* --- MAIN CONTENT --- */}
       <div
