@@ -10,6 +10,12 @@ import {
   BookOpen,
   LogOut,
   Settings,
+  MessageCircle,
+  MessageSquare,
+  Wifi,
+  Users,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -20,7 +26,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user, logout, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
   const location = useLocation();
+
+  const whatsappPaths = [
+    "/dashboard/whatsapp",
+    "/dashboard/bot-messages",
+    "/dashboard/bot-clients",
+  ];
+  const isWhatsappActive = whatsappPaths.some((p) =>
+    location.pathname.startsWith(p),
+  );
 
   // Handle window resize
   useEffect(() => {
@@ -141,6 +157,80 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             sidebarOpen={sidebarOpen}
             isMobile={isMobile}
           />
+
+          {/* ── WhatsApp Bot collapsible section ── */}
+          <div>
+            <button
+              onClick={() => setWhatsappOpen((o) => !o)}
+              className={`group flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${
+                isWhatsappActive
+                  ? "bg-purple-600/20 text-purple-300"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
+              } ${!sidebarOpen && !isMobile ? "justify-center" : ""}`}
+            >
+              <div className="flex-shrink-0">
+                <MessageCircle size={18} />
+              </div>
+              {(sidebarOpen || isMobile) && (
+                <>
+                  <span className="flex-1 text-left font-medium">
+                    WhatsApp Bot
+                  </span>
+                  {whatsappOpen ? (
+                    <ChevronDown size={15} className="text-slate-500" />
+                  ) : (
+                    <ChevronRight size={15} className="text-slate-500" />
+                  )}
+                </>
+              )}
+            </button>
+
+            {/* Sub-items */}
+            {(sidebarOpen || isMobile) && whatsappOpen && (
+              <div className="mt-1 ml-4 space-y-1 border-l border-slate-700/50 pl-3">
+                <NavLink
+                  to="/dashboard/whatsapp"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-purple-600/30 font-semibold text-purple-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <Wifi size={15} />
+                  Conexión
+                </NavLink>
+                <NavLink
+                  to="/dashboard/bot-messages"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-blue-600/30 font-semibold text-blue-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <MessageSquare size={15} />
+                  Mensajes
+                </NavLink>
+                <NavLink
+                  to="/dashboard/bot-clients"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-emerald-600/30 font-semibold text-emerald-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <Users size={15} />
+                  Clientes
+                </NavLink>
+              </div>
+            )}
+          </div>
+
           {isAdmin && (
             <NavItem
               to="/dashboard/settings"

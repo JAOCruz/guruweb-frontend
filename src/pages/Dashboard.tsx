@@ -9,6 +9,9 @@ import DataCharts from "../components/dashboard/DataCharts";
 import FlipbooksSection from "../components/dashboard/FlipbooksSection";
 import StatsCard from "../components/dashboard/StatsCard";
 import Settings from "./Settings";
+import WhatsAppBot from "./WhatsAppBot";
+import BotMessages from "./BotMessages";
+import BotClients from "./BotClients";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap } from "lucide-react";
@@ -365,6 +368,9 @@ const Dashboard: React.FC = () => {
           path="/settings"
           element={isAdmin ? <Settings /> : <div className="text-center text-slate-400 py-8">No tienes acceso a esta página</div>}
         />
+        <Route path="/whatsapp" element={<WhatsAppBot />} />
+        <Route path="/bot-messages" element={<BotMessages />} />
+        <Route path="/bot-clients" element={<BotClients />} />
       </Routes>
     </DashboardLayout>
   );
