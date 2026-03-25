@@ -1,278 +1,658 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { motion } from "framer-motion";
-import { MessageSquare, RefreshCw, Bot, User } from "lucide-react";
-import { botAPI, BotMessage } from "../services/botApi";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import {
+  MessageSquare,
+  Search,
+  Send,
+  Bot,
+  User,
+  RefreshCw,
+  ChevronLeft,
+  Circle,
+} from "lucide-react";
+import { botAPI } from "../services/botApi";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface ConvRow {
+  phone: string;
+  client_name: string | null;
+  last_message: string;
+  last_message_at: string;
+  message_count: string;
+  botActive: boolean;
+}
+
+interface MsgRow {
+  id: string | number;
+  phone: string;
+  direction: "inbound" | "outbound";
+  content: string;        // real field from API
+  message?: string;       // fallback alias
+  media_url?: string | null;
+  status?: string;
+  created_at: string;
+  ai_generated?: boolean;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const getInitials = (name?: string, phone?: string): string => {
+function getInitials(name?: string | null, phone?: string): string {
   if (name && name.trim()) {
     const parts = name.trim().split(" ");
     return parts.length >= 2
       ? (parts[0][0] + parts[1][0]).toUpperCase()
       : parts[0].slice(0, 2).toUpperCase();
   }
-  if (phone) return phone.slice(-2);
-  return "??";
-};
+  return phone ? phone.slice(-4) : "??";
+}
 
-const formatTimestamp = (ts: string): string => {
+function formatRelTime(ts: string): string {
   const date = new Date(ts);
-  if (isNaN(date.getTime())) return ts;
+  if (isNaN(date.getTime())) return "";
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   if (diffMins < 1) return "ahora";
-  if (diffMins < 60) return `${diffMins}m`;
+  if (diffMins < 60) return `hace ${diffMins} min`;
   const diffHrs = Math.floor(diffMins / 60);
-  if (diffHrs < 24) return `${diffHrs}h`;
-  return date.toLocaleDateString("es-DO", { day: "numeric", month: "short" });
-};
+  if (diffHrs < 24) {
+    return date.toLocaleTimeString("es-DO", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Ayer";
+  return date.toLocaleDateString("es-DO", {
+    day: "numeric",
+    month: "short",
+  });
+}
 
-// ─── Stat chip ────────────────────────────────────────────────────────────────
-const StatChip: React.FC<{
-  label: string;
-  value: number;
-  color: string;
-}> = ({ label, value, color }) => (
-  <div className="flex flex-col items-center rounded-xl border border-slate-700/50 bg-slate-800/50 px-5 py-3">
-    <span className={`text-2xl font-bold ${color}`}>{value}</span>
-    <span className="text-xs text-slate-500">{label}</span>
-  </div>
-);
+function formatPhone(phone: string): string {
+  const d = phone.replace(/\D/g, "");
+  if (d.length === 11 && d.startsWith("1"))
+    return `(${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  return phone;
+}
 
-// ─── Conversation Card ────────────────────────────────────────────────────────
-const ConversationCard: React.FC<{
-  msg: BotMessage;
-  botMode: "all" | "selected";
-  onToggle: (phone: string) => void;
-  onEnable: (phone: string) => void;
-}> = ({ msg, botMode, onToggle, onEnable }) => {
-  const initials = getInitials(msg.name, msg.phone);
+function getDateLabel(ts: string): string {
+  const date = new Date(ts);
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) return "Hoy";
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Ayer";
+  return date.toLocaleDateString("es-DO", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+// ─── Conversation Item ────────────────────────────────────────────────────────
+
+interface ConvItemProps {
+  conv: ConvRow;
+  isSelected: boolean;
+  onSelect: () => void;
+  onToggleAI: (phone: string, e: React.MouseEvent) => void;
+}
+
+const ConvItem: React.FC<ConvItemProps> = ({
+  conv,
+  isSelected,
+  onSelect,
+  onToggleAI,
+}) => {
+  const initials = getInitials(conv.client_name, conv.phone);
+  const name = conv.client_name || formatPhone(conv.phone);
+  const preview = (conv.last_message || "—").slice(0, 40);
+  const time = formatRelTime(conv.last_message_at);
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-start gap-4 rounded-xl border border-slate-700/40 bg-slate-800/40 p-4 transition-colors hover:border-slate-600/60 hover:bg-slate-800/60"
+    <div
+      onClick={onSelect}
+      className={`flex cursor-pointer items-start gap-3 px-4 py-3 transition-all hover:bg-slate-800/50 ${
+        isSelected
+          ? "border-l-2 border-blue-500 bg-slate-800"
+          : "border-l-2 border-transparent"
+      }`}
     >
       {/* Avatar */}
-      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-sm font-bold text-white shadow-md shadow-purple-500/20">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-sm font-bold text-white shadow-md">
         {initials}
       </div>
 
-      {/* Content */}
+      {/* Name + preview */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate font-semibold text-white">
-            {msg.name || msg.phone}
-          </p>
-          <span className="flex-shrink-0 text-xs text-slate-500">
-            {formatTimestamp(msg.timestamp)}
-          </span>
+          <p className="truncate text-sm font-semibold text-white">{name}</p>
+          <span className="flex-shrink-0 text-[10px] text-slate-500">{time}</span>
         </div>
-        <p className="mt-0.5 truncate text-sm text-slate-400">
-          {msg.lastMessage || "—"}
-        </p>
+        <p className="mt-0.5 truncate text-xs text-slate-500">{preview}</p>
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-shrink-0 flex-col items-end gap-2">
-        {/* Bot / Manual toggle */}
-        <button
-          onClick={() => onToggle(msg.phone)}
-          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
-            msg.botActive
-              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-              : "border-yellow-500/30 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
+      {/* IA toggle switch */}
+      <button
+        onClick={(e) => onToggleAI(conv.phone, e)}
+        title={
+          conv.botActive
+            ? "IA activa — click para desactivar"
+            : "Manual — click para activar IA"
+        }
+        className={`mt-1 flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
+          conv.botActive ? "bg-emerald-500" : "bg-slate-600"
+        }`}
+      >
+        <div
+          className={`ml-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+            conv.botActive ? "translate-x-4" : "translate-x-0"
           }`}
-        >
-          {msg.botActive ? (
-            <>
-              <Bot size={12} /> Bot
-            </>
-          ) : (
-            <>
-              <User size={12} /> Manual
-            </>
-          )}
-        </button>
-
-        {/* Habilitar button — only in "selected" mode */}
-        {botMode === "selected" && (
-          <button
-            onClick={() => onEnable(msg.phone)}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
-              msg.enabled
-                ? "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
-                : "border-slate-600 bg-slate-700/50 text-slate-400 hover:border-slate-500 hover:text-white"
-            }`}
-          >
-            {msg.enabled ? "Habilitado" : "Habilitar"}
-          </button>
-        )}
-      </div>
-    </motion.div>
+        />
+      </button>
+    </div>
   );
 };
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-const BotMessages: React.FC = () => {
-  const [messages, setMessages] = useState<BotMessage[]>([]);
-  const [botMode, setBotMode] = useState<"all" | "selected">("all");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+// ─── Message Bubble ───────────────────────────────────────────────────────────
 
-  const fetchMessages = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    else setRefreshing(true);
+function getMediaLabel(url: string): { label: string; isImage: boolean } {
+  const lower = url.toLowerCase();
+  const isImage = /\.(jpe?g|png|webp|gif)(\?.*)?$/.test(lower);
+  return { label: isImage ? "🖼 Imagen" : "📎 Documento", isImage };
+}
+
+const MessageBubble: React.FC<{ msg: MsgRow }> = ({ msg }) => {
+  const isOut = msg.direction === "outbound";
+  // Real field is "content"; fallback to "message" for safety
+  const text = msg.content ?? msg.message ?? "";
+  const time = (() => {
     try {
-      const [msgRes, statusRes] = await Promise.all([
-        botAPI.getMessages(),
-        botAPI.getStatus(),
-      ]);
-      setMessages(msgRes.data);
-      setBotMode(statusRes.data.mode ?? "all");
-      setLastRefresh(new Date());
+      return new Date(msg.created_at).toLocaleTimeString("es-DO", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } catch {
-      // silently ignore
+      return "";
+    }
+  })();
+
+  const media = msg.media_url;
+  const { label: mediaLabel, isImage } = media
+    ? getMediaLabel(media)
+    : { label: "", isImage: false };
+
+  return (
+    <div className={`flex mb-1.5 ${isOut ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`max-w-[75%] px-4 py-2.5 text-sm text-white shadow-sm ${
+          isOut
+            ? "rounded-bl-2xl rounded-tl-2xl rounded-tr-2xl bg-emerald-800"
+            : "rounded-br-2xl rounded-tl-2xl rounded-tr-2xl bg-slate-700"
+        }`}
+      >
+        {/* Media attachment */}
+        {media && (
+          <a
+            href={media}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`mb-1.5 flex items-center gap-1.5 underline underline-offset-2 ${
+              isOut ? "text-emerald-200" : "text-blue-300"
+            }`}
+          >
+            {isImage ? (
+              <img
+                src={media}
+                alt="media"
+                className="mb-1 max-h-48 w-full rounded-lg object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <span className="text-sm">{mediaLabel}</span>
+            )}
+          </a>
+        )}
+        {/* Text content */}
+        {text && <p className="break-words leading-relaxed">{text}</p>}
+        {/* Timestamp */}
+        <p
+          className={`mt-1 text-[10px] ${
+            isOut ? "text-right text-emerald-300/60" : "text-slate-400"
+          }`}
+        >
+          {time}
+          {msg.ai_generated && (
+            <span className="ml-1.5 text-emerald-300/50">· IA</span>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// ─── Date Separator ───────────────────────────────────────────────────────────
+
+const DateSeparator: React.FC<{ label: string }> = ({ label }) => (
+  <div className="my-4 flex items-center gap-3">
+    <div className="flex-1 border-t border-slate-800" />
+    <span className="rounded-full bg-slate-800 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+      {label}
+    </span>
+    <div className="flex-1 border-t border-slate-800" />
+  </div>
+);
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+const BotMessages: React.FC = () => {
+  // Conversation list
+  const [conversations, setConversations] = useState<ConvRow[]>([]);
+  const [convLoading, setConvLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "ai" | "manual">("all");
+
+  // Selected conversation
+  const [selectedPhone, setSelectedPhone] = useState<string | null>(null);
+  const [showRightPanel, setShowRightPanel] = useState(false); // mobile toggle
+
+  // Chat
+  const [messages, setMessages] = useState<MsgRow[]>([]);
+  const [msgLoading, setMsgLoading] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // ── Fetch conversation list ─────────────────────────────────────────────────
+
+  const fetchConversations = useCallback(async (silent = false) => {
+    if (!silent) setConvLoading(true);
+    try {
+      const res = await botAPI.getMessages();
+      const raw = res.data as {
+        conversations?: Array<{
+          phone: string;
+          client_name: string | null;
+          last_message: string;
+          last_message_at: string;
+          message_count: string;
+        }>;
+      };
+      const convs = raw.conversations ?? [];
+      setConversations((prev) => {
+        const prevMap = new Map(prev.map((c) => [c.phone, c.botActive]));
+        return convs.map((c) => ({
+          ...c,
+          botActive: prevMap.get(c.phone) ?? true,
+        }));
+      });
+    } catch {
+      // silent
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      setConvLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(() => fetchMessages(true), 8000);
-    return () => clearInterval(interval);
-  }, [fetchMessages]);
+    fetchConversations();
+    const iv = setInterval(() => fetchConversations(true), 8000);
+    return () => clearInterval(iv);
+  }, [fetchConversations]);
 
-  const handleToggle = async (phone: string) => {
+  // ── Fetch messages for selected phone ──────────────────────────────────────
+
+  const fetchMessages = useCallback(async (phone: string) => {
+    setMsgLoading(true);
     try {
-      await botAPI.toggleContactMode(phone);
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.phone === phone ? { ...m, botActive: !m.botActive } : m,
-        ),
-      );
+      const res = await botAPI.getPhoneMessages(phone);
+      const data = res.data as MsgRow[] | { messages: MsgRow[] };
+      // API returns { messages: [...] } — unwrap it
+      const raw = Array.isArray(data) ? data : (data.messages ?? []);
+      setMessages(raw);
     } catch {
-      // silently ignore
+      setMessages([]);
+    } finally {
+      setMsgLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedPhone) fetchMessages(selectedPhone);
+  }, [selectedPhone, fetchMessages]);
+
+  // Auto-refresh selected chat
+  useEffect(() => {
+    if (!selectedPhone) return;
+    const iv = setInterval(() => fetchMessages(selectedPhone), 8000);
+    return () => clearInterval(iv);
+  }, [selectedPhone, fetchMessages]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
+  const selectConversation = (phone: string) => {
+    setSelectedPhone(phone);
+    setShowRightPanel(true);
+    setInputText("");
+  };
+
+  const handleToggleAI = async (phone: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConversations((prev) =>
+      prev.map((c) => (c.phone === phone ? { ...c, botActive: !c.botActive } : c))
+    );
+    try {
+      await botAPI.toggleChatAI(phone);
+    } catch {
+      // revert on failure
+      setConversations((prev) =>
+        prev.map((c) => (c.phone === phone ? { ...c, botActive: !c.botActive } : c))
+      );
     }
   };
 
-  const handleEnable = async (phone: string) => {
+  const handleSend = async () => {
+    const text = inputText.trim();
+    if (!text || !selectedPhone || sending) return;
+    setInputText("");
+    setSending(true);
+    // Optimistic message
+    const optimistic: MsgRow = {
+      id: `opt-${Date.now()}`,
+      phone: selectedPhone,
+      direction: "outbound",
+      content: text,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimistic]);
     try {
-      await botAPI.enableContact(phone);
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.phone === phone ? { ...m, enabled: !m.enabled } : m,
-        ),
-      );
+      await botAPI.sendMessage(selectedPhone, text);
+      await fetchMessages(selectedPhone);
     } catch {
-      // silently ignore
+      // keep optimistic on screen
+    } finally {
+      setSending(false);
     }
   };
 
-  const botActiveCount = messages.filter((m) => m.botActive).length;
-  const manualCount = messages.filter((m) => !m.botActive).length;
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  // ── Filtering ──────────────────────────────────────────────────────────────
+
+  const filtered = conversations.filter((c) => {
+    const q = search.toLowerCase();
+    const matchSearch =
+      !search ||
+      (c.client_name || "").toLowerCase().includes(q) ||
+      c.phone.includes(q);
+    const matchFilter =
+      filter === "all" ||
+      (filter === "ai" && c.botActive) ||
+      (filter === "manual" && !c.botActive);
+    return matchSearch && matchFilter;
+  });
+
+  const selectedConv = conversations.find((c) => c.phone === selectedPhone);
+
+  // ── Group messages by date ─────────────────────────────────────────────────
+
+  const messageGroups: { date: string; msgs: MsgRow[] }[] = [];
+  messages.forEach((m) => {
+    const label = getDateLabel(m.created_at);
+    const last = messageGroups[messageGroups.length - 1];
+    if (!last || last.date !== label) {
+      messageGroups.push({ date: label, msgs: [m] });
+    } else {
+      last.msgs.push(m);
+    }
+  });
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex items-center justify-between"
+    /*
+     * Escape DashboardLayout's padding (p-3 md:p-8) so the 2-panel layout
+     * can fill the full available height below the top bar (h-16 / h-20).
+     */
+    <div
+      className="-m-3 md:-m-8 flex overflow-hidden"
+      style={{ height: "calc(100vh - 4rem)" }}
+    >
+      {/* ════════════════════════════════════════════════════════════
+          LEFT PANEL — Conversation List (320 px on desktop)
+      ════════════════════════════════════════════════════════════ */}
+      <div
+        className={`flex flex-col border-r border-slate-700 bg-slate-900 ${
+          showRightPanel ? "hidden md:flex" : "flex"
+        } w-full flex-shrink-0 md:w-80`}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/30">
-            <MessageSquare size={20} className="text-white" />
-          </div>
-          <div>
-            <h2 className="font-display text-2xl font-bold text-white md:text-3xl">
-              Mensajes Bot
+        {/* Header */}
+        <div className="flex-shrink-0 border-b border-slate-700 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 shadow-md">
+              <MessageSquare size={16} className="text-white" />
+            </div>
+            <h2 className="font-display text-base font-bold text-white">
+              Conversaciones
             </h2>
-            <p className="text-sm text-slate-400">
-              Conversaciones en tiempo real
-            </p>
+            <span className="ml-auto rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300">
+              {conversations.length}
+            </span>
+          </div>
+
+          {/* Search */}
+          <div className="relative mb-3">
+            <Search
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+            />
+            <input
+              type="text"
+              placeholder="Buscar por nombre o número..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-xl border border-slate-700 bg-slate-800 py-2 pl-8 pr-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-blue-500"
+            />
+          </div>
+
+          {/* Filter tabs */}
+          <div className="flex gap-1">
+            {(
+              [
+                ["all", "Todos"],
+                ["ai", "IA Activa"],
+                ["manual", "Manual"],
+              ] as const
+            ).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setFilter(val)}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+                  filter === val
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-800 text-slate-400 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <button
-          onClick={() => fetchMessages(true)}
-          disabled={refreshing}
-          className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-2 text-sm text-slate-400 transition-all hover:border-slate-600 hover:text-white disabled:opacity-50"
-        >
-          <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-          <span className="hidden sm:inline">
-            {lastRefresh
-              ? `Actualizado ${formatTimestamp(lastRefresh.toISOString())}`
-              : "Actualizar"}
-          </span>
-        </button>
-      </motion.div>
+        {/* Conversation list */}
+        <div className="flex-1 overflow-y-auto">
+          {convLoading ? (
+            <div className="flex items-center justify-center py-16 text-slate-500">
+              <RefreshCw size={20} className="animate-spin" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="py-14 text-center text-slate-600">
+              <MessageSquare
+                size={32}
+                className="mx-auto mb-2 opacity-20"
+              />
+              <p className="text-sm">Sin conversaciones</p>
+            </div>
+          ) : (
+            filtered.map((conv) => (
+              <ConvItem
+                key={conv.phone}
+                conv={conv}
+                isSelected={selectedPhone === conv.phone}
+                onSelect={() => selectConversation(conv.phone)}
+                onToggleAI={handleToggleAI}
+              />
+            ))
+          )}
+        </div>
+      </div>
 
-      {/* Stats bar */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="grid grid-cols-3 gap-3"
+      {/* ════════════════════════════════════════════════════════════
+          RIGHT PANEL — Chat Area
+      ════════════════════════════════════════════════════════════ */}
+      <div
+        className={`flex flex-1 flex-col overflow-hidden bg-slate-950 ${
+          !showRightPanel ? "hidden md:flex" : "flex"
+        }`}
       >
-        <StatChip
-          label="Conversaciones"
-          value={messages.length}
-          color="text-white"
-        />
-        <StatChip
-          label="Bot Activo"
-          value={botActiveCount}
-          color="text-emerald-400"
-        />
-        <StatChip label="Manual" value={manualCount} color="text-yellow-400" />
-      </motion.div>
-
-      {/* Conversation list */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.15 }}
-      >
-        {loading ? (
-          <div className="flex items-center justify-center py-20 text-slate-500">
-            <RefreshCw size={24} className="animate-spin" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-700/50 bg-slate-900/30 py-16 text-center">
-            <MessageSquare
-              size={40}
-              className="mx-auto mb-4 text-slate-600"
-            />
-            <p className="text-slate-400">
-              No hay conversaciones aún.
+        {/* ── Empty state ── */}
+        {!selectedPhone ? (
+          <div className="flex flex-1 flex-col items-center justify-center text-slate-600">
+            <MessageSquare size={52} className="mb-4 opacity-20" />
+            <p className="text-lg font-semibold text-slate-500">
+              Selecciona una conversación
             </p>
             <p className="mt-1 text-sm text-slate-600">
-              Envía un mensaje al número conectado.
+              Los mensajes aparecerán aquí
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {messages.map((msg) => (
-              <ConversationCard
-                key={msg.id}
-                msg={msg}
-                botMode={botMode}
-                onToggle={handleToggle}
-                onEnable={handleEnable}
+          <>
+            {/* ── Top bar ── */}
+            <div className="flex flex-shrink-0 items-center gap-3 border-b border-slate-800 bg-slate-900 px-4 py-3">
+              {/* Back (mobile only) */}
+              <button
+                className="flex items-center justify-center rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white md:hidden"
+                onClick={() => {
+                  setShowRightPanel(false);
+                  setSelectedPhone(null);
+                }}
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              {/* Avatar */}
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-sm font-bold text-white shadow-md">
+                {getInitials(selectedConv?.client_name, selectedConv?.phone)}
+              </div>
+
+              {/* Name + phone */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate text-sm font-semibold text-white">
+                    {selectedConv?.client_name ||
+                      formatPhone(selectedPhone)}
+                  </p>
+                  <Circle
+                    size={7}
+                    className="flex-shrink-0 fill-emerald-400 text-emerald-400"
+                  />
+                </div>
+                <p className="truncate text-xs text-slate-500">
+                  {selectedPhone}
+                </p>
+              </div>
+
+              {/* IA badge + toggle */}
+              <div className="flex items-center gap-2">
+                {selectedConv?.botActive && (
+                  <span className="hidden rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400 sm:inline">
+                    IA activada
+                  </span>
+                )}
+                <button
+                  onClick={(e) => handleToggleAI(selectedPhone, e)}
+                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-all ${
+                    selectedConv?.botActive
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                      : "border-yellow-500/30 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
+                  }`}
+                >
+                  {selectedConv?.botActive ? (
+                    <Bot size={12} />
+                  ) : (
+                    <User size={12} />
+                  )}
+                  <span className="hidden sm:inline">
+                    {selectedConv?.botActive ? "Bot" : "Manual"}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* ── Messages area ── */}
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              {msgLoading ? (
+                <div className="flex items-center justify-center py-16 text-slate-500">
+                  <RefreshCw size={20} className="animate-spin" />
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex items-center justify-center py-16">
+                  <p className="text-sm text-slate-600">Sin mensajes aún</p>
+                </div>
+              ) : (
+                messageGroups.map((group) => (
+                  <div key={group.date}>
+                    <DateSeparator label={group.date} />
+                    {group.msgs.map((msg) => (
+                      <MessageBubble key={msg.id} msg={msg} />
+                    ))}
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* ── Input bar ── */}
+            <div className="flex flex-shrink-0 items-center gap-2 border-t border-slate-800 bg-slate-900 px-4 py-3">
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Escribe un mensaje..."
+                className="flex-1 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-blue-500"
               />
-            ))}
-          </div>
+              <button
+                onClick={handleSend}
+                disabled={!inputText.trim() || sending}
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {sending ? (
+                  <RefreshCw size={15} className="animate-spin" />
+                ) : (
+                  <Send size={15} />
+                )}
+              </button>
+            </div>
+          </>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 };

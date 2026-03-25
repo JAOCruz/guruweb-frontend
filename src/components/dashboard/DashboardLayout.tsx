@@ -233,13 +233,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </div>
 
           <NavItem
-            to="/dashboard/chat"
-            icon={<MessageSquare size={18} />}
-            label="Chat en Vivo"
-            sidebarOpen={sidebarOpen}
-            isMobile={isMobile}
-          />
-          <NavItem
             to="/dashboard/ai-insights"
             icon={<BarChart2 size={18} />}
             label="IA Analytics"

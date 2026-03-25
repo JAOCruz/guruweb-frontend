@@ -127,20 +127,20 @@ export interface AnalyticsData {
 
 export const botAPI = {
   // ── Bot connection ──────────────────────────────────────────────────────
-  getStatus: () => botApi.get<BotStatus>("/bot/status"),
-  connect: () => botApi.post("/bot/connect"),
-  getQR: () => botApi.get<{ qr: string | null }>("/bot/qr"),
-  disconnect: () => botApi.post("/bot/disconnect"),
-  toggleBot: () => botApi.post("/bot/toggle"),
-  setBotMode: (mode: BotMode) => botApi.post("/bot/mode", { mode }),
+  getStatus: () => botApi.get<BotStatus>("/whatsapp/status"),
+  connect: () => botApi.post("/whatsapp/connect"),
+  getQR: () => botApi.get<{ qr: string | null }>("/whatsapp/qr"),
+  disconnect: () => botApi.post("/whatsapp/disconnect"),
+  toggleBot: () => botApi.post("/whatsapp/bot-toggle"),
+  setBotMode: (mode: BotMode) => botApi.post("/whatsapp/bot-mode", { mode }),
 
   // ── Legacy message/client endpoints ────────────────────────────────────
-  getMessages: () => botApi.get<BotMessage[]>("/bot/messages"),
-  getClients: () => botApi.get<BotClient[]>("/bot/clients"),
+  getMessages: () => botApi.get<{ conversations: Array<{phone:string;client_name:string|null;last_message:string;last_message_at:string;message_count:string}> }>("/messages/conversations"),
+  getClients: () => botApi.get<BotClient[]>("/clients"),
   toggleContactMode: (phone: string) =>
-    botApi.post(`/bot/contacts/${phone}/toggle`),
+    botApi.post(`/messages/chat-toggle/${phone}`),
   enableContact: (phone: string) =>
-    botApi.post(`/bot/contacts/${phone}/enable`),
+    botApi.post(`/messages/chat-toggle/${phone}`),
   loginBot: (email: string, password: string) =>
     botApi.post<{ token: string }>("/auth/login", { email, password }),
 

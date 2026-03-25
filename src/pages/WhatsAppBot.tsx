@@ -85,7 +85,13 @@ const WhatsAppBot: React.FC = () => {
   const fetchStatus = useCallback(async () => {
     try {
       const res = await botAPI.getStatus();
-      setStatus(res.data);
+      // Adapt backend response: {connected, botActive, botMode} → {status, mode}
+      const raw = res.data as { connected: boolean; botActive: boolean; botMode: string };
+      setStatus({
+        status: raw.connected ? "connected" : "disconnected",
+        paused: !raw.botActive,
+        mode: (raw.botMode as "all" | "selected") ?? "all",
+      });
     } catch {
       // silently ignore polling errors
     }
