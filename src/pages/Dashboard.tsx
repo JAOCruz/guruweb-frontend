@@ -12,6 +12,8 @@ import Settings from "./Settings";
 import WhatsAppBot from "./WhatsAppBot";
 import BotMessages from "./BotMessages";
 import BotClients from "./BotClients";
+import WhatsAppChat from "./WhatsAppChat";
+import AIInsights from "./AIInsights";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap } from "lucide-react";
@@ -371,6 +373,8 @@ const Dashboard: React.FC = () => {
         <Route path="/whatsapp" element={<WhatsAppBot />} />
         <Route path="/bot-messages" element={<BotMessages />} />
         <Route path="/bot-clients" element={<BotClients />} />
+        <Route path="/chat" element={<WhatsAppChat />} />
+        <Route path="/ai-insights" element={<AIInsights />} />
       </Routes>
     </DashboardLayout>
   );

@@ -12,7 +12,7 @@ const botApi = axios.create({
 // Request interceptor to add bot token
 botApi.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("guru_bot_token");
+    const token = localStorage.getItem("guru_bot_token") || localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -50,7 +50,7 @@ export interface BotMessage {
   lastMessage: string;
   timestamp: string;
   botActive: boolean;
-  enabled?: boolean; // for "selected" mode
+  enabled?: boolean;
 }
 
 export interface BotClient {
@@ -61,44 +61,119 @@ export interface BotClient {
   messageCount: number;
 }
 
+// ─── Chat / Conversation types ──────────────────────────────────────────────
+
+export type MessageDirection = "inbound" | "outbound";
+export type HandledBy = "ai" | "human";
+
+export interface ChatMessage {
+  id: string;
+  phone: string;
+  message: string;
+  direction: MessageDirection;
+  timestamp: string;
+  handledBy?: HandledBy;
+  fromMe?: boolean;
+  read?: boolean;
+}
+
+export interface Conversation {
+  id: string;
+  phone: string;
+  name?: string;
+  lastMessage: string;
+  lastMessageTime: string;
+  timestamp: string;
+  unreadCount?: number;
+  botActive?: boolean;
+  aiActive?: boolean;
+  handledBy?: HandledBy;
+  status?: "active" | "inactive";
+}
+
+export interface PhoneStatus {
+  phone: string;
+  aiActive: boolean;
+  mode: "ai" | "human";
+}
+
+// ─── Analytics types ────────────────────────────────────────────────────────
+
+export interface IntentData {
+  intent: string;
+  count: number;
+  percentage: number;
+}
+
+export interface DashboardStats {
+  totalConversations?: number;
+  aiHandled?: number;
+  humanHandled?: number;
+  humanTakeovers?: number;
+  avgResponseTimeAI?: number;
+  avgResponseTimeHuman?: number;
+  totalMessages?: number;
+  activeConversations?: number;
+  [key: string]: unknown;
+}
+
+export interface AnalyticsData {
+  topIntents?: IntentData[];
+  dailyStats?: { date: string; ai: number; human: number }[];
+  [key: string]: unknown;
+}
+
 // ─── API Methods ────────────────────────────────────────────────────────────
 
 export const botAPI = {
-  /** Get current WhatsApp bot status */
+  // ── Bot connection ──────────────────────────────────────────────────────
   getStatus: () => botApi.get<BotStatus>("/bot/status"),
-
-  /** Initiate WhatsApp connection (triggers QR generation) */
   connect: () => botApi.post("/bot/connect"),
-
-  /** Get current QR code string */
   getQR: () => botApi.get<{ qr: string | null }>("/bot/qr"),
-
-  /** Disconnect the WhatsApp session */
   disconnect: () => botApi.post("/bot/disconnect"),
-
-  /** Toggle bot paused/active */
   toggleBot: () => botApi.post("/bot/toggle"),
-
-  /** Set bot mode: 'all' responds to everyone, 'selected' only to enabled contacts */
   setBotMode: (mode: BotMode) => botApi.post("/bot/mode", { mode }),
 
-  /** Get list of conversations with last message info */
+  // ── Legacy message/client endpoints ────────────────────────────────────
   getMessages: () => botApi.get<BotMessage[]>("/bot/messages"),
-
-  /** Get list of known clients */
   getClients: () => botApi.get<BotClient[]>("/bot/clients"),
-
-  /** Toggle individual contact bot mode (bot vs manual) */
   toggleContactMode: (phone: string) =>
     botApi.post(`/bot/contacts/${phone}/toggle`),
-
-  /** Enable a contact in "selected" mode */
   enableContact: (phone: string) =>
     botApi.post(`/bot/contacts/${phone}/enable`),
-
-  /** Login to bot backend (if it has its own auth) */
   loginBot: (email: string, password: string) =>
     botApi.post<{ token: string }>("/auth/login", { email, password }),
+
+  // ── Conversations ───────────────────────────────────────────────────────
+  /** GET /api/messages/conversations — list all conversations */
+  getConversations: () =>
+    botApi.get<Conversation[]>("/messages/conversations"),
+
+  /** GET /api/messages/phone/:phone — full message history */
+  getPhoneMessages: (phone: string) =>
+    botApi.get<ChatMessage[]>(`/messages/phone/${encodeURIComponent(phone)}`),
+
+  /** POST /api/messages/send — send a message */
+  sendMessage: (phone: string, message: string) =>
+    botApi.post("/messages/send", { phone, message }),
+
+  /** POST /api/messages/chat-toggle/:phone — toggle AI on/off */
+  toggleChatAI: (phone: string) =>
+    botApi.post(`/messages/chat-toggle/${encodeURIComponent(phone)}`),
+
+  /** GET /api/messages/phone-status/:phone — get AI/manual status */
+  getPhoneStatus: (phone: string) =>
+    botApi.get<PhoneStatus>(`/messages/phone-status/${encodeURIComponent(phone)}`),
+
+  // ── Dashboard & Analytics ───────────────────────────────────────────────
+  /** GET /api/dashboard/stats */
+  getDashboardStats: () => botApi.get<DashboardStats>("/dashboard/stats"),
+
+  /** GET /api/dashboard/analytics */
+  getAnalytics: () => botApi.get<AnalyticsData>("/dashboard/analytics"),
+
+  /** GET /api/clients */
+  getAllClients: () => botApi.get<BotClient[]>("/clients"),
 };
 
 export default botApi;

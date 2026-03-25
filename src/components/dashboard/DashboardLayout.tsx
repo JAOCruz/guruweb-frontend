@@ -16,6 +16,7 @@ import {
   Users,
   ChevronDown,
   ChevronRight,
+  BarChart2,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -230,6 +231,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               </div>
             )}
           </div>
+
+          <NavItem
+            to="/dashboard/chat"
+            icon={<MessageSquare size={18} />}
+            label="Chat en Vivo"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
+          <NavItem
+            to="/dashboard/ai-insights"
+            icon={<BarChart2 size={18} />}
+            label="IA Analytics"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
 
           {isAdmin && (
             <NavItem
