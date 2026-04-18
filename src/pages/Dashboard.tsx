@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import LoadingScreen from "../components/LoadingScreen";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import AdminDataTable from "../components/dashboard/AdminDataTable";
 import EmployeeDataTable from "../components/dashboard/EmployeeDataTable";
@@ -12,6 +12,8 @@ import Settings from "./Settings";
 import WhatsAppBot from "./WhatsAppBot";
 import BotMessages from "./BotMessages";
 import BotClients from "./BotClients";
+import Cases from "./Cases";
+import Cotizaciones from "./Cotizaciones";
 import AIInsights from "./AIInsights";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -21,6 +23,7 @@ import { formatCurrency } from "../utils";
 
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
+  const location = useLocation();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const getTodayString = () => new Date().toISOString().split("T")[0];
@@ -32,9 +35,18 @@ const Dashboard: React.FC = () => {
   const [employeePercentage, setEmployeePercentage] = useState(50);
 
   useEffect(() => {
-    fetchData();
-    fetchEmployeePercentage();
-  }, [startDate, endDate]); // Re-fetch when dates change
+    // Check if on a bot-related route
+    const isBotRoute = /\/(whatsapp|bot-|ai-insights|flipbooks)/.test(location.pathname);
+
+    if (isBotRoute) {
+      // Skip service fetching on bot routes
+      setLoading(false);
+    } else {
+      // Fetch services on main dashboard and settings routes
+      fetchData();
+      fetchEmployeePercentage();
+    }
+  }, [startDate, endDate, location.pathname]);
 
   const fetchEmployeePercentage = async () => {
     try {
@@ -372,6 +384,8 @@ const Dashboard: React.FC = () => {
         <Route path="/whatsapp" element={<WhatsAppBot />} />
         <Route path="/bot-messages" element={<BotMessages />} />
         <Route path="/bot-clients" element={<BotClients />} />
+        <Route path="/cotizaciones" element={<Cotizaciones />} />
+        <Route path="/cases" element={<Cases />} />
         <Route path="/ai-insights" element={<AIInsights />} />
       </Routes>
     </DashboardLayout>

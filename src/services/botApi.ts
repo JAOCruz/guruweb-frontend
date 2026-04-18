@@ -61,6 +61,81 @@ export interface BotClient {
   messageCount: number;
 }
 
+export interface ClientDetailFull {
+  client: {
+    id: number;
+    name?: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    notes?: string;
+    created_at: string;
+  };
+  services: Array<{
+    id: number;
+    name: string;
+    abbreviation: string;
+    color: string;
+    category_type: string;
+    status: 'active' | 'completed' | 'cancelled';
+    started_at: string;
+  }>;
+  cases: Array<{
+    id: number;
+    case_number: string;
+    title: string;
+    description?: string;
+    status: string;
+    case_type?: string;
+    court?: string;
+    next_hearing?: string;
+    created_at: string;
+    tags: Array<{ tag_type: string; tag_value: string }>;
+  }>;
+  messages: Array<{
+    id: number;
+    direction: 'inbound' | 'outbound';
+    content: string;
+    media_url?: string;
+    created_at: string;
+  }>;
+  documents: Array<{
+    id: number;
+    doc_type: string;
+    file_name?: string;
+    status: string;
+    created_at: string;
+  }>;
+  appointments: Array<{
+    id: number;
+    date: string;
+    time: string;
+    type: string;
+    status: string;
+  }>;
+  stats: {
+    totalServices: number;
+    totalCases: number;
+    totalMessages: number;
+    totalDocuments: number;
+  };
+}
+
+export interface ClientMedia {
+  id: number;
+  phone: string;
+  client_id: number;
+  wa_message_id?: string;
+  media_type: string;
+  mime_type?: string;
+  original_name?: string;
+  saved_name: string;
+  file_path: string;
+  file_size?: number;
+  context: string;
+  created_at: string;
+}
+
 // ─── Chat / Conversation types ──────────────────────────────────────────────
 
 export type MessageDirection = "inbound" | "outbound";
@@ -137,6 +212,12 @@ export const botAPI = {
   // ── Legacy message/client endpoints ────────────────────────────────────
   getMessages: () => botApi.get<{ conversations: Array<{phone:string;client_name:string|null;last_message:string;last_message_at:string;message_count:string}> }>("/messages/conversations"),
   getClients: () => botApi.get<BotClient[]>("/clients"),
+  getClientDetail: (clientId: string | number) =>
+    botApi.get<ClientDetailFull>(`/clients/${clientId}/detail`),
+  getClientMedia: (clientId: string | number) =>
+    botApi.get<{ media: ClientMedia[] }>(`/clients/${clientId}/media`),
+  getClientCasesSummary: (clientId: string | number) =>
+    botApi.get(`/clients/${clientId}/cases-summary`),
   toggleContactMode: (phone: string) =>
     botApi.post(`/messages/chat-toggle/${phone}`),
   enableContact: (phone: string) =>
@@ -174,6 +255,10 @@ export const botAPI = {
 
   /** GET /api/clients */
   getAllClients: () => botApi.get<BotClient[]>("/clients"),
+
+  /** GET /api/messages/search?q=term — search messages by content */
+  searchConversations: (query: string) =>
+    botApi.get<{ conversations: Array<{phone:string;client_name:string|null;last_message:string;last_message_at:string;message_count:string;botActive:boolean;firstMatchId:number|null}> }>("/messages/search", { params: { q: query } }),
 };
 
 export default botApi;

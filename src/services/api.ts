@@ -1,6 +1,15 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const getAPIUrl = () => {
+  // In development, use localhost; in production, use current hostname
+  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    return "http://localhost:3000/api";
+  }
+  // For remote access, use the current hostname with port 3000
+  return `http://${window.location.hostname}:3000/api`;
+};
+
+const API_URL = import.meta.env.VITE_API_URL || getAPIUrl();
 
 const api = axios.create({
   baseURL: API_URL,

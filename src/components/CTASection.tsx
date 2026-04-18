@@ -14,7 +14,6 @@ const CTASection: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
           className="group relative overflow-hidden rounded-[2.5rem] border border-blue-500/20 bg-slate-900/40 p-12 text-center backdrop-blur-2xl md:p-20"
         >
           {/* Animated Background Gradient */}

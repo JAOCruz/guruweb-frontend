@@ -15,7 +15,6 @@ const VideoSection: React.FC = () => {
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
           className="group relative"
         >
           {/* Cyber Frame */}

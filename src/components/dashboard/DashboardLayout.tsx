@@ -17,6 +17,8 @@ import {
   ChevronDown,
   ChevronRight,
   BarChart2,
+  Briefcase,
+  FileText,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -34,6 +36,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     "/dashboard/whatsapp",
     "/dashboard/bot-messages",
     "/dashboard/bot-clients",
+    "/dashboard/cotizaciones",
+    "/dashboard/cases",
   ];
   const isWhatsappActive = whatsappPaths.some((p) =>
     location.pathname.startsWith(p),
@@ -227,6 +231,32 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 >
                   <Users size={15} />
                   Clientes
+                </NavLink>
+                <NavLink
+                  to="/dashboard/cotizaciones"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-purple-600/30 font-semibold text-purple-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <FileText size={15} />
+                  Cotizaciones
+                </NavLink>
+                <NavLink
+                  to="/dashboard/cases"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-blue-600/30 font-semibold text-blue-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <Briefcase size={15} />
+                  Casos
                 </NavLink>
               </div>
             )}

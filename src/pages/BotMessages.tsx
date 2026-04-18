@@ -8,6 +8,8 @@ import {
   RefreshCw,
   ChevronLeft,
   Circle,
+  Users,
+  MessageCircle,
 } from "lucide-react";
 import { botAPI } from "../services/botApi";
 
@@ -20,6 +22,7 @@ interface ConvRow {
   last_message_at: string;
   message_count: string;
   botActive: boolean;
+  firstMatchId?: string | number | null;
 }
 
 interface MsgRow {
@@ -59,14 +62,17 @@ function formatRelTime(ts: string): string {
     return date.toLocaleTimeString("es-DO", {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "America/Santo_Domingo",
     });
   }
+  const fmt = (d: Date) => d.toLocaleDateString("es-DO", { timeZone: "America/Santo_Domingo" });
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "Ayer";
+  if (fmt(date) === fmt(yesterday)) return "Ayer";
   return date.toLocaleDateString("es-DO", {
     day: "numeric",
     month: "short",
+    timeZone: "America/Santo_Domingo",
   });
 }
 
@@ -75,20 +81,24 @@ function formatPhone(phone: string): string {
   if (d.length === 11 && d.startsWith("1"))
     return `(${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
   if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+  // WhatsApp @lid privacy ID — real number hidden by WA
+  if (d.length > 12) return `WA:···${d.slice(-4)}`;
   return phone;
 }
 
 function getDateLabel(ts: string): string {
   const date = new Date(ts);
   const now = new Date();
-  if (date.toDateString() === now.toDateString()) return "Hoy";
+  const fmt = (d: Date) => d.toLocaleDateString("es-DO", { timeZone: "America/Santo_Domingo" });
+  if (fmt(date) === fmt(now)) return "Hoy";
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "Ayer";
+  if (fmt(date) === fmt(yesterday)) return "Ayer";
   return date.toLocaleDateString("es-DO", {
     weekday: "long",
     day: "numeric",
     month: "long",
+    timeZone: "America/Santo_Domingo",
   });
 }
 
@@ -157,15 +167,92 @@ const ConvItem: React.FC<ConvItemProps> = ({
   );
 };
 
-// ─── Message Bubble ───────────────────────────────────────────────────────────
+// ─── Authenticated media loader (Blob URL) ───────────────────────────────────
 
-function getMediaLabel(url: string): { label: string; isImage: boolean } {
-  const lower = url.toLowerCase();
-  const isImage = /\.(jpe?g|png|webp|gif)(\?.*)?$/.test(lower);
-  return { label: isImage ? "🖼 Imagen" : "📎 Documento", isImage };
+function useMediaBlob(apiPath: string | null | undefined) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [mimeType, setMimeType] = useState<string>("");
+
+  useEffect(() => {
+    if (!apiPath) return;
+    let revoked = false;
+    const token = localStorage.getItem("guru_bot_token") || localStorage.getItem("token") || "";
+    fetch(apiPath, { headers: { Authorization: `Bearer ${token}` } })
+      .then(async (res) => {
+        if (!res.ok) return;
+        const ct = res.headers.get("content-type") ?? "";
+        const blob = await res.blob();
+        if (!revoked) {
+          setMimeType(ct);
+          setBlobUrl(URL.createObjectURL(blob));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      revoked = true;
+      setBlobUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
+    };
+  }, [apiPath]);
+
+  return { blobUrl, mimeType };
 }
 
-const MessageBubble: React.FC<{ msg: MsgRow }> = ({ msg }) => {
+// ─── Media bubble component ───────────────────────────────────────────────────
+
+const MediaAttachment: React.FC<{ apiPath: string; isOut: boolean }> = ({ apiPath, isOut }) => {
+  const { blobUrl, mimeType } = useMediaBlob(apiPath);
+
+  if (!blobUrl) {
+    return (
+      <div className={`mb-1.5 text-xs italic ${isOut ? "text-emerald-300/60" : "text-slate-400"}`}>
+        Cargando media…
+      </div>
+    );
+  }
+
+  if (mimeType.startsWith("image/")) {
+    return (
+      <img
+        src={blobUrl}
+        alt="imagen"
+        className="mb-1.5 max-h-52 w-full rounded-xl object-cover cursor-pointer"
+        onClick={() => window.open(blobUrl, "_blank")}
+      />
+    );
+  }
+
+  if (mimeType.startsWith("audio/")) {
+    return (
+      <audio controls preload="metadata" className="mb-1.5 w-full min-w-[250px]">
+        <source src={blobUrl} type={mimeType || "audio/ogg"} />
+        Tu navegador no soporta audio.
+      </audio>
+    );
+  }
+
+  if (mimeType.startsWith("video/")) {
+    return (
+      <video controls src={blobUrl} className="mb-1.5 max-h-52 w-full rounded-xl object-cover">
+        Tu navegador no soporta video.
+      </video>
+    );
+  }
+
+  // Generic download link
+  return (
+    <a
+      href={blobUrl}
+      download
+      className={`mb-1.5 flex items-center gap-1.5 underline underline-offset-2 text-sm ${isOut ? "text-emerald-200" : "text-blue-300"}`}
+    >
+      📎 Descargar archivo
+    </a>
+  );
+};
+
+// ─── Message Bubble ───────────────────────────────────────────────────────────
+
+const MessageBubble: React.FC<{ msg: MsgRow; isHighlighted?: boolean }> = ({ msg, isHighlighted }) => {
   const isOut = msg.direction === "outbound";
   // Real field is "content"; fallback to "message" for safety
   const text = msg.content ?? msg.message ?? "";
@@ -174,6 +261,7 @@ const MessageBubble: React.FC<{ msg: MsgRow }> = ({ msg }) => {
       return new Date(msg.created_at).toLocaleTimeString("es-DO", {
         hour: "2-digit",
         minute: "2-digit",
+        timeZone: "America/Santo_Domingo",
       });
     } catch {
       return "";
@@ -181,45 +269,33 @@ const MessageBubble: React.FC<{ msg: MsgRow }> = ({ msg }) => {
   })();
 
   const media = msg.media_url;
-  const { label: mediaLabel, isImage } = media
-    ? getMediaLabel(media)
-    : { label: "", isImage: false };
 
   return (
-    <div className={`flex mb-1.5 ${isOut ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`flex mb-1.5 ${isOut ? "justify-end" : "justify-start"} transition-all duration-300`}
+      id={`msg-${msg.id}`}
+    >
       <div
-        className={`max-w-[75%] px-4 py-2.5 text-sm text-white shadow-sm ${
+        className={`max-w-[75%] px-4 py-2.5 text-sm text-white shadow-sm transition-all duration-300 ${
+          isHighlighted
+            ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-[#0B1120] scale-[1.02] shadow-lg shadow-yellow-400/30"
+            : ""
+        } ${
           isOut
-            ? "rounded-bl-2xl rounded-tl-2xl rounded-tr-2xl bg-emerald-800"
-            : "rounded-br-2xl rounded-tl-2xl rounded-tr-2xl bg-slate-700"
+            ? `rounded-bl-2xl rounded-tl-2xl rounded-tr-2xl ${
+                isHighlighted ? "bg-emerald-700" : "bg-emerald-800"
+              }`
+            : `rounded-br-2xl rounded-tl-2xl rounded-tr-2xl ${
+                isHighlighted ? "bg-slate-600" : "bg-slate-700"
+              }`
         }`}
       >
-        {/* Media attachment */}
-        {media && (
-          <a
-            href={media}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`mb-1.5 flex items-center gap-1.5 underline underline-offset-2 ${
-              isOut ? "text-emerald-200" : "text-blue-300"
-            }`}
-          >
-            {isImage ? (
-              <img
-                src={media}
-                alt="media"
-                className="mb-1 max-h-48 w-full rounded-lg object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
-                }}
-              />
-            ) : (
-              <span className="text-sm">{mediaLabel}</span>
-            )}
-          </a>
-        )}
+        {/* Authenticated media */}
+        {media && <MediaAttachment apiPath={media} isOut={isOut} />}
         {/* Text content */}
-        {text && <p className="break-words leading-relaxed">{text}</p>}
+        {text && !text.startsWith("[📎") && !text.startsWith("[🎤") && (
+          <p className="break-words leading-relaxed">{text}</p>
+        )}
         {/* Timestamp */}
         <p
           className={`mt-1 text-[10px] ${
@@ -266,8 +342,18 @@ const BotMessages: React.FC = () => {
   const [msgLoading, setMsgLoading] = useState(false);
   const [inputText, setInputText] = useState("");
   const [sending, setSending] = useState(false);
+  const [highlightMessageId, setHighlightMessageId] = useState<string | number | null>(null);
+
+  // Message search
+  const [showMsgSearch, setShowMsgSearch] = useState(false);
+  const [msgSearch, setMsgSearch] = useState("");
+  const [messageSearchMatches, setMessageSearchMatches] = useState<(string | number)[]>([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const userScrolledRef = useRef(false);
+  const prevMessageCount = useRef(0);
 
   // ── Fetch conversation list ─────────────────────────────────────────────────
 
@@ -282,6 +368,7 @@ const BotMessages: React.FC = () => {
           last_message: string;
           last_message_at: string;
           message_count: string;
+          botActive?: boolean;
         }>;
       };
       const convs = raw.conversations ?? [];
@@ -289,13 +376,23 @@ const BotMessages: React.FC = () => {
         const prevMap = new Map(prev.map((c) => [c.phone, c.botActive]));
         return convs.map((c) => ({
           ...c,
-          botActive: prevMap.get(c.phone) ?? true,
+          botActive: c.botActive ?? prevMap.get(c.phone) ?? true,
         }));
       });
     } catch {
       // silent
     } finally {
       setConvLoading(false);
+    }
+  }, []);
+
+  // Auto-open chat from BotClients
+  useEffect(() => {
+    const phoneToOpen = localStorage.getItem('openChatPhone');
+    if (phoneToOpen) {
+      localStorage.removeItem('openChatPhone');
+      setSelectedPhone(phoneToOpen);
+      setShowRightPanel(true);
     }
   }, []);
 
@@ -307,18 +404,17 @@ const BotMessages: React.FC = () => {
 
   // ── Fetch messages for selected phone ──────────────────────────────────────
 
-  const fetchMessages = useCallback(async (phone: string) => {
-    setMsgLoading(true);
+  const fetchMessages = useCallback(async (phone: string, silent = false) => {
+    if (!silent) setMsgLoading(true);
     try {
       const res = await botAPI.getPhoneMessages(phone);
-      const data = res.data as MsgRow[] | { messages: MsgRow[] };
-      // API returns { messages: [...] } — unwrap it
-      const raw = Array.isArray(data) ? data : (data.messages ?? []);
-      setMessages(raw);
+      const data = res.data as unknown;
+      const raw = Array.isArray(data) ? data : ((data as any).messages ?? []);
+      setMessages([...raw].reverse()); // API returns DESC, we need ASC for chat display
     } catch {
-      setMessages([]);
+      if (!silent) setMessages([]);
     } finally {
-      setMsgLoading(false);
+      if (!silent) setMsgLoading(false);
     }
   }, []);
 
@@ -326,24 +422,73 @@ const BotMessages: React.FC = () => {
     if (selectedPhone) fetchMessages(selectedPhone);
   }, [selectedPhone, fetchMessages]);
 
-  // Auto-refresh selected chat
+  // Auto-refresh selected chat (silent — no loading spinner, no scroll reset)
   useEffect(() => {
     if (!selectedPhone) return;
-    const iv = setInterval(() => fetchMessages(selectedPhone), 8000);
+    const iv = setInterval(() => fetchMessages(selectedPhone, true), 8000);
     return () => clearInterval(iv);
   }, [selectedPhone, fetchMessages]);
 
-  // Auto-scroll to bottom
+  // Scroll to bottom ONLY on first load or conversation switch
+  const lastSelectedPhone = useRef<string | null>(null);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (!messages.length) return;
+    const isNewConversation = selectedPhone !== lastSelectedPhone.current;
+    const isFirstLoad = prevMessageCount.current === 0;
+    const hasNewMessages = messages.length > prevMessageCount.current;
+    prevMessageCount.current = messages.length;
+
+    if (isNewConversation || isFirstLoad) {
+      lastSelectedPhone.current = selectedPhone;
+      // Instant jump to bottom on conversation switch
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+      }, 50);
+    } else if (hasNewMessages && !userScrolledRef.current) {
+      // New message arrived and user is at bottom — smooth scroll
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    // If user scrolled up: NEVER move scroll
+  }, [messages, selectedPhone]);
+
+  // Track if user scrolled up manually
+  const handleScrollContainer = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    userScrolledRef.current = distFromBottom > 80;
+  }, []);
+
+  // Scroll to highlighted message (search result) — wait for messages to load
+  useEffect(() => {
+    if (!highlightMessageId || messages.length === 0) return;
+    // Wait for DOM to render the message
+    const timer = setTimeout(() => {
+      // Try both formats: msg-{id} and msg-{stringId}
+      let element = document.getElementById(`msg-${highlightMessageId}`);
+      if (!element) {
+        // Try with string conversion
+        element = document.getElementById(`msg-${String(highlightMessageId)}`);
+      }
+      console.log(`[Search] Looking for msg-${highlightMessageId}, found:`, !!element);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        console.log(`[Search] Scrolled to message ${highlightMessageId}`);
+      } else {
+        console.log(`[Search] Message ${highlightMessageId} not found in DOM`);
+        console.log(`[Search] Available message IDs:`, messages.slice(0, 5).map(m => m.id));
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [highlightMessageId, messages]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  const selectConversation = (phone: string) => {
+  const selectConversation = (phone: string, firstMatchId?: string | number | null) => {
     setSelectedPhone(phone);
     setShowRightPanel(true);
     setInputText("");
+    setHighlightMessageId(firstMatchId || null);
   };
 
   const handleToggleAI = async (phone: string, e: React.MouseEvent) => {
@@ -392,6 +537,30 @@ const BotMessages: React.FC = () => {
     }
   };
 
+  // ── Message search ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!msgSearch.trim()) {
+      setMessageSearchMatches([]);
+      setHighlightMessageId(null);
+      return;
+    }
+
+    const q = msgSearch.toLowerCase();
+    const matches = messages
+      .filter((m) => m.content.toLowerCase().includes(q))
+      .map((m) => m.id);
+    setMessageSearchMatches(matches);
+    setCurrentMatchIndex(0);
+
+    if (matches.length > 0) {
+      setHighlightMessageId(matches[0]);
+      setTimeout(() => {
+        const el = document.getElementById(`msg-${matches[0]}`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [msgSearch, messages]);
+
   // ── Filtering ──────────────────────────────────────────────────────────────
 
   const filtered = conversations.filter((c) => {
@@ -422,6 +591,14 @@ const BotMessages: React.FC = () => {
     }
   });
 
+  // Calculate stats
+  const totalConversations = conversations.length;
+  // Sum message_count from all conversations
+  const totalMessages = conversations.reduce((sum, conv) => {
+    const count = parseInt(conv.message_count || "0", 10);
+    return sum + count;
+  }, 0);
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -441,6 +618,30 @@ const BotMessages: React.FC = () => {
           showRightPanel ? "hidden md:flex" : "flex"
         } w-full flex-shrink-0 md:w-80`}
       >
+        {/* Stats bar */}
+        <div className="flex-shrink-0 border-b border-slate-700 bg-slate-800/50 px-4 py-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg border border-slate-600 bg-slate-700/50 p-2.5">
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Users size={13} />
+                <span>Conversaciones</span>
+              </div>
+              <div className="mt-1 text-lg font-bold text-white">
+                {totalConversations}
+              </div>
+            </div>
+            <div className="rounded-lg border border-slate-600 bg-slate-700/50 p-2.5">
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <MessageCircle size={13} />
+                <span>Mensajes</span>
+              </div>
+              <div className="mt-1 text-lg font-bold text-white">
+                {totalMessages}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="flex-shrink-0 border-b border-slate-700 p-4">
           <div className="mb-3 flex items-center gap-2">
@@ -463,11 +664,20 @@ const BotMessages: React.FC = () => {
             />
             <input
               type="text"
-              placeholder="Buscar por nombre o número..."
+              placeholder={search.trim().length >= 2 ? "Buscando en mensajes..." : "Buscar por nombre, número o palabra..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 py-2 pl-8 pr-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-blue-500"
+              className={`w-full rounded-xl border py-2 pl-8 pr-3 text-sm text-white outline-none transition-all focus:border-blue-500 ${
+                search.trim().length >= 2
+                  ? "border-blue-500 bg-slate-800/80 placeholder-blue-300"
+                  : "border-slate-700 bg-slate-800 placeholder-slate-500"
+              }`}
             />
+            {search.trim().length >= 2 && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-blue-400 font-semibold">
+                EN MENSAJES
+              </span>
+            )}
           </div>
 
           {/* Filter tabs */}
@@ -495,7 +705,7 @@ const BotMessages: React.FC = () => {
         </div>
 
         {/* Conversation list */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scroll">
           {convLoading ? (
             <div className="flex items-center justify-center py-16 text-slate-500">
               <RefreshCw size={20} className="animate-spin" />
@@ -514,7 +724,7 @@ const BotMessages: React.FC = () => {
                 key={conv.phone}
                 conv={conv}
                 isSelected={selectedPhone === conv.phone}
-                onSelect={() => selectConversation(conv.phone)}
+                onSelect={() => selectConversation(conv.phone, conv.firstMatchId)}
                 onToggleAI={handleToggleAI}
               />
             ))
@@ -603,10 +813,65 @@ const BotMessages: React.FC = () => {
                   </span>
                 </button>
               </div>
+
+              {/* Message search button */}
+              <button
+                onClick={() => {
+                  setShowMsgSearch(!showMsgSearch);
+                  if (showMsgSearch) {
+                    setMsgSearch("");
+                    setMessageSearchMatches([]);
+                    setHighlightMessageId(null);
+                  }
+                }}
+                className={`flex items-center justify-center rounded-lg p-2 transition-all ${
+                  showMsgSearch
+                    ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                }`}
+                title="Buscar en mensajes"
+              >
+                <Search size={18} />
+              </button>
             </div>
 
+            {/* Message search bar */}
+            {showMsgSearch && (
+              <div className="flex flex-shrink-0 items-center gap-2 border-b border-slate-800 bg-slate-900 px-4 py-2">
+                <Search size={16} className="text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={msgSearch}
+                  onChange={(e) => setMsgSearch(e.target.value)}
+                  placeholder="Buscar en mensajes..."
+                  autoFocus
+                  className="flex-1 border-0 bg-slate-800 px-3 py-1.5 text-sm text-white placeholder-slate-500 outline-none focus:bg-slate-700 rounded"
+                />
+                {messageSearchMatches.length > 0 && (
+                  <span className="text-xs text-slate-400 flex-shrink-0">
+                    {currentMatchIndex + 1}/{messageSearchMatches.length}
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    setShowMsgSearch(false);
+                    setMsgSearch("");
+                    setMessageSearchMatches([]);
+                    setHighlightMessageId(null);
+                  }}
+                  className="text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
             {/* ── Messages area ── */}
-            <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div
+              ref={scrollContainerRef}
+              onScroll={handleScrollContainer}
+              className="flex-1 overflow-y-auto px-4 py-4 custom-scroll"
+            >
               {msgLoading ? (
                 <div className="flex items-center justify-center py-16 text-slate-500">
                   <RefreshCw size={20} className="animate-spin" />
@@ -620,7 +885,7 @@ const BotMessages: React.FC = () => {
                   <div key={group.date}>
                     <DateSeparator label={group.date} />
                     {group.msgs.map((msg) => (
-                      <MessageBubble key={msg.id} msg={msg} />
+                      <MessageBubble key={msg.id} msg={msg} isHighlighted={msg.id === highlightMessageId} />
                     ))}
                   </div>
                 ))

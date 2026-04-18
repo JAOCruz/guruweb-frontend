@@ -40,7 +40,6 @@ const DominicanSection: React.FC = () => {
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 1, ease: "easeOut" }}
             style={{ perspective: "1000px" }}
           >
             <motion.div

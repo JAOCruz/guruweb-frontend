@@ -15,8 +15,6 @@ import {
   Cell,
 } from "recharts";
 import type { PieLabelRenderProps } from "recharts";
-import { useAuth } from "../../context/AuthContext";
-
 interface Service {
   id: number;
   service_name: string;
@@ -72,7 +70,6 @@ const ALL_SERVICES = [
 ];
 
 const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
-  const { isAdmin } = useAuth();
   const [showAllServices, setShowAllServices] = useState(false);
   const [dateFilter, setDateFilter] = useState<"all" | "specific" | "range">(
     "all",
