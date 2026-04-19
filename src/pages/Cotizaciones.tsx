@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, Download, CheckCircle, XCircle } from "lucide-react";
 import { getAPIUrl } from "../services/api";
 

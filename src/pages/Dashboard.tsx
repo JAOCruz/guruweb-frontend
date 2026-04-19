@@ -35,14 +35,14 @@ const Dashboard: React.FC = () => {
   const [employeePercentage, setEmployeePercentage] = useState(50);
 
   useEffect(() => {
-    // Check if on a bot-related route
-    const isBotRoute = /\/(whatsapp|bot-|ai-insights|flipbooks)/.test(location.pathname);
+    // Check if on a bot-related route (skip service fetching for these)
+    const isBotRoute = /\/(whatsapp|bot-|cases|cotizaciones|ai-insights|flipbooks)/.test(location.pathname);
 
     if (isBotRoute) {
       // Skip service fetching on bot routes
       setLoading(false);
     } else {
-      // Fetch services on main dashboard and settings routes
+      // Fetch services on main dashboard and settings routes only
       fetchData();
       fetchEmployeePercentage();
     }
