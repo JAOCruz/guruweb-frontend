@@ -1,6 +1,10 @@
 import axios from "axios";
 
-const BOT_API_URL = "/api";
+// API is on port 3000, dashboard on 5174
+const BOT_API_URL =
+  typeof window !== 'undefined' && window.location.hostname
+    ? `http://${window.location.hostname}:3000/api`
+    : "/api";
 
 const botApi = axios.create({
   baseURL: BOT_API_URL,
@@ -198,6 +202,44 @@ export interface AnalyticsData {
   [key: string]: unknown;
 }
 
+// ─── Document types (Digitación services) ──────────────────────────────────
+
+export interface DocumentIndexItem {
+  id: string;
+  name: string;
+  category: string;
+  subcategory: string | null;
+  sub_subcategory: string | null;
+  specialization: string;
+  file_path: string;
+  absolute_path: string;
+  file_extension: string;
+  file_size_bytes: number;
+  modified_date: string;
+  status: 'active' | 'archived' | 'draft';
+  description: string;
+  tags: string[];
+  comments: Array<{
+    id?: string;
+    author?: string;
+    text: string;
+    created_at?: string;
+  }>;
+}
+
+export interface DocumentIndexMetadata {
+  total_documents: number;
+  generated_at: string;
+  base_path: string;
+}
+
+export interface DocumentIndex {
+  metadata: DocumentIndexMetadata;
+  categories: string[];
+  documents: DocumentIndexItem[];
+  grouped_by_category: Record<string, number>;
+}
+
 // ─── API Methods ────────────────────────────────────────────────────────────
 
 export const botAPI = {
@@ -259,6 +301,27 @@ export const botAPI = {
   /** GET /api/messages/search?q=term — search messages by content */
   searchConversations: (query: string) =>
     botApi.get<{ conversations: Array<{phone:string;client_name:string|null;last_message:string;last_message_at:string;message_count:string;botActive:boolean;firstMatchId:number|null}> }>("/messages/search", { params: { q: query } }),
+
+  // ── Document Management (Digitación services) ──────────────────────────────
+  /** GET /api/documents/index — fetch document index with all 319 documents */
+  getDocumentIndex: () =>
+    botApi.get<DocumentIndex>("/documents/index"),
+
+  /** POST /api/documents/:id/comment — add comment to document */
+  addDocumentComment: (docId: string, comment: { text: string; author?: string }) =>
+    botApi.post(`/documents/${docId}/comment`, comment),
+
+  /** PUT /api/documents/:id — update document metadata */
+  updateDocumentMetadata: (docId: string, updates: Partial<DocumentIndexItem>) =>
+    botApi.put(`/documents/${docId}`, updates),
+
+  /** GET /api/documents/file/:docId — returns URL to stream a document file (used as iframe src) */
+  getDocumentFileUrl: (docId: string): string => {
+    const base = typeof window !== 'undefined' && window.location.hostname
+      ? `http://${window.location.hostname}:3000/api`
+      : '/api';
+    return `${base}/documents/file/${docId}`;
+  },
 };
 
 export default botApi;

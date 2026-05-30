@@ -2,17 +2,18 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Instagram, Mail, Phone, MapPin, ExternalLink } from "lucide-react";
 
+const NB = {
+  card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
+};
+
 const Footer: React.FC = () => {
   return (
     <motion.footer
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
-      className="relative overflow-hidden border-t border-blue-500/10 bg-[#020617] pt-24 pb-12"
+      className="relative overflow-hidden border-t-4 border-[#000080] bg-[#020617] pt-24 pb-12"
     >
-      {/* Background Decor */}
-      <div className="absolute top-0 left-1/2 h-[1px] w-full -translate-x-1/2 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent shadow-[0_0_20px_rgba(59,130,246,0.5)]" />
-
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-20 grid gap-16 text-center md:grid-cols-2 md:text-left lg:grid-cols-4">
           {/* Column 1: Brand */}
@@ -92,11 +93,12 @@ const Footer: React.FC = () => {
             <h3 className="font-[Space_Grotesk] text-xs font-bold tracking-[0.3em] text-blue-500 uppercase">
               Localización
             </h3>
-            <div className="group relative overflow-hidden rounded-xl border border-white/5 bg-slate-900/40 p-1">
+            <div className={`group relative overflow-hidden ${NB.card} p-1`}>
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3784.731960779048!2d-69.9315891239499!3d18.450475282629593!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8ea5635fabab61a7%3A0x1cc6b9e0dfa32f93!2sGuru%20Soluciones!5e0!3m2!1ses-419!2sdo!4v1759434493649!5m2!1ses-419!2sdo"
                 width="100%"
                 height="100"
+                sandbox="allow-scripts allow-same-origin"
                 style={{
                   border: 0,
                   filter: "invert(90%) hue-rotate(180deg) brightness(0.8)",
@@ -104,7 +106,6 @@ const Footer: React.FC = () => {
                 allowFullScreen={false}
                 loading="lazy"
               ></iframe>
-              <div className="pointer-events-none absolute inset-0 bg-blue-500/5" />
             </div>
             <p className="flex items-start justify-center gap-2 font-[Outfit] text-[10px] leading-tight text-slate-500 md:justify-start">
               <MapPin size={12} className="mt-0.5 shrink-0" />
@@ -114,7 +115,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col items-center justify-between gap-6 border-t border-white/5 pt-12 md:flex-row">
+        <div className="flex flex-col items-center justify-between gap-6 border-t-2 border-[#000080] pt-12 md:flex-row">
           <div className="font-[Space_Grotesk] text-[10px] tracking-[0.2em] text-slate-500 uppercase">
             GURÚ SOLUCIONES © {new Date().getFullYear()} // ALL_RIGHTS_RESERVED
           </div>

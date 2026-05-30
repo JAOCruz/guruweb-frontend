@@ -13,6 +13,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+const NB = {
+  btn: "border-4 border-[#000080] bg-[#0000FF] text-white shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none",
+  tag: "border-3 border-[#000080] bg-[#0000FF] text-white px-4 py-1.5 text-xs font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
+  card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
+};
+
 const ServicesSection: React.FC = () => {
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -42,7 +48,6 @@ const ServicesSection: React.FC = () => {
       description:
         "Digitalización profesional de contratos legales con máxima precisión y eficiencia.",
       icon: <FileText size={28} />,
-      color: "from-blue-500 to-cyan-400",
     },
     {
       id: 2,
@@ -50,7 +55,6 @@ const ServicesSection: React.FC = () => {
       description:
         "Servicios de notarización y asesoría legal por abogados certificados.",
       icon: <UserCheck size={28} />,
-      color: "from-purple-500 to-blue-400",
     },
     {
       id: 3,
@@ -58,7 +62,6 @@ const ServicesSection: React.FC = () => {
       description:
         "Gestión de certificaciones digitales y legales en instituciones públicas.",
       icon: <ShieldCheck size={28} />,
-      color: "from-cyan-500 to-blue-400",
     },
     {
       id: 4,
@@ -66,7 +69,6 @@ const ServicesSection: React.FC = () => {
       description:
         "Servicios de traducción profesional para documentos legales en múltiples idiomas.",
       icon: <Languages size={28} />,
-      color: "from-blue-600 to-indigo-500",
     },
     {
       id: 5,
@@ -74,7 +76,6 @@ const ServicesSection: React.FC = () => {
       description:
         "Servicio de fotografía profesional para documentos oficiales y trámites legales.",
       icon: <Camera size={28} />,
-      color: "from-indigo-500 to-purple-500",
     },
     {
       id: 6,
@@ -82,7 +83,6 @@ const ServicesSection: React.FC = () => {
       description:
         "Impresión de alta calidad para documentos legales, contratos y certificaciones.",
       icon: <Printer size={28} />,
-      color: "from-blue-400 to-cyan-300",
     },
     {
       id: 7,
@@ -90,7 +90,6 @@ const ServicesSection: React.FC = () => {
       description:
         "Gestión y compra de impuestos internos con asesoría especializada para tus trámites fiscales.",
       icon: <Landmark size={28} />,
-      color: "from-cyan-400 to-blue-500",
     },
     {
       id: 8,
@@ -98,7 +97,6 @@ const ServicesSection: React.FC = () => {
       description:
         "Accede a nuestra tienda virtual con artículos y productos especializados para trámites legales.",
       icon: <ShoppingBag size={28} />,
-      color: "from-purple-400 to-indigo-500",
     },
     {
       id: 9,
@@ -106,7 +104,6 @@ const ServicesSection: React.FC = () => {
       description:
         "Servicio de mensajería rápida y segura para el depósito y entrega de documentos importantes.",
       icon: <Send size={28} />,
-      color: "from-blue-500 to-indigo-400",
     },
   ];
 
@@ -125,7 +122,7 @@ const ServicesSection: React.FC = () => {
         >
           <motion.div
             variants={itemVariants}
-            className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 font-[Space_Grotesk] text-xs font-bold tracking-[0.2em] text-blue-400 uppercase"
+            className={`mb-4 inline-block ${NB.tag}`}
           >
             Especialidades
           </motion.div>
@@ -133,7 +130,7 @@ const ServicesSection: React.FC = () => {
             className="mb-6 font-[Outfit] text-3xl font-extrabold tracking-tighter text-white sm:text-5xl md:text-7xl"
             variants={itemVariants}
           >
-            Nuestros{" "}
+            Nuestos{" "}
             <span className="text-glow-blue text-blue-500">Servicios</span>
           </motion.h2>
           <motion.p
@@ -157,18 +154,10 @@ const ServicesSection: React.FC = () => {
             <motion.div
               key={service.id}
               variants={itemVariants}
-              whileHover={{ y: -5 }}
               className="group relative"
             >
-              {/* Card Glow Background */}
-              <div
-                className={`absolute -inset-0.5 bg-gradient-to-r ${service.color} rounded-2xl opacity-0 blur transition duration-500 group-hover:opacity-20`}
-              />
-
-              <div className="relative flex h-full flex-col rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm sm:p-8">
-                <div
-                  className={`h-12 w-12 rounded-xl bg-gradient-to-br ${service.color} mb-4 flex items-center justify-center text-white shadow-lg shadow-blue-500/10 sm:mb-6 sm:h-14 sm:w-14`}
-                >
+              <div className={`relative flex h-full flex-col ${NB.card} sm:p-8`}>
+                <div className="mb-4 flex h-12 w-12 items-center justify-center border-4 border-[#000080] bg-[#0000FF] text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] sm:mb-6 sm:h-14 sm:w-14">
                   {service.icon}
                 </div>
 
@@ -189,19 +178,14 @@ const ServicesSection: React.FC = () => {
         </motion.div>
 
         <div className="mt-20 flex justify-center">
-          <motion.a
+          <a
             href="https://wa.me/18298049017"
             target="_blank"
             rel="noopener noreferrer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="group relative bg-transparent px-10 py-5 focus:outline-none"
+            className={`${NB.btn} px-10 py-5 font-[Space_Grotesk] text-lg font-bold tracking-widest`}
           >
-            <div className="absolute inset-0 skew-x-[-12deg] rounded-xl border border-blue-500/50 bg-blue-600/10 transition-all duration-300 group-hover:bg-blue-600 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]" />
-            <span className="relative font-[Space_Grotesk] text-lg font-bold tracking-widest text-white">
-              CONTACTAR AHORA
-            </span>
-          </motion.a>
+            CONTACTAR AHORA
+          </a>
         </div>
       </div>
     </section>

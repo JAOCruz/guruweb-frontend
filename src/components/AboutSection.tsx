@@ -1,6 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
 
+const NB = {
+  card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
+};
+
 const AboutSection: React.FC = () => {
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -28,9 +32,6 @@ const AboutSection: React.FC = () => {
       id="sobre-guru"
       className="relative overflow-hidden bg-[#020617] py-24"
     >
-      {/* Background elements to match Hero */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(30,58,138,0.2),_transparent_70%)]" />
-
       <motion.div
         className="relative z-10 mx-auto max-w-5xl px-6"
         initial="hidden"
@@ -42,7 +43,7 @@ const AboutSection: React.FC = () => {
           {/* Accent Line */}
           <motion.div
             variants={itemVariants}
-            className="mb-8 h-1 w-12 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]"
+            className="mb-8 h-1 w-12 bg-[#0000FF] shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]"
           />
 
           <motion.h2
@@ -53,19 +54,15 @@ const AboutSection: React.FC = () => {
               Nuestra Historia
             </span>
             ¿Quiénes{" "}
-            <span className="text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.4)]">
+            <span className="text-blue-500">
               Somos?
             </span>
           </motion.h2>
 
           <motion.div
-            className="relative rounded-3xl border border-blue-500/10 bg-blue-950/20 p-8 shadow-2xl backdrop-blur-xl md:p-12"
+            className={`relative rounded-none ${NB.card} md:p-12`}
             variants={itemVariants}
           >
-            {/* Corner Accents */}
-            <div className="absolute top-0 left-0 h-8 w-8 rounded-tl-2xl border-t-2 border-l-2 border-blue-500/30" />
-            <div className="absolute right-0 bottom-0 h-8 w-8 rounded-br-2xl border-r-2 border-b-2 border-blue-500/30" />
-
             <p className="font-[Outfit] text-xl leading-relaxed text-slate-200 md:text-3xl">
               <span className="mb-6 block bg-gradient-to-r from-white to-blue-200 bg-clip-text text-3xl font-bold text-transparent md:text-5xl">
                 ¡Somos una empresa de servicios legales automatizados!

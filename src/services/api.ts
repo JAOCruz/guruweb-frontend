@@ -71,6 +71,16 @@ export const servicesAPI = {
     api.put(`/services/${id}/comment`, { comment }),
 };
 
+export const serviceCatalogAPI = {
+  getAll: () => api.get("/services"),
+  getCategories: () => api.get("/services/categories/list"),
+  create: (data: any) => api.post("/services", data),
+  update: (id: number, data: any) => api.put(`/services/${id}`, data),
+  delete: (id: number) => api.delete(`/services/${id}`),
+  calculate: (data: { serviceId: number; assetValue?: number; quantity?: number }) =>
+    api.post("/services/calculate", data),
+};
+
 export const settingsAPI = {
   getCurrentPercentage: () => api.get("/settings/current"),
 

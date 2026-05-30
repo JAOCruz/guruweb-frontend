@@ -79,6 +79,7 @@ const FlipbooksSection: React.FC = () => {
             key={selectedFlipbook.id}
             src={selectedFlipbook.url}
             title={selectedFlipbook.title}
+            sandbox="allow-scripts allow-same-origin"
             allow="clipboard-write"
             allowFullScreen
             scrolling="no"

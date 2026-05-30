@@ -6,7 +6,7 @@ import AdminDataTable from "../components/dashboard/AdminDataTable";
 import EmployeeDataTable from "../components/dashboard/EmployeeDataTable";
 import DataModificationForm from "../components/dashboard/DataModificationForm";
 import DataCharts from "../components/dashboard/DataCharts";
-import FlipbooksSection from "../components/dashboard/FlipbooksSection";
+import ManualOperativo from "./ManualOperativo";
 import StatsCard from "../components/dashboard/StatsCard";
 import Settings from "./Settings";
 import WhatsAppBot from "./WhatsAppBot";
@@ -15,6 +15,10 @@ import BotClients from "./BotClients";
 import Cases from "./Cases";
 import Cotizaciones from "./Cotizaciones";
 import AIInsights from "./AIInsights";
+import DocumentManagement from "./DocumentManagement";
+import Laws from "./Laws";
+import ServicesCatalog from "./ServicesCatalog";
+import MotherBrain from "./MotherBrain";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap } from "lucide-react";
@@ -36,7 +40,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     // Check if on a bot-related route (skip service fetching for these)
-    const isBotRoute = /\/(whatsapp|bot-|cases|cotizaciones|ai-insights|flipbooks)/.test(location.pathname);
+    const isBotRoute = /\/(whatsapp|bot-|cases|cotizaciones|ai-insights|documents|flipbooks|laws)/.test(location.pathname);
 
     if (isBotRoute) {
       // Skip service fetching on bot routes
@@ -344,7 +348,7 @@ const Dashboard: React.FC = () => {
               ) : (
                 <div className="space-y-8">
                   <EmployeeDataTable services={getEmployeeServices()} />
-                  <FlipbooksSection />
+                  <ManualOperativo />
                 </div>
               )}
             </div>
@@ -364,7 +368,7 @@ const Dashboard: React.FC = () => {
               ) : (
                 <EmployeeDataTable services={getEmployeeServices()} />
               )}
-              {!isAdmin && <FlipbooksSection />}
+              {!isAdmin && <ManualOperativo />}
             </div>
           }
         />
@@ -373,10 +377,10 @@ const Dashboard: React.FC = () => {
           element={
             // Note: You might need to adjust DataCharts to handle new theme if needed,
             // but keeping it as is for now as requested
-            <DataCharts services={services} />
+            <DataCharts services={services} isAdmin={isAdmin} user={user} />
           }
         />
-        <Route path="/flipbooks" element={<FlipbooksSection />} />
+        <Route path="/flipbooks" element={<ManualOperativo />} />
         <Route
           path="/settings"
           element={isAdmin ? <Settings /> : <div className="text-center text-slate-400 py-8">No tienes acceso a esta página</div>}
@@ -387,6 +391,21 @@ const Dashboard: React.FC = () => {
         <Route path="/cotizaciones" element={<Cotizaciones />} />
         <Route path="/cases" element={<Cases />} />
         <Route path="/ai-insights" element={<AIInsights />} />
+        <Route path="/documents" element={<DocumentManagement />} />
+        <Route path="/laws" element={<Laws />} />
+        <Route path="/motherbrain" element={<MotherBrain />} />
+        <Route
+          path="/services-catalog"
+          element={
+            isAdmin ? (
+              <ServicesCatalog />
+            ) : (
+              <div className="py-8 text-center text-slate-400">
+                No tienes acceso a esta página
+              </div>
+            )
+          }
+        />
       </Routes>
     </DashboardLayout>
   );

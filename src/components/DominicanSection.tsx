@@ -1,6 +1,10 @@
 import React, { useRef } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 
+const NB = {
+  tag: "border-3 border-[#000080] bg-[#0000FF] text-white px-4 py-1.5 text-xs font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
+};
+
 const DominicanSection: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const rotateX = useMotionValue(0);
@@ -26,9 +30,6 @@ const DominicanSection: React.FC = () => {
 
   return (
     <section className="relative overflow-hidden bg-[#020617] py-24">
-      {/* Background Grid Accent */}
-      <div className="retro-grid pointer-events-none absolute inset-0 opacity-10" />
-
       <div className="relative z-10 mx-auto max-w-7xl px-6">
         <div className="flex flex-col items-center gap-16 md:flex-row md:items-center">
           {/* Interactive Map Part */}
@@ -50,11 +51,10 @@ const DominicanSection: React.FC = () => {
               }}
               className="group relative"
             >
-              <div className="absolute -inset-4 rounded-full bg-blue-500/20 opacity-0 blur-[60px] transition-opacity duration-700 group-hover:opacity-100" />
               <img
                 src="/rd_3d_3.png"
                 alt="República Dominicana 3D"
-                className="relative z-10 h-auto w-full drop-shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all duration-500"
+                className="relative z-10 h-auto w-full transition-all duration-500"
               />
             </motion.div>
           </motion.div>
@@ -67,8 +67,8 @@ const DominicanSection: React.FC = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 font-[Space_Grotesk] text-xs font-bold tracking-[0.2em] text-blue-400 uppercase">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+              <div className={`mb-6 inline-flex items-center gap-2 ${NB.tag}`}>
+                <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
                 Sede Central
               </div>
 

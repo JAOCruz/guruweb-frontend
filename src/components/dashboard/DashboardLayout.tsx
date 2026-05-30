@@ -19,6 +19,8 @@ import {
   BarChart2,
   Briefcase,
   FileText,
+  Scale,
+  Brain,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -38,6 +40,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     "/dashboard/bot-clients",
     "/dashboard/cotizaciones",
     "/dashboard/cases",
+    "/dashboard/documents",
   ];
   const isWhatsappActive = whatsappPaths.some((p) =>
     location.pathname.startsWith(p),
@@ -162,6 +165,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             sidebarOpen={sidebarOpen}
             isMobile={isMobile}
           />
+          <NavItem
+            to="/dashboard/laws"
+            icon={<Scale size={18} />}
+            label="Leyes"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
 
           {/* ── WhatsApp Bot collapsible section ── */}
           <div>
@@ -257,6 +267,45 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 >
                   <Briefcase size={15} />
                   Casos
+                </NavLink>
+                <NavLink
+                  to="/dashboard/documents"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-amber-600/30 font-semibold text-amber-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <FileText size={15} />
+                  Documentos
+                </NavLink>
+                <NavLink
+                  to="/dashboard/services-catalog"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-pink-600/30 font-semibold text-pink-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <Database size={15} />
+                  Catálogo de Precios
+                </NavLink>
+                <NavLink
+                  to="/dashboard/motherbrain"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-cyan-600/30 font-semibold text-cyan-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <Brain size={15} />
+                  Mother Brain
                 </NavLink>
               </div>
             )}

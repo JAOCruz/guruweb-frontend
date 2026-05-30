@@ -162,3 +162,147 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   VIDEO-GAMEY SHIMMER / SPARKLE TEXT EFFECTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* 1. Animated shine sweep across gradient text (rare-item vibe) */
+.shimmer-text {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    #94a3b8 0%,
+    #e2e8f0 20%,
+    #ffffff 40%,
+    #e2e8f0 60%,
+    #94a3b8 80%,
+    #64748b 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer-sweep 2.5s linear infinite;
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+/* 2. Gold / legendary item sparkle */
+.legendary-text {
+  background: linear-gradient(
+    to bottom,
+    #fef08a 0%,
+    #facc15 30%,
+    #eab308 50%,
+    #facc15 70%,
+    #fde047 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.5))
+          drop-shadow(0 2px 0 #713f12);
+  animation: legendary-pulse 2s ease-in-out infinite;
+}
+
+@keyframes legendary-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.4))
+            drop-shadow(0 2px 0 #713f12);
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(250, 204, 21, 0.7))
+            drop-shadow(0 2px 0 #713f12);
+  }
+}
+
+/* 3. Holographic rainbow shimmer (epic item vibe) */
+.holo-text {
+  background: linear-gradient(
+    90deg,
+    #22d3ee 0%,
+    #a78bfa 20%,
+    #f472b6 40%,
+    #34d399 60%,
+    #60a5fa 80%,
+    #22d3ee 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: holo-shift 4s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.35));
+}
+
+@keyframes holo-shift {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* 4. Subtle sparkle overlay using pseudo-element (add .sparkle-wrap parent) */
+.sparkle-wrap {
+  position: relative;
+  display: inline-block;
+}
+.sparkle-wrap::after {
+  content: "✦";
+  position: absolute;
+  top: -0.3em;
+  right: -0.6em;
+  font-size: 0.6em;
+  color: #facc15;
+  opacity: 0;
+  animation: sparkle-pop 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sparkle-pop {
+  0%, 80%, 100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-20deg);
+  }
+  90% {
+    opacity: 1;
+    transform: scale(1.2) rotate(10deg);
+  }
+}
+
+/* 5. Retro arcade glow */
+.arcade-text {
+  color: #ffffff;
+  text-shadow:
+    0 0 4px #60a5fa,
+    0 0 8px #3b82f6,
+    0 0 16px #2563eb,
+    0 0 32px rgba(37, 99, 235, 0.4);
+  animation: arcade-flicker 4s infinite;
+}
+
+@keyframes arcade-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow:
+      0 0 4px #60a5fa,
+      0 0 8px #3b82f6,
+      0 0 16px #2563eb,
+      0 0 32px rgba(37, 99, 235, 0.4);
+    opacity: 1;
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+    opacity: 0.85;
+  }
+}

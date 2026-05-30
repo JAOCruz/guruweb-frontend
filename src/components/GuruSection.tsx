@@ -1,6 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
 
+const NB = {
+  tag: "border-3 border-[#000080] bg-[#0000FF] text-white px-4 py-1.5 text-xs font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
+  card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
+};
+
 const GuruSection: React.FC = () => {
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -65,7 +70,7 @@ const GuruSection: React.FC = () => {
               className="order-2 space-y-8 md:order-1"
               variants={itemVariants}
             >
-              <div className="inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 font-[Space_Grotesk] text-xs font-bold tracking-[0.2em] text-blue-400 uppercase">
+              <div className={NB.tag}>
                 Saber Interno
               </div>
               <h3 className="font-[Outfit] text-4xl leading-tight font-bold text-white md:text-6xl">
@@ -74,9 +79,9 @@ const GuruSection: React.FC = () => {
                   Sabiduría Legal
                 </span>
               </h3>
-              <div className="relative rounded-2xl border border-white/5 bg-white/5 p-6 backdrop-blur-md">
+              <div className={NB.card}>
                 <p className="font-[Outfit] text-lg leading-relaxed text-slate-300">
-                  Nuestro “Búho” representa al sabio interno que todo abogado
+                  Nuestro "Búho" representa al sabio interno que todo abogado
                   tiene en su interior. Este personaje es quien te atenderá en
                   cada interacción, con la capacidad de manejar temas en
                   lineamientos de procedimientos civiles locales, leyes y
@@ -89,12 +94,10 @@ const GuruSection: React.FC = () => {
               className="relative order-1 flex justify-center md:order-2"
               variants={imageVariants}
             >
-              {/* Decorative Glow */}
-              <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-[80px]" />
               <img
                 src="/mascot_1.png"
                 alt="Gurú Búho con Documentos"
-                className="relative z-10 max-h-[400px] w-auto drop-shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-transform duration-500 hover:scale-110"
+                className="relative z-10 max-h-[400px] w-auto transition-transform duration-500 hover:scale-110"
               />
             </motion.div>
           </div>
@@ -105,11 +108,10 @@ const GuruSection: React.FC = () => {
               className="relative flex justify-center"
               variants={imageVariants}
             >
-              <div className="absolute inset-0 rounded-full bg-cyan-500/10 blur-[80px]" />
               <img
                 src="/mascot_2.png"
                 alt="Gurú Búho Leyendo"
-                className="relative z-10 max-h-[400px] w-auto drop-shadow-[0_0_30px_rgba(34,211,238,0.5)] transition-transform duration-500 hover:scale-110"
+                className="relative z-10 max-h-[400px] w-auto transition-transform duration-500 hover:scale-110"
               />
             </motion.div>
 
@@ -117,16 +119,16 @@ const GuruSection: React.FC = () => {
               className="space-y-8 text-right md:text-left"
               variants={itemVariantsReverse}
             >
-              <div className="inline-block rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 font-[Space_Grotesk] text-xs font-bold tracking-[0.2em] text-cyan-400 uppercase">
+              <div className={NB.tag}>
                 Excelencia Tech
               </div>
               <h3 className="font-[Outfit] text-4xl leading-tight font-bold text-white md:text-6xl">
                 Compromiso con la{" "}
-                <span className="text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">
+                <span className="text-cyan-400">
                   Precisión
                 </span>
               </h3>
-              <div className="relative rounded-2xl border border-white/5 bg-white/5 p-6 backdrop-blur-md">
+              <div className={NB.card}>
                 <p className="font-[Outfit] text-lg leading-relaxed text-slate-300">
                   Nuestro equipo pasa día y noche aprendiendo de cada
                   experiencia para ofrecer un servicio de calidad. Revisamos

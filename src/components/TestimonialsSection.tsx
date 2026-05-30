@@ -2,6 +2,11 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
 
+const NB = {
+  tag: "border-3 border-[#000080] bg-[#0000FF] text-white px-4 py-1.5 text-xs font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
+  card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
+};
+
 const TestimonialsSection: React.FC = () => {
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -53,10 +58,6 @@ const TestimonialsSection: React.FC = () => {
 
   return (
     <section className="relative overflow-hidden bg-[#020617] py-24">
-      {/* Decorative vertical lines */}
-      <div className="pointer-events-none absolute top-0 right-10 h-full w-[1px] bg-gradient-to-b from-transparent via-blue-500/20 to-transparent" />
-      <div className="pointer-events-none absolute top-0 left-10 h-full w-[1px] bg-gradient-to-b from-transparent via-blue-500/20 to-transparent" />
-
       <div className="mx-auto max-w-7xl px-6">
         <motion.div
           className="mb-20 text-center"
@@ -67,7 +68,7 @@ const TestimonialsSection: React.FC = () => {
         >
           <motion.div
             variants={itemVariants}
-            className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 font-[Space_Grotesk] text-xs font-bold tracking-[0.2em] text-blue-400 uppercase"
+            className={`mb-4 inline-block ${NB.tag}`}
           >
             Feedback
           </motion.div>
@@ -93,8 +94,7 @@ const TestimonialsSection: React.FC = () => {
             <motion.div
               key={testimonial.id}
               variants={itemVariants}
-              whileHover={{ y: -5 }}
-              className="group relative overflow-hidden rounded-3xl border border-white/5 bg-slate-900/40 p-10 shadow-2xl backdrop-blur-xl"
+              className={`group relative overflow-hidden ${NB.card} p-10`}
             >
               {/* Massive Quote Icon Background */}
               <Quote
@@ -108,7 +108,7 @@ const TestimonialsSection: React.FC = () => {
                     <Star
                       key={i}
                       size={18}
-                      className="fill-blue-500 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                      className="fill-blue-500 text-blue-400"
                     />
                   ))}
                 </div>
@@ -124,9 +124,6 @@ const TestimonialsSection: React.FC = () => {
                   </span>
                 </div>
               </div>
-
-              {/* Hover Accent */}
-              <div className="absolute bottom-0 left-0 h-1 w-full origin-left scale-x-0 transform bg-gradient-to-r from-blue-600 to-cyan-400 transition-transform duration-500 group-hover:scale-x-100" />
             </motion.div>
           ))}
         </motion.div>
