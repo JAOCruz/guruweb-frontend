@@ -305,6 +305,7 @@ export default function DataCharts({ services, isAdmin, user }: DataChartsProps)
                         outerRadius={90}
                         paddingAngle={4}
                         dataKey="value"
+                        nameKey="name"
                         label={({ name, percent }) => `${name}: ${typeof percent === "number" ? (percent * 100).toFixed(0) : "0"}%`}
                         labelLine={false}
                       >
@@ -313,8 +314,9 @@ export default function DataCharts({ services, isAdmin, user }: DataChartsProps)
                         ))}
                       </Pie>
                       <Tooltip
-                        contentStyle={{ backgroundColor: BG_DARK, border: "2px solid #000080", borderRadius: "12px", color: "#fff" }}
-                        formatter={(v: any, n: any) => [formatRD(Number(v)), n]}
+                        contentStyle={{ backgroundColor: BG_DARK, border: "2px solid #000080", borderRadius: "12px" }}
+                        itemStyle={{ color: "#fff" }}
+                        formatter={(value: any, name: any) => [formatRD(Number(value)), name]}
                       />
                     </PieChart>
                   </ResponsiveContainer>
