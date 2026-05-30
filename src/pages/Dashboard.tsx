@@ -41,10 +41,15 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     // Check if on a bot-related route (skip service fetching for these)
     const isBotRoute = /\/(whatsapp|bot-|cases|cotizaciones|ai-insights|documents|flipbooks|laws)/.test(location.pathname);
+    const isAnalyticsRoute = /\/(charts|data)/.test(location.pathname);
 
     if (isBotRoute) {
       // Skip service fetching on bot routes
       setLoading(false);
+    } else if (isAnalyticsRoute) {
+      // Charts/Data need all historical data, not just today's
+      fetchData(true);
+      fetchEmployeePercentage();
     } else {
       // Fetch services on main dashboard and settings routes only
       fetchData();
@@ -62,15 +67,16 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const fetchData = async () => {
+  const fetchData = async (allTime = false) => {
     try {
       setLoading(true);
-      const response = await servicesAPI.getServices(startDate, endDate);
-      // console.log("Services data:", response.data);
+      const response = allTime
+        ? await servicesAPI.getServices()
+        : await servicesAPI.getServices(startDate, endDate);
       setServices(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching services:", error);
-      setServices([]); // Set empty array on error
+      setServices([]);
     } finally {
       setLoading(false);
     }
