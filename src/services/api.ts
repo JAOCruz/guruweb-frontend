@@ -1,12 +1,14 @@
 import axios from "axios";
 
 export const getAPIUrl = () => {
-  // In development, use localhost; in production, use current hostname
-  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-    return "http://localhost:3000";
+  if (typeof window === "undefined") return "http://localhost:3000";
+  const host = window.location.hostname;
+  // Production domains → Railway backend
+  if (host === "gurusolucionesrd.com" || host === "www.gurusolucionesrd.com" || host.includes("netlify.app")) {
+    return "https://guruweb-backend-production.up.railway.app";
   }
-  // For remote access, use the current hostname with port 3000
-  return `http://${window.location.hostname}:3000`;
+  // Local / Tailscale
+  return "http://localhost:3000";
 };
 
 const API_URL = import.meta.env.VITE_API_URL || (getAPIUrl() + "/api");
@@ -16,13 +18,16 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Send HttpOnly cookies cross-origin
 });
 
-// Request interceptor to add token
+// Request interceptor: prefer HttpOnly cookie, fallback to localStorage token
 api.interceptors.request.use(
   (config) => {
+    // The browser sends the HttpOnly cookie automatically (withCredentials: true).
+    // We keep the localStorage fallback for backward-compat during transition.
     const token = localStorage.getItem("token");
-    if (token) {
+    if (token && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -45,6 +50,8 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (email: string, password: string) =>
     api.post("/auth/login", { email, password }),
+
+  logout: () => api.post("/auth/logout"),
 
   getCurrentUser: () => api.get("/auth/me"),
 };

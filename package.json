@@ -11,6 +11,7 @@
     "netlify-build": "vite build"
   },
   "dependencies": {
+    "@sentry/react": "^10.55.0",
     "@types/qrcode.react": "^1.0.5",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",

@@ -27,13 +27,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const token = localStorage.getItem("token");
-    if (token) {
-      loadUser();
-    } else {
-      setLoading(false);
-    }
+    // Try to load user via HttpOnly cookie (no localStorage needed)
+    loadUser();
   }, []);
 
   const loadUser = async () => {
@@ -41,7 +36,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const response = await authAPI.getCurrentUser();
       setUser(response.data.user || response.data);
     } catch (error) {
+      // Cookie invalid or expired — clear any stale localStorage fallback
       localStorage.removeItem("token");
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -52,7 +49,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const response = await authAPI.login(username, password);
       const { token, user } = response.data;
 
-      localStorage.setItem("token", token);
+      // Backend sets HttpOnly cookie automatically.
+      // We keep localStorage as a temporary fallback for backward-compat.
+      if (token) localStorage.setItem("token", token);
       setUser(user);
       navigate("/dashboard");
     } catch (error: any) {
@@ -60,7 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authAPI.logout(); // Backend clears HttpOnly cookie
+    } catch (err) {
+      // Ignore — always clear local state
+    }
     localStorage.removeItem("token");
     setUser(null);
     navigate("/login");
