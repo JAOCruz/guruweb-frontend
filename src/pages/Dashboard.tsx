@@ -21,7 +21,7 @@ import ServicesCatalog from "./ServicesCatalog";
 import MotherBrain from "./MotherBrain";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { Zap } from "lucide-react";
+import { Zap, Eye, EyeOff } from "lucide-react";
 import { USER_COLUMNS } from "../services/excelService";
 import { formatCurrency } from "../utils";
 
@@ -37,6 +37,7 @@ const Dashboard: React.FC = () => {
 
   // Fetch employee percentage from settings
   const [employeePercentage, setEmployeePercentage] = useState(50);
+  const [showEarnings, setShowEarnings] = useState(false);
 
   useEffect(() => {
     // Check if on a bot-related route (skip service fetching for these)
@@ -171,6 +172,15 @@ const Dashboard: React.FC = () => {
                   </p>
                 </div>
                 <div className="flex w-full flex-col gap-3 xl:w-auto">
+                  {/* Privacy toggle */}
+                  <button
+                    onClick={() => setShowEarnings((v) => !v)}
+                    className="flex items-center justify-center gap-2 rounded-xl border-4 border-[#000080] bg-[#0000FF] px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+                    title={showEarnings ? "Ocultar ganancias" : "Mostrar ganancias"}
+                  >
+                    {showEarnings ? <EyeOff size={14} /> : <Eye size={14} />}
+                    {showEarnings ? "Ocultar" : "Mostrar"} Ganancias
+                  </button>
                   {/* Date Filter Integrated into Header style */}
                   <div className="flex w-full flex-col gap-1.5 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-1.5 backdrop-blur-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:p-2">
                     <div className="flex min-w-0 items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/50 px-2 py-1.5 sm:gap-2 sm:px-3">
@@ -235,8 +245,11 @@ const Dashboard: React.FC = () => {
                       ),
                     )}
                     subValue={`${services.length} serv.`}
-                    color="text-emerald-400"
+                    color="text-white"
                     delay={0.1}
+                    sensitive
+                    visible={showEarnings}
+                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
 
                   {/* Total Users (Sum of their earnings/shares) - 50% split */}
@@ -261,8 +274,11 @@ const Dashboard: React.FC = () => {
                         ),
                       ).length
                     } serv.`}
-                    color="text-yellow-400"
+                    color="text-white"
                     delay={0.15}
+                    sensitive
+                    visible={showEarnings}
+                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
 
                   {/* Dynamic stats for workers - showing their 50% share */}
@@ -280,8 +296,11 @@ const Dashboard: React.FC = () => {
                         ),
                     )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "HENGI").length} serv.`}
-                    color="text-blue-400"
+                    color="text-white"
                     delay={0.2}
+                    sensitive
+                    visible={showEarnings}
+                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
                   <StatsCard
                     label="Marleni"
@@ -297,8 +316,11 @@ const Dashboard: React.FC = () => {
                         ),
                     )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "MARLENI").length} serv.`}
-                    color="text-purple-400"
+                    color="text-white"
                     delay={0.3}
+                    sensitive
+                    visible={showEarnings}
+                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
                   <StatsCard
                     label="Israel"
@@ -314,8 +336,11 @@ const Dashboard: React.FC = () => {
                         ),
                     )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "ISRAEL").length} serv.`}
-                    color="text-pink-400"
+                    color="text-white"
                     delay={0.4}
+                    sensitive
+                    visible={showEarnings}
+                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
                   <StatsCard
                     label="Thaicar"
@@ -331,8 +356,11 @@ const Dashboard: React.FC = () => {
                         ),
                     )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "THAICAR").length} serv.`}
-                    color="text-cyan-400"
+                    color="text-white"
                     delay={0.5}
+                    sensitive
+                    visible={showEarnings}
+                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
                 </div>
               )}

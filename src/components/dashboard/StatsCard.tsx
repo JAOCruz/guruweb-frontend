@@ -1,51 +1,76 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
 
 interface StatsCardProps {
   label: string;
   value: string;
   subValue?: string;
-  color: string;
+  color?: string;
   delay?: number;
+  sensitive?: boolean;
+  visible?: boolean;
+  onToggleVisibility?: () => void;
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({
   label,
   value,
   subValue,
-  color,
+  color = "text-white",
   delay = 0,
+  sensitive = false,
+  visible = true,
+  onToggleVisibility,
 }) => {
+  const hiddenValue = "••••••";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className="group relative overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] p-4 shadow-lg transition-all duration-300 hover:border-blue-500/30 sm:p-6"
+      className="group relative overflow-hidden rounded-xl border-4 border-[#000080] bg-[#0000FF] p-4 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,128,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none sm:p-5"
     >
-      <div className="absolute top-0 right-0 p-2 opacity-50">
-        {subValue && (
-          <span className="rounded border border-slate-700 bg-slate-800 px-2 py-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-            {subValue}
-          </span>
+      {/* Top row: label + eye toggle */}
+      <div className="mb-3 flex items-start justify-between">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">
+          {label}
+        </p>
+        {sensitive && onToggleVisibility && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleVisibility();
+            }}
+            className="rounded border border-white/20 bg-white/10 p-1 text-white/80 transition-all hover:bg-white/20 hover:text-white"
+            title={visible ? "Ocultar monto" : "Mostrar monto"}
+          >
+            {visible ? <Eye size={14} /> : <EyeOff size={14} />}
+          </button>
         )}
       </div>
-      <p className="mb-2 text-xs font-bold tracking-widest text-slate-400 uppercase sm:mb-3">
-        {label}
-      </p>
+
+      {/* Value */}
       <h3
-        className={`font-display text-xl font-bold sm:text-2xl ${color} drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]`}
+        className={`font-display text-2xl font-black tracking-tight sm:text-3xl ${color} ${!visible && sensitive ? "tracking-widest" : ""}`}
       >
-        {value}
+        {visible || !sensitive ? value : hiddenValue}
       </h3>
 
-      {/* Decorative Glow */}
-      <div className="absolute -right-10 -bottom-10 h-24 w-24 rounded-full bg-blue-500/10 blur-3xl transition-all duration-500 group-hover:bg-blue-500/20" />
+      {/* Subvalue */}
+      {subValue && (
+        <div className="mt-2">
+          <span className="inline-block rounded border border-white/30 bg-white/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white/80">
+            {subValue}
+          </span>
+        </div>
+      )}
 
-      {/* Accent Line */}
-      <div
-        className={`absolute top-0 left-0 h-full w-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${color.replace("text-", "bg-")}`}
-      />
+      {/* Decorative number watermark */}
+      <div className="pointer-events-none absolute -right-2 -bottom-4 text-6xl font-black text-white/5 select-none">
+        {label.charAt(0)}
+      </div>
     </motion.div>
   );
 };
