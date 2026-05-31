@@ -273,7 +273,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                 className={`rounded-lg px-4 py-1.5 text-xs font-bold tracking-wide whitespace-nowrap uppercase transition-all ${
                   activeUser === user
                     ? "bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.4)]"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                    : "bg-[#000080] text-white/80 hover:bg-[#000080]/60"
                 }`}
               >
                 {user}
@@ -304,15 +304,15 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
               {user}
             </h3>
             <div className="flex gap-3 font-mono text-xs sm:gap-4">
-              <span className="font-bold tracking-widest text-slate-400 uppercase">
+              <span className="font-bold tracking-widest text-white/80 uppercase">
                 Total:{" "}
-                <span className="text-blue-400">
+                <span className="text-white">
                   {formatCurrency(userTotals[user].total)}
                 </span>
               </span>
-              <span className="font-bold tracking-widest text-slate-400 uppercase">
+              <span className="font-bold tracking-widest text-white/80 uppercase">
                 Admin:{" "}
-                <span className="text-emerald-400">
+                <span className="text-white">
                   {formatCurrency(userTotals[user].adminShare)}
                 </span>
               </span>
@@ -322,7 +322,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           {/* VISTA ESCRITORIO (Tabla) */}
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-left">
-              <thead className="bg-[#111827] text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+              <thead className="bg-[#000080] text-[10px] font-bold tracking-wider text-white/80 uppercase">
                 <tr>
                   <th className="p-5">Hora</th>
                   <th className="p-5">Servicio / Cliente</th>
@@ -332,41 +332,41 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                   <th className="p-5 text-center">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700/50">
+              <tbody className="divide-y divide-[#000080]/40">
                 {groupedData[user].length > 0 ? (
                   groupedData[user].map((item, idx) => {
                     const isEditing = editingCommentId === `${user}-${idx}`;
                     return (
                       <tr
                         key={`${user}-${idx}`}
-                        className="transition-colors hover:bg-slate-800/50"
+                        className="transition-colors hover:bg-[#000080]/50"
                       >
-                        <td className="p-5 font-mono text-xs text-slate-400">
+                        <td className="p-5 font-mono text-xs text-white/80">
                           {item.time || "--:--"}
                         </td>
                         <td className="p-5">
-                          <div className="text-sm font-bold text-slate-200">
+                          <div className="text-sm font-bold text-white">
                             {item.service}
                           </div>
-                          <div className="mt-1 text-xs text-blue-400">
+                          <div className="mt-1 text-xs text-white">
                             {item.client || "Cliente General"}
                           </div>
                         </td>
-                        <td className="p-5 font-mono font-bold text-emerald-400">
+                        <td className="p-5 font-mono font-bold text-white">
                           {formatCurrency(item.earnings)}
                         </td>
                         <td className="p-5">
                           <div className="flex flex-col gap-1 font-mono">
-                            <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                            <span className="text-[10px] font-bold tracking-widest text-white/60 uppercase">
                               Admin:{" "}
-                              <span className="text-blue-400">
+                              <span className="text-white">
                                 {formatCurrency(
                                   item.earnings *
                                     (1 - employeePercentage / 100),
                                 )}
                               </span>
                             </span>
-                            <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                            <span className="text-[10px] font-bold tracking-widest text-white/60 uppercase">
                               User:{" "}
                               <span className="text-yellow-400">
                                 {formatCurrency(
@@ -381,7 +381,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                             <div className="flex gap-2">
                               <input
                                 autoFocus
-                                className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                                className="w-full rounded-lg border border-slate-700 bg-[#000080] px-3 py-1.5 text-xs text-white focus:border-blue-500 focus:outline-none"
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
                               />
@@ -389,7 +389,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                                 onClick={() =>
                                   handleSaveComment(item.id, user, idx)
                                 }
-                                className="rounded-lg bg-blue-600/20 p-1.5 text-blue-400 transition-all hover:bg-blue-600 hover:text-white"
+                                className="rounded-lg bg-blue-600/20 p-1.5 text-white transition-all hover:bg-blue-600 hover:text-white"
                               >
                                 <Check size={14} />
                               </button>
@@ -408,7 +408,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                                   item.comment || "",
                                 )
                               }
-                              className="group/edit flex cursor-pointer items-center gap-2 text-xs text-slate-400 transition-colors hover:text-blue-400"
+                              className="group/edit flex cursor-pointer items-center gap-2 text-xs text-white/80 transition-colors hover:text-white"
                             >
                               <span className="max-w-[150px] truncate italic">
                                 {item.comment || "Agregar nota..."}
@@ -418,13 +418,13 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                         </td>
                         <td className="p-5 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <button className="rounded-lg bg-slate-800 p-2 text-blue-400 transition-colors hover:bg-slate-700">
+                            <button className="rounded-lg bg-[#000080] p-2 text-white transition-colors hover:bg-[#000080]/60">
                               <MessageCircle size={16} />
                             </button>
                             <button
                               onClick={() => handleDelete(item.id)}
                               disabled={deletingId === item.id}
-                              className="rounded-lg bg-slate-800 p-2 text-slate-500 transition-all hover:bg-red-900/40 hover:text-red-400"
+                              className="rounded-lg bg-[#000080] p-2 text-white/60 transition-all hover:bg-red-900/60 hover:text-red-300"
                             >
                               {deletingId === item.id ? (
                                 <Loader2 className="animate-spin" size={16} />
@@ -441,7 +441,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                   <tr>
                     <td
                       colSpan={6}
-                      className="p-8 text-center text-sm text-slate-500 italic"
+                      className="p-8 text-center text-sm text-white/60 italic"
                     >
                       Sin servicios registrados hoy
                     </td>
@@ -452,30 +452,30 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           </div>
 
           {/* VISTA MÓVIL (Tarjetas) */}
-          <div className="divide-y divide-slate-800 md:hidden">
+          <div className="divide-y divide-[#000080]/40 md:hidden">
             {groupedData[user].length > 0 ? (
               groupedData[user].map((item, idx) => (
-                <div key={`${user}-m-${idx}`} className="bg-slate-900 p-3">
+                <div key={`${user}-m-${idx}`} className="bg-[#000080]/30 p-3">
                   {/* Row 1: Service name + earnings */}
                   <div className="mb-1 flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm leading-tight font-bold break-words text-white">
                         {item.service}
                       </p>
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      <p className="mt-0.5 text-xs text-white/60">
                         {item.client || "Cliente General"}
                       </p>
                     </div>
-                    <span className="flex-shrink-0 text-base font-bold text-emerald-400">
+                    <span className="flex-shrink-0 text-base font-bold text-white">
                       {formatCurrency(item.earnings)}
                     </span>
                   </div>
                   {/* Row 2: Time, comment, delete */}
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 font-mono text-xs text-slate-500">
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 font-mono text-xs text-white/60">
                       <span className="whitespace-nowrap">{item.time || "--:--"}</span>
                       {item.comment && (
-                        <span className="truncate rounded bg-slate-800 px-1.5 py-0.5 text-slate-300">
+                        <span className="truncate rounded bg-[#000080] px-1.5 py-0.5 text-white/90">
                           {item.comment}
                         </span>
                       )}
@@ -483,7 +483,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                     <button
                       onClick={() => handleDelete(item.id)}
                       disabled={deletingId === item.id}
-                      className="flex-shrink-0 rounded p-1 text-slate-600 hover:text-red-400"
+                      className="flex-shrink-0 rounded p-1 text-white/50 hover:text-red-300"
                     >
                       {deletingId === item.id ? (
                         <Loader2 className="animate-spin" size={16} />
@@ -495,7 +495,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                 </div>
               ))
             ) : (
-              <div className="p-6 text-center text-sm text-slate-500 italic">
+              <div className="p-6 text-center text-sm text-white/60 italic">
                 Sin servicios registrados hoy
               </div>
             )}
@@ -506,18 +506,18 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
       {/* MODAL IA */}
       {aiModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-[#000080]/30 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-xl font-bold text-white">
-                <Sparkles className="text-purple-400" /> Análisis IA
+                <Sparkles className="text-white" /> Análisis IA
               </h3>
               <button onClick={() => setAiModalOpen(false)}>
-                <X className="text-slate-400" />
+                <X className="text-white/80" />
               </button>
             </div>
-            <div className="min-h-[150px] rounded-xl bg-slate-800/50 p-4 leading-relaxed whitespace-pre-wrap text-slate-200">
+            <div className="min-h-[150px] rounded-xl bg-[#000080]/50 p-4 leading-relaxed whitespace-pre-wrap text-white">
               {aiLoading ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-500">
+                <div className="flex h-full flex-col items-center justify-center gap-3 text-white/60">
                   <Loader2 className="animate-spin text-blue-500" size={32} />
                   <p>Analizando transacciones...</p>
                 </div>

@@ -7,7 +7,11 @@ export const getAPIUrl = () => {
   if (host === "gurusolucionesrd.com" || host === "www.gurusolucionesrd.com" || host.includes("netlify.app")) {
     return "https://guruweb-backend-production.up.railway.app";
   }
-  // Local / Tailscale
+  // Tailscale / remote LAN access
+  if (host === "100.87.41.106") {
+    return "http://100.87.41.106:3000";
+  }
+  // Local
   return "http://localhost:3000";
 };
 
