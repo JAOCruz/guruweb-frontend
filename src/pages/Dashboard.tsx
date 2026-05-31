@@ -249,7 +249,6 @@ const Dashboard: React.FC = () => {
                     delay={0.1}
                     sensitive
                     visible={showEarnings}
-                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
 
                   {/* Total Users (Sum of their earnings/shares) - 50% split */}
@@ -278,7 +277,6 @@ const Dashboard: React.FC = () => {
                     delay={0.15}
                     sensitive
                     visible={showEarnings}
-                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
 
                   {/* Dynamic stats for workers - showing their 50% share */}
@@ -300,7 +298,6 @@ const Dashboard: React.FC = () => {
                     delay={0.2}
                     sensitive
                     visible={showEarnings}
-                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
                   <StatsCard
                     label="Marleni"
@@ -320,7 +317,6 @@ const Dashboard: React.FC = () => {
                     delay={0.3}
                     sensitive
                     visible={showEarnings}
-                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
                   <StatsCard
                     label="Israel"
@@ -340,7 +336,6 @@ const Dashboard: React.FC = () => {
                     delay={0.4}
                     sensitive
                     visible={showEarnings}
-                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
                   <StatsCard
                     label="Thaicar"
@@ -360,7 +355,6 @@ const Dashboard: React.FC = () => {
                     delay={0.5}
                     sensitive
                     visible={showEarnings}
-                    onToggleVisibility={() => setShowEarnings((v) => !v)}
                   />
                 </div>
               )}

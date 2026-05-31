@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -10,7 +10,6 @@ interface StatsCardProps {
   delay?: number;
   sensitive?: boolean;
   visible?: boolean;
-  onToggleVisibility?: () => void;
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({
@@ -21,9 +20,17 @@ const StatsCard: React.FC<StatsCardProps> = ({
   delay = 0,
   sensitive = false,
   visible = true,
-  onToggleVisibility,
 }) => {
   const hiddenValue = "••••••";
+  // Local override: each card manages its own reveal state,
+  // but syncs with the global 'visible' prop when it changes.
+  const [revealed, setRevealed] = useState(visible);
+
+  useEffect(() => {
+    setRevealed(visible);
+  }, [visible]);
+
+  const isVisible = revealed;
 
   return (
     <motion.div
@@ -37,25 +44,25 @@ const StatsCard: React.FC<StatsCardProps> = ({
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">
           {label}
         </p>
-        {sensitive && onToggleVisibility && (
+        {sensitive && (
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onToggleVisibility();
+              setRevealed((v) => !v);
             }}
             className="rounded border border-white/20 bg-white/10 p-1 text-white/80 transition-all hover:bg-white/20 hover:text-white"
-            title={visible ? "Ocultar monto" : "Mostrar monto"}
+            title={isVisible ? "Ocultar monto" : "Mostrar monto"}
           >
-            {visible ? <Eye size={14} /> : <EyeOff size={14} />}
+            {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
           </button>
         )}
       </div>
 
       {/* Value */}
       <h3
-        className={`font-display text-2xl font-black tracking-tight sm:text-3xl ${color} ${!visible && sensitive ? "tracking-widest" : ""}`}
+        className={`font-display text-2xl font-black tracking-tight sm:text-3xl ${color} ${!isVisible && sensitive ? "tracking-widest" : ""}`}
       >
-        {visible || !sensitive ? value : hiddenValue}
+        {isVisible || !sensitive ? value : hiddenValue}
       </h3>
 
       {/* Subvalue */}

@@ -250,9 +250,9 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
   const usersToRender = activeUser === "all" ? USER_COLUMNS : [activeUser];
 
   return (
-    <div className="animate-in fade-in space-y-8 duration-500">
+    <div className="animate-in fade-in space-y-6 duration-500">
       {/* 1. HEADER: Tabs y Botón IA */}
-      <div className="flex flex-col items-center justify-between gap-6 border-b border-white/5 pb-6 md:flex-row">
+      <div className="flex flex-col items-center justify-between gap-4 rounded-xl border-4 border-[#000080] bg-[#0000FF] p-4 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] md:flex-row sm:p-5">
         {/* Tabs de Usuario */}
         {!isEmployeeView && (
           <div className="flex w-full flex-wrap gap-2 md:w-auto">
@@ -260,8 +260,8 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
               onClick={() => setActiveUser("all")}
               className={`rounded-lg px-4 py-1.5 text-xs font-bold tracking-wide whitespace-nowrap uppercase transition-all ${
                 activeUser === "all"
-                  ? "bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.4)]"
-                  : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                  ? "border-2 border-white bg-[#000080] text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)]"
+                  : "border-2 border-transparent bg-[#000080]/40 text-white/70 hover:bg-[#000080]/60"
               }`}
             >
               Todos
@@ -285,7 +285,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
         {/* Botón IA */}
         <button
           onClick={handleGenerateInsights}
-          className="flex items-center gap-2 rounded-xl border border-transparent bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_15px_rgba(147,51,234,0.5)] transition-all duration-300 hover:bg-purple-500"
+          className="flex items-center gap-2 rounded-xl border-4 border-[#000080] bg-[#0000FF] px-5 py-2.5 text-sm font-black text-white shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:-translate-y-0.5 hover:shadow-[8px_8px_0px_0px_rgba(0,0,128,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
         >
           <Sparkles size={16} />
           Insights IA
@@ -296,11 +296,11 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
       {usersToRender.map((user) => (
         <div
           key={user}
-          className="overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] shadow-xl"
+          className="overflow-hidden rounded-xl border-4 border-[#000080] bg-[#0000FF] shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]"
         >
           {/* Header de la Tabla */}
-          <div className="flex flex-col gap-2 border-b border-slate-700/50 bg-[#1A233A] p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-5">
-            <h3 className="text-sm font-bold tracking-wide text-white uppercase sm:text-base">
+          <div className="flex flex-col gap-2 border-b-4 border-[#000080] bg-[#0000FF] p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-5">
+            <h3 className="text-sm font-black uppercase tracking-wider text-white sm:text-base">
               {user}
             </h3>
             <div className="flex gap-3 font-mono text-xs sm:gap-4">
