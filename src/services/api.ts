@@ -27,8 +27,9 @@ api.interceptors.request.use(
     // The browser sends the HttpOnly cookie automatically (withCredentials: true).
     // We keep the localStorage fallback for backward-compat during transition.
     const token = localStorage.getItem("token");
-    if (token && !config.headers.Authorization) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      // Axios 1.x uses AxiosHeaders — use .set() to be safe
+      config.headers.set("Authorization", `Bearer ${token}`);
     }
     return config;
   },
@@ -41,7 +42,10 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      // Only hard-redirect if we're not already on the login page
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   },
