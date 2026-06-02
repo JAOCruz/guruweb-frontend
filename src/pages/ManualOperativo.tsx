@@ -1,34 +1,20 @@
 import { useState, useEffect, useRef } from "react";
+import api from "../services/api";
 
 // ==========================================
 // 🚀 UTILIDADES API GEMINI (LLM)
 // ==========================================
 const callGeminiAPI = async (prompt: string, systemPrompt: string) => {
-  const apiKey = ""; // Inyectado por el entorno
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-  const payload = {
-    contents: [{ parts: [{ text: prompt }] }],
-    systemInstruction: { parts: [{ text: systemPrompt }] },
-  };
-
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
   const retries = [1000, 2000, 4000, 8000, 16000];
 
   for (let i = 0; i <= retries.length; i++) {
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const response = await api.post("/ai/generate", {
+        prompt,
+        systemPrompt,
       });
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      return (
-        data.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "Error de formato en la respuesta."
-      );
+      return response.data.text || "Error de formato en la respuesta.";
     } catch (e: any) {
       if (i === retries.length)
         throw new Error(

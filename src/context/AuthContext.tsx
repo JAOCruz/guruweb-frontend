@@ -31,13 +31,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loadUser();
   }, []);
 
-  const loadUser = async () => {
+  const loadUser = async (retries = 2) => {
+    setLoading(true);
     try {
       const response = await authAPI.getCurrentUser();
       setUser(response.data.user || response.data);
-    } catch (error) {
-      // Cookie invalid or expired — clear any stale localStorage fallback
-      localStorage.removeItem("token");
+    } catch (error: any) {
+      const status = error.response?.status;
+      console.log("[AuthContext] loadUser failed — status:", status, "message:", error.message, "retries left:", retries);
+      // Only clear token on 401 (unauthorized). Other errors (500, timeout,
+      // network blip) should NOT wipe the session — the user might just be
+      // offline or Railway is restarting.
+      if (status === 401) {
+        localStorage.removeItem("token");
+        setUser(null);
+      } else if (retries > 0 && !error.response) {
+        // Network error: retry after 1.5s (Railway cold-start, etc.)
+        console.log("[AuthContext] Retrying loadUser in 1.5s...");
+        setTimeout(() => loadUser(retries - 1), 1500);
+        return; // Keep loading=true while retrying
+      }
+      // For 500s or final retry failure, stay logged out visually
+      // but DON'T wipe the token so a refresh might recover.
       setUser(null);
     } finally {
       setLoading(false);
