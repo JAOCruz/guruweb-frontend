@@ -131,7 +131,7 @@ const HeroSection = () => {
       )}
 
       {/* Main Content — vertically centered between header & marquee */}
-      <div className="relative z-20 mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 pb-28 text-center md:pb-32" style={{ perspective: '1000px' }}>
+      <div className="relative z-20 mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 pt-12 pb-28 text-center md:pt-16 md:pb-32" style={{ perspective: '1000px' }}>
         {/* Heading */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 50 }}
