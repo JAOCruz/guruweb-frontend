@@ -1,9 +1,79 @@
-import React from "react";
+import React, { Suspense, useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 
 const NB = {
   card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
 };
+
+/* ── 3D Lady Justice Model ── */
+function LadyJusticeModel() {
+  const { scene } = useGLTF("/lady_justice.glb", true);
+  const groupRef = useRef<any>(null);
+  const [hovered, setHovered] = useState(false);
+  const [clicked, setClicked] = useState(false);
+
+  useEffect(() => {
+    scene.traverse((child: any) => {
+      if (child.isMesh && child.material) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach((mat: any) => {
+          if (mat.map) mat.map = null;
+          if (mat.vertexColors) mat.vertexColors = false;
+          mat.color.set("#FFFFFF");
+          if (mat.emissive) mat.emissive.set("#000022");
+          mat.needsUpdate = true;
+        });
+      }
+    });
+  }, [scene]);
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return;
+    groupRef.current.rotation.y += delta * (hovered ? 1.5 : 0.4);
+    groupRef.current.position.y = Math.sin(Date.now() * 0.0015) * 0.1;
+    if (clicked) {
+      groupRef.current.rotation.y += delta * 6;
+      if (groupRef.current.rotation.y > Math.PI * 2) {
+        setClicked(false);
+        groupRef.current.rotation.y = groupRef.current.rotation.y % (Math.PI * 2);
+      }
+    }
+  });
+
+  return (
+    <group
+      ref={groupRef}
+      scale={1.6}
+      position={[0, -1, 0]}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+      onClick={() => setClicked(true)}
+    >
+      <primitive object={scene} />
+    </group>
+  );
+}
+
+function LadyJusticeCanvas() {
+  return (
+    <div className="relative h-72 w-72 cursor-pointer md:h-96 md:w-96 lg:h-[28rem] lg:w-[28rem]">
+      <Canvas
+        camera={{ position: [0, 1, 5], fov: 40 }}
+        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+      >
+        <ambientLight intensity={1.2} />
+        <directionalLight position={[5, 5, 5]} intensity={2.5} />
+        <directionalLight position={[-3, 2, -5]} intensity={0.8} color="#8888ff" />
+        <pointLight position={[0, 2, 2]} intensity={1.5} color="#ffffff" />
+        <Suspense fallback={null}>
+          <LadyJusticeModel />
+        </Suspense>
+      </Canvas>
+    </div>
+  );
+}
 
 const AboutSection: React.FC = () => {
   const containerVariants = {
@@ -30,52 +100,64 @@ const AboutSection: React.FC = () => {
   return (
     <section
       id="sobre-guru"
-      className="relative overflow-hidden bg-[#020617] py-24"
+      className="relative overflow-hidden bg-[#0000FF] py-24"
     >
       <motion.div
-        className="relative z-10 mx-auto max-w-5xl px-6"
+        className="relative z-10 mx-auto max-w-6xl px-6"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
         variants={containerVariants}
       >
-        <div className="flex flex-col items-center text-center">
-          {/* Accent Line */}
+        {/* Accent Line */}
+        <motion.div
+          variants={itemVariants}
+          className="mb-8 h-1 w-12 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]"
+        />
+
+        {/* Two-column layout: 3D left, text right */}
+        <div className="flex flex-col items-center gap-12 lg:flex-row lg:items-center lg:gap-16">
+          {/* 3D Model — Left */}
           <motion.div
             variants={itemVariants}
-            className="mb-8 h-1 w-12 bg-[#0000FF] shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]"
-          />
-
-          <motion.h2
-            className="mb-12 font-[Outfit] text-5xl font-extrabold tracking-tighter text-white md:text-7xl"
-            variants={itemVariants}
+            className="flex flex-shrink-0 items-center justify-center"
           >
-            <span className="mb-4 block font-[Space_Grotesk] text-2xl tracking-[0.3em] uppercase opacity-50 md:text-3xl">
-              Nuestra Historia
-            </span>
-            ¿Quiénes{" "}
-            <span className="text-blue-500">
-              Somos?
-            </span>
-          </motion.h2>
-
-          <motion.div
-            className={`relative rounded-none ${NB.card} md:p-12`}
-            variants={itemVariants}
-          >
-            <p className="font-[Outfit] text-xl leading-relaxed text-slate-200 md:text-3xl">
-              <span className="mb-6 block bg-gradient-to-r from-white to-blue-200 bg-clip-text text-3xl font-bold text-transparent md:text-5xl">
-                ¡Somos una empresa de servicios legales automatizados!
-              </span>
-              Con la capacidad de realizar cualquier tipo de documentación legal
-              de manera{" "}
-              <span className="font-semibold text-blue-400">
-                personalizada y actualizada
-              </span>
-              . Nuestra misión es simplificar tus procesos más complejos para
-              que puedas cumplir tus sueños con total seguridad.
-            </p>
+            <LadyJusticeCanvas />
           </motion.div>
+
+          {/* Text — Right */}
+          <div className="flex-1 text-center lg:text-left">
+            <motion.h2
+              className="mb-8 font-[Outfit] text-5xl font-extrabold tracking-tighter text-white md:text-6xl"
+              variants={itemVariants}
+            >
+              <span className="mb-4 block font-[Space_Grotesk] text-2xl tracking-[0.3em] uppercase text-white/70 md:text-3xl">
+                Nuestra Historia
+              </span>
+              ¿Quiénes{" "}
+              <span className="text-[#00FFFF]">
+                Somos?
+              </span>
+            </motion.h2>
+
+            <motion.div
+              className={`relative rounded-none ${NB.card} md:p-10`}
+              variants={itemVariants}
+            >
+              <p className="font-[Outfit] text-xl leading-relaxed text-slate-200 md:text-2xl">
+                <span className="mb-6 block bg-gradient-to-r from-white to-blue-200 bg-clip-text text-2xl font-bold text-transparent md:text-4xl">
+                  ¡Somos una empresa de servicios legales automatizados!
+                </span>
+                Con la capacidad de realizar cualquier tipo de documentación legal
+                de manera{" "}
+                <span className="font-semibold text-blue-400">
+                  personalizada y actualizada
+                </span>
+                . Nuestra misión es simplificar tus procesos más complejos para
+                que puedas cumplir tus sueños con total seguridad.
+              </p>
+            </motion.div>
+          </div>
         </div>
       </motion.div>
 
