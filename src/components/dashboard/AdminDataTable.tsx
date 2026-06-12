@@ -34,8 +34,8 @@ interface UserServiceEntry {
 
 type GroupedUserData = Record<WorkerKey, UserServiceEntry[]>;
 
-// API Key de Gemini (Idealmente mover a variables de entorno: import.meta.env.VITE_GEMINI_KEY)
-const GEMINI_API_KEY = "TU_API_KEY_AQUI";
+// API Key de Gemini - se configura en variables de entorno (VITE_GEMINI_API_KEY)
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 
 const AdminDataTable: React.FC<AdminDataTableProps> = ({
   data,

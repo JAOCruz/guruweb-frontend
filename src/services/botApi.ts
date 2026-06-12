@@ -6,6 +6,8 @@ const BOT_API_URL =
     ? `http://${window.location.hostname}:3000/api`
     : "/api";
 
+const BOT_API_KEY = import.meta.env.VITE_BOT_API_KEY || "";
+
 const botApi = axios.create({
   baseURL: BOT_API_URL,
   headers: {
@@ -13,12 +15,15 @@ const botApi = axios.create({
   },
 });
 
-// Request interceptor to add bot token
+// Request interceptor to add bot token and API key
 botApi.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("guru_bot_token") || localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (BOT_API_KEY) {
+      config.headers["x-api-key"] = BOT_API_KEY;
     }
     return config;
   },
