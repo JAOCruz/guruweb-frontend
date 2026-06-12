@@ -72,22 +72,18 @@ const TypewriterSection: React.FC = () => {
   return (
     <section className="relative overflow-hidden bg-[#020617] py-16 md:py-24">
       {/* Service marks watermark background */}
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.08]">
-        <div className="absolute inset-0 flex flex-wrap content-start justify-center gap-x-8 gap-y-6 p-6">
-          {Array.from({ length: 36 }).map((_, i) => {
+      <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.08]">
+        <div className="grid h-full w-full grid-cols-2 auto-rows-fr gap-4 p-4 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 48 }).map((_, i) => {
             const mark = serviceMarks[i % serviceMarks.length];
             const Icon = mark.icon;
             return (
               <div
                 key={i}
-                className="flex items-center gap-2 text-white"
-                style={{
-                  transform: `rotate(${-6 + (i % 4) * 4}deg)`,
-                  fontSize: i % 3 === 0 ? "0.9rem" : "0.75rem",
-                }}
+                className="flex items-center justify-center gap-2 text-white"
               >
-                <Icon size={i % 3 === 0 ? 20 : 16} />
-                <span className="whitespace-nowrap font-[Space_Grotesk] font-black uppercase tracking-widest">
+                <Icon size={18} />
+                <span className="whitespace-nowrap font-[Space_Grotesk] text-xs font-black uppercase tracking-widest md:text-sm">
                   {mark.name}
                 </span>
               </div>
