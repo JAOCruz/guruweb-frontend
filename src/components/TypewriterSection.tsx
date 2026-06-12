@@ -73,11 +73,11 @@ const TypewriterSection: React.FC = () => {
     <section className="relative overflow-hidden bg-[#020617] py-16 md:py-24">
       {/* Service marks watermark background */}
       <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.08]">
-        <div className="grid h-full w-full grid-cols-3 auto-rows-fr gap-2 p-3 md:grid-cols-4 lg:grid-cols-6">
-          {Array.from({ length: 72 }).map((_, i) => {
+        <div className="grid h-full w-full grid-cols-2 auto-rows-fr gap-3 p-3 md:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 48 }).map((_, i) => {
             const mark = serviceMarks[i % serviceMarks.length];
             const Icon = mark.icon;
-            const cols = 6;
+            const cols = 4;
             const row = Math.floor(i / cols);
             const col = i % cols;
             // Artistic angle pattern based on row/col parity
@@ -86,11 +86,11 @@ const TypewriterSection: React.FC = () => {
             return (
               <div
                 key={i}
-                className="flex items-center justify-center gap-1 text-white md:gap-2"
+                className="flex items-center justify-center gap-2 text-white"
                 style={{ transform: `rotate(${angle}deg)` }}
               >
-                <Icon size={22} />
-                <span className="whitespace-nowrap font-[Space_Grotesk] text-base font-black uppercase tracking-widest md:text-lg">
+                <Icon size={28} />
+                <span className="whitespace-nowrap font-[Space_Grotesk] text-xl font-black uppercase tracking-widest md:text-2xl lg:text-3xl">
                   {mark.name}
                 </span>
               </div>
