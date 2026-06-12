@@ -203,10 +203,10 @@ const HeroSection = () => {
       )}
 
       {/* ── HERO TEXT ── */}
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pt-6 text-center">
+      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pt-2 text-center">
         {/* 3D Scales above the title */}
         <motion.div
-          className="w-full mb-[-3rem] md:mb-[-4rem] lg:mb-[-5rem]"
+          className="w-full mb-[-4rem] md:mb-[-5rem] lg:mb-[-6rem]"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}

@@ -77,13 +77,19 @@ const TypewriterSection: React.FC = () => {
           {Array.from({ length: 48 }).map((_, i) => {
             const mark = serviceMarks[i % serviceMarks.length];
             const Icon = mark.icon;
+            const row = Math.floor(i / 4);
+            const col = i % 4;
+            // Artistic angle pattern based on row/col parity
+            const rotations = [-4, 2, -2, 4, 3, -3, 0, 5];
+            const angle = rotations[(row + col) % rotations.length];
             return (
               <div
                 key={i}
                 className="flex items-center justify-center gap-2 text-white"
+                style={{ transform: `rotate(${angle}deg)` }}
               >
-                <Icon size={18} />
-                <span className="whitespace-nowrap font-[Space_Grotesk] text-xs font-black uppercase tracking-widest md:text-sm">
+                <Icon size={20} />
+                <span className="whitespace-nowrap font-[Space_Grotesk] text-sm font-black uppercase tracking-widest md:text-base">
                   {mark.name}
                 </span>
               </div>
