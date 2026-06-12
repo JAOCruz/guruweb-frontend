@@ -9,6 +9,7 @@ const ServicesSection = lazy(() => import("../src/components/ServicesSection"));
 const TestimonialsSection = lazy(() => import("../src/components/TestimonialsSection"));
 const DominicanSection = lazy(() => import("../src/components/DominicanSection"));
 const CTASection = lazy(() => import("../src/components/CTASection"));
+const ScalesSection = lazy(() => import("../src/components/ScalesSection"));
 const LocationSection = lazy(() => import("../src/components/LocationSection"));
 const Footer = lazy(() => import("../src/components/Footer"));
 
@@ -34,13 +35,16 @@ function App() {
           <ServicesSection />
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
-          <TestimonialsSection />
-        </Suspense>
-        <Suspense fallback={<SectionFallback />}>
           <DominicanSection />
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
           <CTASection />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <ScalesSection />
+        </Suspense>
+        <Suspense fallback={<SectionFallback />}>
+          <TestimonialsSection />
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
           <LocationSection />
