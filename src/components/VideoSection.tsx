@@ -11,7 +11,20 @@ const VideoSection: React.FC = () => {
 
   return (
     <section className="relative overflow-hidden bg-[#020617] py-24">
-      <div className="relative z-10 mx-auto max-w-4xl px-6">
+      <div className="relative z-10 mx-auto max-w-7xl px-6">
+        <motion.div
+          className="mb-8 text-center"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+        >
+          <h3 className="font-[Outfit] text-2xl leading-tight font-medium text-slate-200 italic md:text-4xl">
+            El GRUPO UNIFICADO DE REDACCIÓN UNIVERSAL{" "}
+            <span className="font-bold text-white">(G.U.R.U.)</span>
+          </h3>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -21,7 +34,7 @@ const VideoSection: React.FC = () => {
           <div className="relative overflow-hidden border-4 border-[#000080] bg-black shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
             <video
               ref={videoRef}
-              className="aspect-video w-full object-cover"
+              className="h-auto max-h-[85vh] w-full object-contain"
               autoPlay
               loop
               muted
@@ -49,13 +62,9 @@ const VideoSection: React.FC = () => {
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
         >
-          <h3 className="font-[Outfit] text-2xl leading-tight font-medium text-slate-200 italic md:text-4xl">
-            El GRUPO UNIFICADO DE REDACCIÓN UNIVERSAL{" "}
-            <span className="font-bold text-white">(G.U.R.U.)</span>,
-            <span className="mt-4 block font-bold text-blue-400 not-italic">
-              Será tu aliado estratégico al garantizar resultados impecables!
-            </span>
-          </h3>
+          <h4 className="font-[Outfit] text-xl leading-tight font-bold text-blue-400 not-italic md:text-3xl">
+            Será tu aliado estratégico al garantizar resultados impecables!
+          </h4>
 
           <div className="mt-12 flex justify-center">
             <a
