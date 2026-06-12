@@ -29,17 +29,32 @@ function ScalesHeroModel() {
   const groupRef = useRef<any>(null);
   const [hovered, setHovered] = useState(false);
 
+  useEffect(() => {
+    scene.traverse((child: any) => {
+      if (child.isMesh && child.material) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach((mat: any) => {
+          if (mat.map) mat.map = null;
+          if (mat.vertexColors) mat.vertexColors = false;
+          mat.color.set("#327361");
+          if (mat.emissive) mat.emissive.set("#0a1a16");
+          mat.needsUpdate = true;
+        });
+      }
+    });
+  }, [scene]);
+
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     groupRef.current.rotation.y += delta * (hovered ? 1.0 : 0.25);
-    groupRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.08;
+    groupRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.06;
   });
 
   return (
     <group
       ref={groupRef}
-      scale={0.8}
-      position={[0, -0.7, 0]}
+      scale={0.45}
+      position={[0, -0.4, 0]}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
@@ -50,24 +65,19 @@ function ScalesHeroModel() {
 
 function ScalesHeroCanvas() {
   return (
-    <div className="relative mx-auto h-32 w-full max-w-md md:h-40 md:max-w-lg lg:h-48 lg:max-w-xl">
+    <div className="relative mx-auto h-24 w-full max-w-xs md:h-32 md:max-w-sm lg:h-40 lg:max-w-md">
       <Canvas
-        camera={{ position: [0, 0.6, 12], fov: 55 }}
+        camera={{ position: [0, 0.5, 14], fov: 55 }}
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
       >
-        <ambientLight intensity={1.2} color="#327361" />
-        <directionalLight position={[5, 5, 5]} intensity={2.0} color="#327361" />
+        <ambientLight intensity={1.2} />
+        <directionalLight position={[5, 5, 5]} intensity={2.0} />
         <directionalLight position={[-3, 2, -5]} intensity={0.8} color="#327361" />
-        <pointLight position={[0, 2, 2]} intensity={1.5} color="#327361" />
+        <pointLight position={[0, 2, 2]} intensity={1.5} color="#ffffff" />
         <Suspense fallback={null}>
           <ScalesHeroModel />
         </Suspense>
       </Canvas>
-      {/* Dark teal tint overlay */}
-      <div
-        className="pointer-events-none absolute inset-0 z-10 mix-blend-overlay"
-        style={{ backgroundColor: "rgba(50, 115, 97, 0.35)" }}
-      />
     </div>
   );
 }
