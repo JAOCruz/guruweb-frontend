@@ -1,10 +1,23 @@
 import axios from "axios";
 
-// API is on port 3000, dashboard on 5174
-const BOT_API_URL =
-  typeof window !== 'undefined' && window.location.hostname
-    ? `http://${window.location.hostname}:3000/api`
-    : "/api";
+function getBotApiBaseURL(): string {
+  if (typeof window === "undefined") return "/api";
+  const host = window.location.hostname;
+
+  // Production domains → Railway backend (HTTPS)
+  if (
+    host === "gurusolucionesrd.com" ||
+    host === "www.gurusolucionesrd.com" ||
+    host.includes("netlify.app")
+  ) {
+    return "https://guruweb-backend-production.up.railway.app/api";
+  }
+
+  // Local / LAN development keeps the original behavior
+  return `http://${host}:3000/api`;
+}
+
+const BOT_API_URL = getBotApiBaseURL();
 
 const BOT_API_KEY = import.meta.env.VITE_BOT_API_KEY || "";
 
@@ -322,10 +335,7 @@ export const botAPI = {
 
   /** GET /api/documents/file/:docId — returns URL to stream a document file (used as iframe src) */
   getDocumentFileUrl: (docId: string): string => {
-    const base = typeof window !== 'undefined' && window.location.hostname
-      ? `http://${window.location.hostname}:3000/api`
-      : '/api';
-    return `${base}/documents/file/${docId}`;
+    return `${BOT_API_URL}/documents/file/${docId}`;
   },
 };
 

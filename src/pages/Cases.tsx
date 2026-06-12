@@ -2,10 +2,24 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Briefcase, Search, RefreshCw, ChevronLeft, Filter, AlertCircle, Tag, ChevronDown } from "lucide-react";
 
 const getAPIUrl = () => {
-  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+  if (typeof window === "undefined") return "http://localhost:3000";
+  const host = window.location.hostname;
+
+  // Production domains → Railway backend (HTTPS)
+  if (
+    host === "gurusolucionesrd.com" ||
+    host === "www.gurusolucionesrd.com" ||
+    host.includes("netlify.app")
+  ) {
+    return "https://guruweb-backend-production.up.railway.app";
+  }
+
+  if (host === "localhost" || host === "127.0.0.1") {
     return "http://localhost:3000";
   }
-  return `http://${window.location.hostname}:3000`;
+
+  // Local / LAN development
+  return `http://${host}:3000`;
 };
 
 // Map frontend section IDs to backend case_type values
