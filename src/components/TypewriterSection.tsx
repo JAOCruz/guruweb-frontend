@@ -18,8 +18,8 @@ function TypewriterModel() {
   return (
     <group
       ref={groupRef}
-      scale={1.0}
-      position={[0, -0.8, 0]}
+      scale={1.2}
+      position={[0, -0.9, 0]}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
@@ -32,7 +32,7 @@ function TypewriterCanvas() {
   return (
     <div className="relative h-[28rem] w-full md:h-[36rem] lg:h-[44rem]">
       <Canvas
-        camera={{ position: [0, 1.0, 12], fov: 60 }}
+        camera={{ position: [0, 1.0, 13], fov: 60 }}
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
       >
         <ambientLight intensity={1.2} />
@@ -49,7 +49,7 @@ function TypewriterCanvas() {
 
 const TypewriterSection: React.FC = () => {
   return (
-    <section className="relative overflow-hidden bg-[#020617] py-16 md:py-24">
+    <section className="relative overflow-hidden bg-[#020617] py-6 md:py-10">
       <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
