@@ -53,7 +53,7 @@ function ScalesHeroModel() {
   return (
     <group
       ref={groupRef}
-      scale={0.12}
+      scale={0.24}
       position={[0, -0.2, 0]}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
@@ -76,50 +76,6 @@ function ScalesHeroCanvas() {
         <pointLight position={[0, 2, 2]} intensity={1.5} color="#ffffff" />
         <Suspense fallback={null}>
           <ScalesHeroModel />
-        </Suspense>
-      </Canvas>
-    </div>
-  );
-}
-
-/* ── 3D Typewriter Model ── */
-function TypewriterHeroModel() {
-  const { scene } = useGLTF("/decorative_typewriter2.glb", true);
-  const groupRef = useRef<any>(null);
-  const [hovered, setHovered] = useState(false);
-
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    groupRef.current.rotation.y += delta * (hovered ? 1.0 : 0.25);
-    groupRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.08;
-  });
-
-  return (
-    <group
-      ref={groupRef}
-      scale={0.9}
-      position={[0, -0.7, 0]}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-    >
-      <primitive object={scene} />
-    </group>
-  );
-}
-
-function TypewriterHeroCanvas() {
-  return (
-    <div className="relative mx-auto h-32 w-full max-w-md md:h-40 md:max-w-lg lg:h-48 lg:max-w-xl">
-      <Canvas
-        camera={{ position: [0, 0.6, 12], fov: 55 }}
-        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-      >
-        <ambientLight intensity={1.2} />
-        <directionalLight position={[5, 5, 5]} intensity={2.0} />
-        <directionalLight position={[-3, 2, -5]} intensity={0.8} color="#8888ff" />
-        <pointLight position={[0, 2, 2]} intensity={1.5} color="#ffffff" />
-        <Suspense fallback={null}>
-          <TypewriterHeroModel />
         </Suspense>
       </Canvas>
     </div>
@@ -301,16 +257,6 @@ const HeroSection = () => {
           <div className="border-3 border-[#000080] bg-[#0000FF] px-5 py-2 text-sm font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] md:px-6 md:py-2.5 md:text-base lg:text-lg">
             Tus documentos en manos de expertos
           </div>
-        </motion.div>
-
-        {/* 3D Typewriter below the tag */}
-        <motion.div
-          className="w-full"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <TypewriterHeroCanvas />
         </motion.div>
 
       </div>

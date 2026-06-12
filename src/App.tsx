@@ -8,6 +8,7 @@ const GuruSection = lazy(() => import("../src/components/GuruSection"));
 const ServicesSection = lazy(() => import("../src/components/ServicesSection"));
 const TestimonialsSection = lazy(() => import("../src/components/TestimonialsSection"));
 const DominicanSection = lazy(() => import("../src/components/DominicanSection"));
+const TypewriterSection = lazy(() => import("../src/components/TypewriterSection"));
 const CTASection = lazy(() => import("../src/components/CTASection"));
 const LocationSection = lazy(() => import("../src/components/LocationSection"));
 const Footer = lazy(() => import("../src/components/Footer"));
@@ -19,6 +20,9 @@ function App() {
     <div className="relative overflow-x-hidden bg-[#020617]">
       <div className="pt-0">
         <HeroSection />
+        <Suspense fallback={<SectionFallback />}>
+          <TypewriterSection />
+        </Suspense>
         {/* Smooth gradient transition from dark hero to blue about */}
         <div className="h-24 w-full bg-gradient-to-b from-[#020617] to-[#0000FF]" />
         <Suspense fallback={<SectionFallback />}>
