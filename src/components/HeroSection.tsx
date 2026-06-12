@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { motion } from "framer-motion";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import {
-  ChevronRight,
-  MousePointer2,
   Menu,
   X,
-  MapPin,
   Scale,
   ScrollText,
   Shield,
@@ -23,6 +22,50 @@ const NB = {
   mobileLink:
     "w-full border-4 border-[#000080] bg-black py-4 text-center font-[Outfit] text-xl font-medium text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,128,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none",
 };
+
+/* ── 3D Scales of Justice Hero Model ── */
+function ScalesHeroModel() {
+  const { scene } = useGLTF("/scales_of_justice_hero.glb", true);
+  const groupRef = useRef<any>(null);
+  const [hovered, setHovered] = useState(false);
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return;
+    groupRef.current.rotation.y += delta * (hovered ? 1.0 : 0.25);
+    groupRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.08;
+  });
+
+  return (
+    <group
+      ref={groupRef}
+      scale={1.2}
+      position={[0, -0.9, 0]}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+    >
+      <primitive object={scene} />
+    </group>
+  );
+}
+
+function ScalesHeroCanvas() {
+  return (
+    <div className="relative h-44 w-full md:h-60 lg:h-72">
+      <Canvas
+        camera={{ position: [0, 0.8, 10], fov: 55 }}
+        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+      >
+        <ambientLight intensity={1.2} />
+        <directionalLight position={[5, 5, 5]} intensity={2.0} />
+        <directionalLight position={[-3, 2, -5]} intensity={0.8} color="#8888ff" />
+        <pointLight position={[0, 2, 2]} intensity={1.5} color="#ffffff" />
+        <Suspense fallback={null}>
+          <ScalesHeroModel />
+        </Suspense>
+      </Canvas>
+    </div>
+  );
+}
 
 const HeroSection = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -146,6 +189,16 @@ const HeroSection = () => {
 
       {/* ── HERO TEXT ── */}
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pt-16 text-center">
+        {/* 3D Scales above the title */}
+        <motion.div
+          className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <ScalesHeroCanvas />
+        </motion.div>
+
         <h1
           className="font-[Outfit] text-5xl leading-[0.9] font-extrabold tracking-tighter sm:text-6xl md:text-8xl lg:text-9xl"
           style={{ perspective: "1000px" }}
@@ -191,34 +244,6 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
-          <a href="https://wa.me/18298049017" target="_blank" rel="noopener noreferrer">
-            <button
-              className={`group relative inline-flex h-[60px] items-center gap-3 border-4 border-[#000080] bg-[#0000FF] px-5 text-white shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none md:h-[80px] md:gap-4 md:px-8`}
-            >
-              <div className="border-2 border-[#000080] bg-white p-2 text-[#0000FF] md:p-2.5">
-                <MousePointer2 size={18} className="fill-current" />
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-[8px] font-bold tracking-widest text-blue-200 uppercase md:text-[9px]">
-                  Sistema Iniciado
-                </span>
-                <span className="mt-0.5 font-[Outfit] text-base leading-none font-bold tracking-wide text-white md:mt-1 md:text-xl">
-                  Descubre más
-                </span>
-              </div>
-              <ChevronRight size={20} className="text-blue-200 transition-transform group-hover:translate-x-1" />
-            </button>
-          </a>
-        </motion.div>
-
-        <motion.div
-          className="mt-5 inline-flex items-center gap-2 border-2 border-[#000080] bg-black px-3 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[5px_5px_0px_0px_rgba(0,0,128,1)] md:mt-6 md:px-4 md:py-2.5 md:text-sm"
-          animate={{ y: [0, -10, 0] }}
-          transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-        >
-          <MapPin size={14} className="md:size-[16px]" /> Santo Domingo
-        </motion.div>
       </div>
 
       {/* ── MARQUEE ── */}
