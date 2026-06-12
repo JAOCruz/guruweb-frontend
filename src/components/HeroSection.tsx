@@ -38,8 +38,8 @@ function ScalesHeroModel() {
   return (
     <group
       ref={groupRef}
-      scale={1.2}
-      position={[0, -0.9, 0]}
+      scale={0.8}
+      position={[0, -0.7, 0]}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
@@ -50,19 +50,24 @@ function ScalesHeroModel() {
 
 function ScalesHeroCanvas() {
   return (
-    <div className="relative h-44 w-full md:h-60 lg:h-72">
+    <div className="relative mx-auto h-32 w-full max-w-md md:h-40 md:max-w-lg lg:h-48 lg:max-w-xl">
       <Canvas
-        camera={{ position: [0, 0.8, 10], fov: 55 }}
+        camera={{ position: [0, 0.6, 12], fov: 55 }}
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
       >
-        <ambientLight intensity={1.2} />
-        <directionalLight position={[5, 5, 5]} intensity={2.0} />
-        <directionalLight position={[-3, 2, -5]} intensity={0.8} color="#8888ff" />
-        <pointLight position={[0, 2, 2]} intensity={1.5} color="#ffffff" />
+        <ambientLight intensity={1.2} color="#327361" />
+        <directionalLight position={[5, 5, 5]} intensity={2.0} color="#327361" />
+        <directionalLight position={[-3, 2, -5]} intensity={0.8} color="#327361" />
+        <pointLight position={[0, 2, 2]} intensity={1.5} color="#327361" />
         <Suspense fallback={null}>
           <ScalesHeroModel />
         </Suspense>
       </Canvas>
+      {/* Dark teal tint overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 z-10 mix-blend-overlay"
+        style={{ backgroundColor: "rgba(50, 115, 97, 0.35)" }}
+      />
     </div>
   );
 }
@@ -189,16 +194,6 @@ const HeroSection = () => {
 
       {/* ── HERO TEXT ── */}
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pt-16 text-center">
-        {/* 3D Scales above the title */}
-        <motion.div
-          className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <ScalesHeroCanvas />
-        </motion.div>
-
         <h1
           className="font-[Outfit] text-5xl leading-[0.9] font-extrabold tracking-tighter sm:text-6xl md:text-8xl lg:text-9xl"
           style={{ perspective: "1000px" }}
@@ -232,6 +227,16 @@ const HeroSection = () => {
             </span>
           </motion.span>
         </h1>
+
+        {/* 3D Scales below the title */}
+        <motion.div
+          className="w-full"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+        >
+          <ScalesHeroCanvas />
+        </motion.div>
 
         <motion.div
           className="mb-6 inline-block md:mb-8"
