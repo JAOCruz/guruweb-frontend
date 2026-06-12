@@ -19,7 +19,6 @@ import {
   BarChart2,
   Briefcase,
   FileText,
-  Scale,
   Brain,
 } from "lucide-react";
 
@@ -162,13 +161,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             to="/dashboard/flipbooks"
             icon={<BookOpen size={18} />}
             label="Guías"
-            sidebarOpen={sidebarOpen}
-            isMobile={isMobile}
-          />
-          <NavItem
-            to="/dashboard/laws"
-            icon={<Scale size={18} />}
-            label="Leyes"
             sidebarOpen={sidebarOpen}
             isMobile={isMobile}
           />
