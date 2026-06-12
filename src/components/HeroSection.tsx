@@ -53,8 +53,8 @@ function ScalesHeroModel() {
   return (
     <group
       ref={groupRef}
-      scale={0.22}
-      position={[0, -0.35, 0]}
+      scale={0.12}
+      position={[0, -0.2, 0]}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
@@ -65,9 +65,9 @@ function ScalesHeroModel() {
 
 function ScalesHeroCanvas() {
   return (
-    <div className="relative mx-auto h-24 w-full max-w-xs md:h-32 md:max-w-sm lg:h-40 lg:max-w-md">
+    <div className="relative mx-auto h-28 w-full max-w-xs md:h-36 md:max-w-sm lg:h-44 lg:max-w-md">
       <Canvas
-        camera={{ position: [0, 0.5, 22], fov: 55 }}
+        camera={{ position: [0, 0.3, 28], fov: 60 }}
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
       >
         <ambientLight intensity={1.2} />
@@ -250,7 +250,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pt-16 text-center">
         {/* 3D Scales above the title */}
         <motion.div
-          className="w-full mb-[-0.5rem] md:mb-[-1rem] lg:mb-[-1.5rem]"
+          className="w-full mb-[-1rem] md:mb-[-2rem] lg:mb-[-3rem]"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
