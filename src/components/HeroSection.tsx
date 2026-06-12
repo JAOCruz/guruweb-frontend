@@ -206,7 +206,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pt-6 text-center">
         {/* 3D Scales above the title */}
         <motion.div
-          className="w-full mb-[-2rem] md:mb-[-3rem] lg:mb-[-4rem]"
+          className="w-full mb-[-3rem] md:mb-[-4rem] lg:mb-[-5rem]"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -219,7 +219,7 @@ const HeroSection = () => {
           style={{ perspective: "1000px" }}
         >
           <motion.span
-            className="mb-2 block text-white"
+            className="mb-0 block text-white"
             initial={{ opacity: 0, rotateX: -45, z: -200, y: 60 }}
             animate={{ opacity: 1, rotateX: 0, z: 0, y: 0 }}
             transition={{ duration: 0.9, ease: [0.215, 0.61, 0.355, 1] }}
