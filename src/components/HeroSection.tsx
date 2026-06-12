@@ -65,9 +65,9 @@ function ScalesHeroModel() {
 
 function ScalesHeroCanvas() {
   return (
-    <div className="relative mx-auto h-32 w-full max-w-xs md:h-40 md:max-w-sm lg:h-48 lg:max-w-md">
+    <div className="relative mx-auto h-40 w-full max-w-xs md:h-52 md:max-w-sm lg:h-64 lg:max-w-md">
       <Canvas
-        camera={{ position: [0, 0.3, 34], fov: 60 }}
+        camera={{ position: [0, 0.3, 42], fov: 60 }}
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
       >
         <ambientLight intensity={1.2} />
@@ -203,7 +203,7 @@ const HeroSection = () => {
       )}
 
       {/* ── HERO TEXT ── */}
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pt-10 text-center">
+      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pt-6 text-center">
         {/* 3D Scales above the title */}
         <motion.div
           className="w-full mb-[-2rem] md:mb-[-3rem] lg:mb-[-4rem]"

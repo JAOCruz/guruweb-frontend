@@ -2,6 +2,16 @@ import React, { Suspense, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
+import {
+  Scale,
+  ScrollText,
+  Shield,
+  Globe,
+  Printer,
+  Bike,
+  Camera,
+  Landmark,
+} from "lucide-react";
 
 /* ── 3D Typewriter Model ── */
 function TypewriterModel() {
@@ -47,9 +57,48 @@ function TypewriterCanvas() {
   );
 }
 
+const serviceMarks = [
+  { name: "Servicios Legales", icon: Scale },
+  { name: "Redacción", icon: ScrollText },
+  { name: "Notarización", icon: Shield },
+  { name: "Traducciones", icon: Globe },
+  { name: "Impresión", icon: Printer },
+  { name: "Mensajería", icon: Bike },
+  { name: "Fotos 2x2", icon: Camera },
+  { name: "Certificaciones", icon: Landmark },
+];
+
 const TypewriterSection: React.FC = () => {
   return (
     <section className="relative overflow-hidden bg-[#020617] py-16 md:py-24">
+      {/* Service marks watermark background */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-[0.08]">
+        <div className="absolute inset-0 flex flex-wrap content-start justify-center gap-x-8 gap-y-6 p-6">
+          {Array.from({ length: 36 }).map((_, i) => {
+            const mark = serviceMarks[i % serviceMarks.length];
+            const Icon = mark.icon;
+            return (
+              <div
+                key={i}
+                className="flex items-center gap-2 text-white"
+                style={{
+                  transform: `rotate(${-6 + (i % 4) * 4}deg)`,
+                  fontSize: i % 3 === 0 ? "0.9rem" : "0.75rem",
+                }}
+              >
+                <Icon size={i % 3 === 0 ? 20 : 16} />
+                <span className="whitespace-nowrap font-[Space_Grotesk] font-black uppercase tracking-widest">
+                  {mark.name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Subtle vignette to keep focus on typewriter */}
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_center,_transparent_40%,_#020617_90%)]" />
+
       <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
