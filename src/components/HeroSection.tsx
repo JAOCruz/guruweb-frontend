@@ -36,7 +36,7 @@ function ScalesHeroModel() {
         mats.forEach((mat: any) => {
           if (mat.map) mat.map = null;
           if (mat.vertexColors) mat.vertexColors = false;
-          mat.color.set("#70F1B8");
+          mat.color.set("#6ADCA8");
           if (mat.emissive) mat.emissive.set("#143326");
           mat.needsUpdate = true;
         });
@@ -53,8 +53,8 @@ function ScalesHeroModel() {
   return (
     <group
       ref={groupRef}
-      scale={0.35}
-      position={[0, -0.5, 0]}
+      scale={0.22}
+      position={[0, -0.35, 0]}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
@@ -65,9 +65,9 @@ function ScalesHeroModel() {
 
 function ScalesHeroCanvas() {
   return (
-    <div className="relative mx-auto h-28 w-full max-w-xs md:h-36 md:max-w-sm lg:h-44 lg:max-w-md">
+    <div className="relative mx-auto h-24 w-full max-w-xs md:h-32 md:max-w-sm lg:h-40 lg:max-w-md">
       <Canvas
-        camera={{ position: [0, 0.5, 16], fov: 55 }}
+        camera={{ position: [0, 0.5, 22], fov: 55 }}
         style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
       >
         <ambientLight intensity={1.2} />
@@ -250,7 +250,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pt-16 text-center">
         {/* 3D Scales above the title */}
         <motion.div
-          className="w-full"
+          className="w-full mb-[-0.5rem] md:mb-[-1rem] lg:mb-[-1.5rem]"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -292,16 +292,6 @@ const HeroSection = () => {
           </motion.span>
         </h1>
 
-        {/* 3D Typewriter below the title */}
-        <motion.div
-          className="w-full"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <TypewriterHeroCanvas />
-        </motion.div>
-
         <motion.div
           className="mb-6 inline-block md:mb-8"
           initial={{ opacity: 0 }}
@@ -311,6 +301,16 @@ const HeroSection = () => {
           <div className="border-3 border-[#000080] bg-[#0000FF] px-5 py-2 text-sm font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] md:px-6 md:py-2.5 md:text-base lg:text-lg">
             Tus documentos en manos de expertos
           </div>
+        </motion.div>
+
+        {/* 3D Typewriter below the tag */}
+        <motion.div
+          className="w-full"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+        >
+          <TypewriterHeroCanvas />
         </motion.div>
 
       </div>
