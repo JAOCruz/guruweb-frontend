@@ -423,7 +423,18 @@ const Dashboard: React.FC = () => {
         <Route path="/documents" element={<DocumentManagement />} />
         <Route path="/laws" element={<Laws />} />
         <Route path="/motherbrain" element={<MotherBrain />} />
-        <Route path="/bot-simulator" element={<BotSimulator />} />
+        <Route
+          path="/bot-simulator"
+          element={
+            isAdmin ? (
+              <BotSimulator />
+            ) : (
+              <div className="py-8 text-center text-slate-400">
+                No tienes acceso a esta página
+              </div>
+            )
+          }
+        />
         <Route
           path="/services-catalog"
           element={
