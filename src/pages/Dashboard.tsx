@@ -19,6 +19,7 @@ import DocumentManagement from "./DocumentManagement";
 import Laws from "./Laws";
 import ServicesCatalog from "./ServicesCatalog";
 import MotherBrain from "./MotherBrain";
+import BotSimulator from "./BotSimulator";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap, Eye, EyeOff } from "lucide-react";
@@ -422,6 +423,7 @@ const Dashboard: React.FC = () => {
         <Route path="/documents" element={<DocumentManagement />} />
         <Route path="/laws" element={<Laws />} />
         <Route path="/motherbrain" element={<MotherBrain />} />
+        <Route path="/bot-simulator" element={<BotSimulator />} />
         <Route
           path="/services-catalog"
           element={

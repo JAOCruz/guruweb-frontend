@@ -20,6 +20,7 @@ import {
   Briefcase,
   FileText,
   Brain,
+  Bot,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -207,6 +208,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 >
                   <Wifi size={15} />
                   Conexión
+                </NavLink>
+                <NavLink
+                  to="/dashboard/bot-simulator"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-cyan-600/30 font-semibold text-cyan-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <Bot size={15} />
+                  Simulador Bot
                 </NavLink>
                 <NavLink
                   to="/dashboard/bot-messages"
