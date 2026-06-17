@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { settingsAPI } from "../services/api";
+import api from "../services/api";
+import { Database, Play, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 const Settings: React.FC = () => {
   const [employeePercentage, setEmployeePercentage] = useState<number>(50);
@@ -9,6 +11,16 @@ const Settings: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Migrations state
+  const [migrating, setMigrating] = useState(false);
+  const [migrationResult, setMigrationResult] = useState<{
+    ok?: boolean;
+    message?: string;
+    ran?: string[];
+    skipped?: string[];
+    error?: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchEmployeePercentage();
@@ -58,6 +70,28 @@ const Settings: React.FC = () => {
   };
 
   const adminPercentage = 100 - parseFloat(newPercentage || "0");
+
+  const handleRunMigrations = async () => {
+    if (!window.confirm("¿Ejecutar migraciones pendientes en la base de datos?")) return;
+    setMigrating(true);
+    setMigrationResult(null);
+    try {
+      const response = await api.post("/admin/run-migrations");
+      setMigrationResult({
+        ok: true,
+        message: response.data.message,
+        ran: response.data.ran,
+        skipped: response.data.skipped,
+      });
+    } catch (err: any) {
+      setMigrationResult({
+        ok: false,
+        error: err.response?.data?.error || err.message || "Error al ejecutar migraciones",
+      });
+    } finally {
+      setMigrating(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-4xl rounded-2xl border border-slate-700 bg-slate-900 p-8 shadow-xl">
@@ -226,6 +260,71 @@ const Settings: React.FC = () => {
               </button>
             </div>
           </form>
+
+          {/* Admin Tools: Database Migrations */}
+          <div className="rounded-xl border border-purple-500/30 bg-purple-900/10 p-6">
+            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-purple-300">
+              <Database size={20} />
+              Herramientas de Administrador
+            </h3>
+            <p className="mb-4 text-sm text-slate-300">
+              Ejecuta las migraciones pendientes de la base de datos. Esto crea las tablas necesarias para el bot de WhatsApp y el simulador.
+            </p>
+            <button
+              type="button"
+              onClick={handleRunMigrations}
+              disabled={migrating}
+              className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-3 font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-400"
+            >
+              {migrating ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Ejecutando migraciones...
+                </>
+              ) : (
+                <>
+                  <Play size={18} />
+                  Ejecutar Migraciones
+                </>
+              )}
+            </button>
+
+            {migrationResult && (
+              <div
+                className={`mt-4 rounded-lg border px-4 py-3 ${
+                  migrationResult.ok
+                    ? "border-emerald-500/50 bg-emerald-900/20 text-emerald-400"
+                    : "border-red-500/50 bg-red-900/20 text-red-400"
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {migrationResult.ok ? (
+                    <CheckCircle size={18} className="mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+                  )}
+                  <div className="text-sm">
+                    <p className="font-semibold">
+                      {migrationResult.ok ? migrationResult.message : "Error"}
+                    </p>
+                    {migrationResult.ok && migrationResult.ran && migrationResult.ran.length > 0 && (
+                      <ul className="mt-1 list-disc pl-4">
+                        {migrationResult.ran.map((file) => (
+                          <li key={file}>{file}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {migrationResult.ok && migrationResult.skipped && migrationResult.skipped.length > 0 && (
+                      <p className="mt-2 text-xs opacity-80">
+                        Omitidas (ya aplicadas): {migrationResult.skipped.join(", ")}
+                      </p>
+                    )}
+                    {migrationResult.error && <p>{migrationResult.error}</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Info Section */}
           <div className="rounded-xl border border-yellow-500/30 bg-yellow-900/10 p-4">
