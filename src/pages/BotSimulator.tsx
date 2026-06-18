@@ -20,7 +20,7 @@ const BotSimulator: React.FC = () => {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sessionId] = useState(() => `sim_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
+  const [sessionId] = useState(() => `sim_${Date.now().toString(36).slice(-8)}`);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
