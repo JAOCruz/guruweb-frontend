@@ -20,6 +20,7 @@ import Laws from "./Laws";
 import ServicesCatalog from "./ServicesCatalog";
 import MotherBrain from "./MotherBrain";
 import BotSimulator from "./BotSimulator";
+import SimulatorReview from "./SimulatorReview";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap, Eye, EyeOff } from "lucide-react";
@@ -428,6 +429,18 @@ const Dashboard: React.FC = () => {
           element={
             isAdmin ? (
               <BotSimulator />
+            ) : (
+              <div className="py-8 text-center text-slate-400">
+                No tienes acceso a esta página
+              </div>
+            )
+          }
+        />
+        <Route
+          path="/simulator-review"
+          element={
+            isAdmin ? (
+              <SimulatorReview />
             ) : (
               <div className="py-8 text-center text-slate-400">
                 No tienes acceso a esta página

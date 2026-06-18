@@ -223,6 +223,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   Simulador Bot
                 </NavLink>
                 <NavLink
+                  to="/dashboard/simulator-review"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-orange-600/30 font-semibold text-orange-300"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`
+                  }
+                >
+                  <MessageSquare size={15} />
+                  Revisión Simulador
+                </NavLink>
+                <NavLink
                   to="/dashboard/bot-messages"
                   className={({ isActive }) =>
                     `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${
