@@ -1,5 +1,4 @@
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Type, Scroll, Users, Sparkles, Crown } from "lucide-react";
 
 const slides = [
@@ -36,98 +35,85 @@ const slides = [
 ];
 
 export default function HistorySection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-80%"]);
-  const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-
   return (
-    <section
-      ref={containerRef}
-      className="relative bg-[#020617]"
-      style={{ height: `${slides.length * 100}vh` }}
-    >
-      {/* Sticky viewport */}
-      <div className="sticky top-0 flex h-screen flex-col overflow-hidden">
+    <section className="relative overflow-hidden bg-[#0000FF] py-16 md:py-24">
+      {/* Background pattern */}
+      <div className="pointer-events-none absolute inset-0 opacity-10">
+        <div
+          className="h-full w-full"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-6xl px-6">
         {/* Header */}
-        <div className="z-20 px-6 pt-16 pb-6 md:px-12">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="font-[Outfit] text-4xl font-bold uppercase italic text-white md:text-6xl"
-          >
-            Historia —{" "}
-            <span className="text-[#6ADCA8]">Quienes Somos</span>
-          </motion.h2>
-          <p className="mt-2 max-w-2xl text-sm text-slate-400 md:text-base">
-            Desplázate para recorrer nuestra historia
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-12 text-center"
+        >
+          <h2 className="text-4xl font-black uppercase italic text-white md:text-6xl">
+            Historia — Quienes Somos
+          </h2>
+          <p className="mt-3 text-sm text-white/80 md:text-base">
+            Un recorrido por nuestras raíces y nuestra visión
           </p>
-        </div>
+        </motion.div>
 
-        {/* Horizontal track */}
-        <div className="relative flex flex-1 items-center">
-          <motion.div
-            style={{ x }}
-            className="flex h-full items-stretch gap-8 px-6 md:px-12"
-          >
-            {slides.map((slide, index) => {
-              const Icon = slide.icon;
-              return (
-                <motion.div
-                  key={index}
-                  className="relative flex h-full w-[85vw] flex-shrink-0 flex-col justify-center md:w-[60vw]"
+        {/* Timeline */}
+        <div className="relative">
+          {/* Vertical line */}
+          <div className="absolute left-6 top-0 bottom-0 w-1 bg-[#000080] md:left-1/2 md:-translate-x-1/2" />
+
+          {slides.map((slide, index) => {
+            const Icon = slide.icon;
+            const isEven = index % 2 === 0;
+
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className={`relative mb-12 flex items-start gap-6 md:gap-0 ${
+                  isEven ? "md:flex-row" : "md:flex-row-reverse"
+                }`}
+              >
+                {/* Icon node on timeline */}
+                <div className="absolute left-6 top-0 z-10 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border-4 border-[#000080] bg-white text-[#0000FF] shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] md:left-1/2">
+                  <Icon size={20} />
+                </div>
+
+                {/* Content card */}
+                <div
+                  className={`ml-16 w-full md:ml-0 md:w-[45%] ${
+                    isEven ? "md:pr-12 md:text-right" : "md:pl-12 md:text-left"
+                  }`}
                 >
-                  {/* Background card */}
-                  <div className="relative overflow-hidden rounded-3xl border border-slate-700/50 bg-gradient-to-br from-[#0F172A] to-[#1E293B] p-8 shadow-2xl md:p-12">
-                    {/* Decorative glow */}
-                    <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#6ADCA8]/10 blur-3xl" />
-                    <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#0000FF]/10 blur-3xl" />
-
-                    {/* Year badge */}
-                    <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[#6ADCA8]/30 bg-[#6ADCA8]/10 px-4 py-2 text-[#6ADCA8]">
-                      <Icon size={18} />
-                      <span className="font-[Space_Grotesk] text-sm font-bold tracking-widest">
-                        {slide.year}
-                      </span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="mb-6 font-[Outfit] text-2xl font-bold text-white md:text-4xl">
+                  <div className="border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
+                    <span className="mb-2 inline-block rounded bg-[#000080] px-2 py-1 text-xs font-bold text-white">
+                      {slide.year}
+                    </span>
+                    <h3 className="mb-3 text-xl font-black uppercase italic text-white md:text-2xl">
                       {slide.title}
                     </h3>
-
-                    {/* Text */}
-                    <p className="font-[Space_Grotesk] text-base leading-relaxed text-slate-300 md:text-lg">
+                    <p className="text-sm leading-relaxed text-slate-300 md:text-base">
                       {slide.text}
                     </p>
-
-                    {/* Slide number */}
-                    <div className="absolute right-6 bottom-6 font-[Space_Grotesk] text-6xl font-black text-slate-800 md:text-8xl">
-                      0{index + 1}
-                    </div>
                   </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </div>
+                </div>
 
-        {/* Progress bar */}
-        <div className="z-20 h-1 w-full bg-slate-800">
-          <motion.div
-            style={{ width: progressWidth }}
-            className="h-full bg-gradient-to-r from-[#0000FF] to-[#6ADCA8]"
-          />
-        </div>
-
-        {/* Scroll hint */}
-        <div className="z-20 px-6 py-4 text-center text-xs text-slate-500 md:px-12">
-          Sigue bajando para continuar la historia →
+                {/* Empty space for the other side */}
+                <div className="hidden md:block md:w-[45%]" />
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
