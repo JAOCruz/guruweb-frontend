@@ -100,7 +100,7 @@ const AboutSection: React.FC = () => {
   return (
     <section
       id="sobre-guru"
-      className="relative overflow-hidden bg-[#0000FF] py-24"
+      className="relative overflow-hidden bg-gradient-to-b from-[#0000FF] to-[#000080] py-24 pb-12"
     >
       <motion.div
         className="relative z-10 mx-auto max-w-6xl px-6"

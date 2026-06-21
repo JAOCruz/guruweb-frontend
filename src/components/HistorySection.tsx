@@ -50,7 +50,7 @@ export default function HistorySection() {
   return (
     <section
       ref={containerRef}
-      className="relative overflow-hidden bg-[#0000FF] py-16 md:py-24"
+      className="relative overflow-hidden bg-gradient-to-b from-[#000080] via-[#0000FF] to-[#000080] py-16 md:py-24"
     >
       {/* Animated background gradient */}
       <motion.div

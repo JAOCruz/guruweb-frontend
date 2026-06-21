@@ -32,7 +32,7 @@ function App() {
         <Suspense fallback={<SectionFallback />}>
           <HistorySection />
         </Suspense>
-        <div className="h-24 w-full bg-gradient-to-b from-[#0000FF] to-[#020617]" />
+        <div className="h-24 w-full bg-gradient-to-b from-[#000080] to-[#020617]" />
         <Suspense fallback={<SectionFallback />}>
           <VideoSection />
         </Suspense>
