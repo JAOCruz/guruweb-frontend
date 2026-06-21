@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Type, Scroll, Users, Sparkles, Crown } from "lucide-react";
 
 const slides = [
@@ -35,9 +36,29 @@ const slides = [
 ];
 
 export default function HistorySection() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"],
+  });
+
+  const rawLineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  const lineHeight = useSpring(rawLineHeight, { stiffness: 50, damping: 20 });
+
+  const glowX = useTransform(scrollYProgress, [0, 1], ["-20%", "120%"]);
+
   return (
-    <section className="relative overflow-hidden bg-[#0000FF] py-16 md:py-24">
-      {/* Background pattern */}
+    <section
+      ref={containerRef}
+      className="relative overflow-hidden bg-[#0000FF] py-16 md:py-24"
+    >
+      {/* Animated background gradient */}
+      <motion.div
+        style={{ x: glowX }}
+        className="pointer-events-none absolute -top-1/2 -left-1/4 h-[200%] w-[80%] bg-gradient-to-r from-transparent via-white/10 to-transparent blur-3xl"
+      />
+
+      {/* Dotted pattern */}
       <div className="pointer-events-none absolute inset-0 opacity-10">
         <div
           className="h-full w-full"
@@ -55,7 +76,7 @@ export default function HistorySection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-12 text-center"
+          className="mb-16 text-center"
         >
           <h2 className="text-4xl font-black uppercase italic text-white md:text-6xl">
             Historia — Quienes Somos
@@ -67,8 +88,13 @@ export default function HistorySection() {
 
         {/* Timeline */}
         <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-6 top-0 bottom-0 w-1 bg-[#000080] md:left-1/2 md:-translate-x-1/2" />
+          {/* Background line */}
+          <div className="absolute left-6 top-0 bottom-0 w-1 bg-[#000080]/50 md:left-1/2 md:-translate-x-1/2" />
+          {/* Animated glowing line */}
+          <motion.div
+            style={{ height: lineHeight }}
+            className="absolute left-6 top-0 w-1 origin-top bg-gradient-to-b from-white via-[#6ADCA8] to-white shadow-[0_0_20px_rgba(255,255,255,0.6)] md:left-1/2 md:-translate-x-1/2"
+          />
 
           {slides.map((slide, index) => {
             const Icon = slide.icon;
@@ -77,29 +103,45 @@ export default function HistorySection() {
             return (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className={`relative mb-12 flex items-start gap-6 md:gap-0 ${
+                initial={{ opacity: 0, y: 80, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, delay: index * 0.08, ease: "easeOut" }}
+                className={`relative mb-16 flex items-start gap-6 md:gap-0 ${
                   isEven ? "md:flex-row" : "md:flex-row-reverse"
                 }`}
               >
                 {/* Icon node on timeline */}
-                <div className="absolute left-6 top-0 z-10 flex h-12 w-12 -translate-x-1/2 items-center justify-center rounded-full border-4 border-[#000080] bg-white text-[#0000FF] shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] md:left-1/2">
-                  <Icon size={20} />
-                </div>
+                <motion.div
+                  whileInView={{ scale: [0.5, 1.2, 1] }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="absolute left-6 top-0 z-10 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full border-4 border-[#000080] bg-white text-[#0000FF] shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] md:left-1/2"
+                >
+                  <Icon size={24} />
+                </motion.div>
 
                 {/* Content card */}
-                <div
+                <motion.div
+                  whileHover={{ scale: 1.02, rotate: isEven ? -1 : 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                   className={`ml-16 w-full md:ml-0 md:w-[45%] ${
-                    isEven ? "md:pr-12 md:text-right" : "md:pl-12 md:text-left"
+                    isEven ? "md:pr-16 md:text-right" : "md:pl-16 md:text-left"
                   }`}
                 >
-                  <div className="border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-                    <span className="mb-2 inline-block rounded bg-[#000080] px-2 py-1 text-xs font-bold text-white">
+                  <div className="group relative overflow-hidden border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-shadow duration-300 hover:shadow-[8px_8px_0px_0px_rgba(0,0,128,1)]">
+                    {/* Hover glow effect */}
+                    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+
+                    <motion.span
+                      initial={{ opacity: 0, x: isEven ? 20 : -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.2 + index * 0.08 }}
+                      className="mb-2 inline-block rounded bg-[#000080] px-3 py-1 text-xs font-bold text-white"
+                    >
                       {slide.year}
-                    </span>
+                    </motion.span>
                     <h3 className="mb-3 text-xl font-black uppercase italic text-white md:text-2xl">
                       {slide.title}
                     </h3>
@@ -107,7 +149,7 @@ export default function HistorySection() {
                       {slide.text}
                     </p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Empty space for the other side */}
                 <div className="hidden md:block md:w-[45%]" />
