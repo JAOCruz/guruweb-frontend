@@ -9,6 +9,7 @@ const ServicesSection = lazy(() => import("../src/components/ServicesSection"));
 const TestimonialsSection = lazy(() => import("../src/components/TestimonialsSection"));
 const DominicanSection = lazy(() => import("../src/components/DominicanSection"));
 const TypewriterSection = lazy(() => import("../src/components/TypewriterSection"));
+const HistorySection = lazy(() => import("../src/components/HistorySection"));
 const CTASection = lazy(() => import("../src/components/CTASection"));
 const LocationSection = lazy(() => import("../src/components/LocationSection"));
 const Footer = lazy(() => import("../src/components/Footer"));
@@ -28,6 +29,11 @@ function App() {
         <Suspense fallback={<SectionFallback />}>
           <AboutSection />
         </Suspense>
+        <div className="h-24 w-full bg-gradient-to-b from-[#0000FF] to-[#020617]" />
+        <Suspense fallback={<SectionFallback />}>
+          <HistorySection />
+        </Suspense>
+        <div className="h-24 w-full bg-gradient-to-b from-[#020617] to-[#0000FF]" />
         <Suspense fallback={<SectionFallback />}>
           <VideoSection />
         </Suspense>
