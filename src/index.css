@@ -90,9 +90,6 @@
   --font-weight-base: var(--base-font-weight);
   --font-weight-heading: var(--heading-font-weight);
 
-  --font-heading-space: "Space Grotesk", sans-serif;
-  --font-heading-barlow: "Barlow Condensed", sans-serif;
-  --font-heading: var(--font-heading-space);
   --font-base: "Outfit", sans-serif;
 }
 
@@ -416,4 +413,16 @@ body {
   background-color: #0a0a0a;
   background-image: radial-gradient(circle, #d4af3722 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+
+/* Manual font-heading utility (Tailwind v4 resolves @theme inline variables at build time) */
+:root {
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-heading-space: "Space Grotesk", sans-serif;
+  --font-heading-barlow: "Barlow Condensed", sans-serif;
+}
+
+.font-heading {
+  font-family: var(--font-heading);
 }
