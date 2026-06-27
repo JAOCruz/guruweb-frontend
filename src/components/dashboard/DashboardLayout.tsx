@@ -99,11 +99,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       >
         <div className="flex h-16 items-center justify-between border-b-2 border-border bg-[#0000CC] p-4">
           {sidebarOpen || isMobile ? (
-            <h1 className="font-heading truncate text-xl font-black tracking-tight text-white">
+            <h1 className="font-heading truncate text-3xl md:text-4xl font-black tracking-tight text-white">
               Gurú<span className="text-yellow-300">Dash</span>
             </h1>
           ) : (
-            <div className="mx-auto font-heading text-2xl font-black text-white">
+            <div className="mx-auto font-heading text-4xl md:text-5xl font-black text-white">
               G
             </div>
           )}
