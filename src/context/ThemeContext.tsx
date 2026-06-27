@@ -13,6 +13,11 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const FONT_MAP = {
+  space: '"Space Grotesk", sans-serif',
+  barlow: '"Barlow Condensed", sans-serif',
+};
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -29,8 +34,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     const body = document.body;
 
     root.classList.toggle("dark", currentTheme === "dark");
-    root.classList.toggle("font-barlow", currentFont === "barlow");
-    root.classList.toggle("font-space", currentFont === "space");
+    root.style.setProperty("--font-heading", FONT_MAP[currentFont]);
     root.classList.toggle("dark-bg-dots", currentTheme === "dark" && currentBg === "dots");
 
     if (currentTheme === "dark" && currentBg === "dots") {
