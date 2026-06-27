@@ -20,6 +20,33 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const [headingFont, setHeadingFontState] = useState<"space" | "barlow">("space");
   const [darkBg, setDarkBgState] = useState<"solid" | "dots">("solid");
 
+  const applyFont = (font: "space" | "barlow") => {
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--font-heading",
+      font === "barlow"
+        ? '"Barlow Condensed", sans-serif'
+        : '"Space Grotesk", sans-serif'
+    );
+    root.classList.toggle("font-barlow", font === "barlow");
+    root.classList.toggle("font-space", font === "space");
+  };
+
+  const applyDarkBg = (isDark: boolean, bg: "solid" | "dots") => {
+    const root = document.documentElement;
+    root.classList.toggle("dark-bg-dots", isDark && bg === "dots");
+    if (isDark && bg === "dots") {
+      root.style.backgroundColor = "#0a0a0a";
+      root.style.backgroundImage =
+        "radial-gradient(circle, #d4af3722 1px, transparent 1px)";
+      root.style.backgroundSize = "20px 20px";
+      document.body.style.backgroundColor = "transparent";
+    } else {
+      root.style.backgroundImage = "";
+      root.style.backgroundSize = "";
+    }
+  };
+
   useEffect(() => {
     const savedTheme = localStorage.getItem("guru-theme") as Theme | null;
     const savedFont = localStorage.getItem("guru-heading-font") as "space" | "barlow" | null;
@@ -36,9 +63,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const root = document.documentElement;
     root.classList.toggle("dark", initialTheme === "dark");
-    root.classList.toggle("font-barlow", initialFont === "barlow");
-    root.classList.toggle("font-space", initialFont === "space");
-    root.classList.toggle("dark-bg-dots", initialTheme === "dark" && initialBg === "dots");
+    applyFont(initialFont);
+    applyDarkBg(initialTheme === "dark", initialBg);
   }, []);
 
   const toggleTheme = () => {
@@ -47,7 +73,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.setItem("guru-theme", next);
       const root = document.documentElement;
       root.classList.toggle("dark", next === "dark");
-      root.classList.toggle("dark-bg-dots", next === "dark" && darkBg === "dots");
+      applyDarkBg(next === "dark", darkBg);
       return next;
     });
   };
@@ -55,16 +81,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const setHeadingFont = (font: "space" | "barlow") => {
     setHeadingFontState(font);
     localStorage.setItem("guru-heading-font", font);
-    const root = document.documentElement;
-    root.classList.toggle("font-barlow", font === "barlow");
-    root.classList.toggle("font-space", font === "space");
+    applyFont(font);
   };
 
   const setDarkBg = (bg: "solid" | "dots") => {
     setDarkBgState(bg);
     localStorage.setItem("guru-dark-bg", bg);
-    const root = document.documentElement;
-    root.classList.toggle("dark-bg-dots", theme === "dark" && bg === "dots");
+    applyDarkBg(theme === "dark", bg);
   };
 
   return (
