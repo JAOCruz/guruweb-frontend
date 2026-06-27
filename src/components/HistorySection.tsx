@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Type, Scroll, Users, Sparkles, Crown } from "lucide-react";
+import { NeoCard, NeoCardContent, NeoBadge } from "./ui/neo";
 
 const slides = [
   {
@@ -45,26 +46,18 @@ export default function HistorySection() {
   const rawLineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
   const lineHeight = useSpring(rawLineHeight, { stiffness: 50, damping: 20 });
 
-  const glowX = useTransform(scrollYProgress, [0, 1], ["-20%", "120%"]);
-
   return (
     <section
       ref={containerRef}
-      className="relative overflow-hidden bg-gradient-to-b from-[#000080] via-[#0000FF] to-[#000080] py-16 md:py-24"
+      className="relative overflow-hidden bg-background py-16 md:py-24"
     >
-      {/* Animated background gradient */}
-      <motion.div
-        style={{ x: glowX }}
-        className="pointer-events-none absolute -top-1/2 -left-1/4 h-[200%] w-[80%] bg-gradient-to-r from-transparent via-white/10 to-transparent blur-3xl"
-      />
-
       {/* Dotted pattern */}
       <div className="pointer-events-none absolute inset-0 opacity-10">
         <div
           className="h-full w-full"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+              "radial-gradient(circle at 2px 2px, var(--foreground) 1px, transparent 0)",
             backgroundSize: "32px 32px",
           }}
         />
@@ -78,10 +71,13 @@ export default function HistorySection() {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <h2 className="text-4xl font-black uppercase italic text-white md:text-6xl">
-            Historia — Quienes Somos
+          <div className="mb-4 inline-block">
+            <NeoBadge variant="main">Historia</NeoBadge>
+          </div>
+          <h2 className="font-heading text-2xl font-black uppercase italic tracking-tighter text-foreground md:text-4xl">
+            Quienes Somos
           </h2>
-          <p className="mt-3 text-sm text-white/80 md:text-base">
+          <p className="mt-3 font-base text-base text-foreground/70 md:text-lg">
             Un recorrido por nuestras raíces y nuestra visión
           </p>
         </motion.div>
@@ -89,11 +85,11 @@ export default function HistorySection() {
         {/* Timeline */}
         <div className="relative">
           {/* Background line */}
-          <div className="absolute left-6 top-0 bottom-0 w-1 bg-[#000080]/50 md:left-1/2 md:-translate-x-1/2" />
+          <div className="absolute left-6 top-0 bottom-0 w-1 bg-border/50 md:left-1/2 md:-translate-x-1/2" />
           {/* Animated glowing line */}
           <motion.div
             style={{ height: lineHeight }}
-            className="absolute left-6 top-0 w-1 origin-top bg-gradient-to-b from-white via-[#6ADCA8] to-white shadow-[0_0_20px_rgba(255,255,255,0.6)] md:left-1/2 md:-translate-x-1/2"
+            className="absolute left-6 top-0 w-1 origin-top bg-main md:left-1/2 md:-translate-x-1/2"
           />
 
           {slides.map((slide, index) => {
@@ -116,7 +112,7 @@ export default function HistorySection() {
                   whileInView={{ scale: [0.5, 1.2, 1] }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="absolute left-6 top-0 z-10 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full border-4 border-[#000080] bg-white text-[#0000FF] shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] md:left-1/2"
+                  className="absolute left-6 top-0 z-10 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full border-4 border-border bg-main text-main-foreground shadow-shadow md:left-1/2"
                 >
                   <Icon size={24} />
                 </motion.div>
@@ -129,26 +125,19 @@ export default function HistorySection() {
                     isEven ? "md:pr-16 md:text-right" : "md:pl-16 md:text-left"
                   }`}
                 >
-                  <div className="group relative overflow-hidden border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-shadow duration-300 hover:shadow-[8px_8px_0px_0px_rgba(0,0,128,1)]">
-                    {/* Hover glow effect */}
-                    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-
-                    <motion.span
-                      initial={{ opacity: 0, x: isEven ? 20 : -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.2 + index * 0.08 }}
-                      className="mb-2 inline-block rounded bg-[#000080] px-3 py-1 text-xs font-bold text-white"
-                    >
-                      {slide.year}
-                    </motion.span>
-                    <h3 className="mb-3 text-xl font-black uppercase italic text-white md:text-2xl">
-                      {slide.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-slate-300 md:text-base">
-                      {slide.text}
-                    </p>
-                  </div>
+                  <NeoCard className="group relative overflow-hidden transition-all hover:shadow-none">
+                    <NeoCardContent className="p-0">
+                      <NeoBadge variant="neutral" className="mb-3">
+                        {slide.year}
+                      </NeoBadge>
+                      <h3 className="mb-3 font-heading text-xl font-black uppercase italic text-foreground md:text-2xl">
+                        {slide.title}
+                      </h3>
+                      <p className="font-base text-base leading-relaxed text-foreground/70 md:text-lg">
+                        {slide.text}
+                      </p>
+                    </NeoCardContent>
+                  </NeoCard>
                 </motion.div>
 
                 {/* Empty space for the other side */}

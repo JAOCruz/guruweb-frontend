@@ -515,15 +515,15 @@ const AIInsights: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.65 }}
       >
-        <NeoCard variant="outline" className="flex-row items-start gap-4 border-2 border-main bg-secondary-background">
+        <NeoCard variant="main" className="flex-row items-start gap-4">
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-base border-2 border-border bg-main">
             <AlertCircle size={18} className="text-main-foreground" />
           </div>
           <div>
-            <h4 className="mb-1 text-base font-black text-main">
+            <h4 className="mb-1 text-base font-black text-main-foreground">
               Conversaciones que requirieron intervención humana
             </h4>
-            <p className="text-base text-foreground/80">
+            <p className="text-base text-main-foreground/90">
               {s.humanTakeovers} conversaciones ({pct(s.humanTakeovers, s.totalConversations)}) fueron
               escaladas a un agente humano. Revisar estos casos ayuda a mejorar el entrenamiento de la IA.
             </p>

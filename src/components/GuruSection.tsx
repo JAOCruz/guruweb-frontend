@@ -1,10 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-
-const NB = {
-  tag: "border-3 border-[#000080] bg-[#0000FF] text-white px-4 py-1.5 text-xs font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
-  card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
-};
+import { NeoBadge, NeoCard, NeoCardContent } from "./ui/neo";
 
 const GuruSection: React.FC = () => {
   const containerVariants = {
@@ -54,7 +50,7 @@ const GuruSection: React.FC = () => {
   return (
     <section
       id="sobre-guru"
-      className="relative overflow-hidden bg-[#020617] py-24"
+      className="relative overflow-hidden bg-secondary-background py-24"
     >
       <div className="mx-auto max-w-7xl px-6">
         <motion.div
@@ -70,24 +66,24 @@ const GuruSection: React.FC = () => {
               className="order-2 space-y-8 md:order-1"
               variants={itemVariants}
             >
-              <div className={NB.tag}>
-                Saber Interno
-              </div>
-              <h3 className="font-[Outfit] text-4xl leading-tight font-bold text-white md:text-6xl">
+              <NeoBadge variant="main">Saber Interno</NeoBadge>
+              <h3 className="font-heading text-2xl leading-tight font-bold text-foreground md:text-4xl">
                 El Búho de la{" "}
-                <span className="text-glow-blue text-blue-500">
+                <span className="text-main">
                   Sabiduría Legal
                 </span>
               </h3>
-              <div className={NB.card}>
-                <p className="font-[Outfit] text-lg leading-relaxed text-slate-300">
-                  Nuestro "Búho" representa al sabio interno que todo abogado
-                  tiene en su interior. Este personaje es quien te atenderá en
-                  cada interacción, con la capacidad de manejar temas en
-                  lineamientos de procedimientos civiles locales, leyes y
-                  contratos legales en general.
-                </p>
-              </div>
+              <NeoCard>
+                <NeoCardContent className="p-0">
+                  <p className="font-base text-base leading-relaxed text-foreground/70 md:text-lg">
+                    Nuestro "Búho" representa al sabio interno que todo abogado
+                    tiene en su interior. Este personaje es quien te atenderá en
+                    cada interacción, con la capacidad de manejar temas en
+                    lineamientos de procedimientos civiles locales, leyes y
+                    contratos legales en general.
+                  </p>
+                </NeoCardContent>
+              </NeoCard>
             </motion.div>
 
             <motion.div
@@ -119,24 +115,24 @@ const GuruSection: React.FC = () => {
               className="space-y-8 text-right md:text-left"
               variants={itemVariantsReverse}
             >
-              <div className={NB.tag}>
-                Excelencia Tech
-              </div>
-              <h3 className="font-[Outfit] text-4xl leading-tight font-bold text-white md:text-6xl">
+              <NeoBadge variant="main">Excelencia Tech</NeoBadge>
+              <h3 className="font-heading text-2xl leading-tight font-bold text-foreground md:text-4xl">
                 Compromiso con la{" "}
-                <span className="text-cyan-400">
+                <span className="text-main">
                   Precisión
                 </span>
               </h3>
-              <div className={NB.card}>
-                <p className="font-[Outfit] text-lg leading-relaxed text-slate-300">
-                  Nuestro equipo pasa día y noche aprendiendo de cada
-                  experiencia para ofrecer un servicio de calidad. Revisamos
-                  meticulosamente la legibilidad de los datos mediante
-                  tecnología de la más alta calidad. ¡Tu aliado tech-legal para
-                  navegar el sistema con flow y precisión!
-                </p>
-              </div>
+              <NeoCard>
+                <NeoCardContent className="p-0">
+                  <p className="font-base text-base leading-relaxed text-foreground/70 md:text-lg">
+                    Nuestro equipo pasa día y noche aprendiendo de cada
+                    experiencia para ofrecer un servicio de calidad. Revisamos
+                    meticulosamente la legibilidad de los datos mediante
+                    tecnología de la más alta calidad. ¡Tu aliado tech-legal para
+                    navegar el sistema con flow y precisión!
+                  </p>
+                </NeoCardContent>
+              </NeoCard>
             </motion.div>
           </div>
         </motion.div>

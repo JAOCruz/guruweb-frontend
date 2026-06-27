@@ -12,12 +12,7 @@ import {
   Send,
   ArrowRight,
 } from "lucide-react";
-
-const NB = {
-  btn: "border-4 border-[#000080] bg-[#0000FF] text-white shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none",
-  tag: "border-3 border-[#000080] bg-[#0000FF] text-white px-4 py-1.5 text-xs font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
-  card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
-};
+import { NeoCard, NeoCardContent, NeoBadge, NeoButton } from "./ui/neo";
 
 const ServicesSection: React.FC = () => {
   const containerVariants = {
@@ -110,7 +105,7 @@ const ServicesSection: React.FC = () => {
   return (
     <section
       id="servicios"
-      className="relative overflow-hidden bg-[#020617] py-24"
+      className="relative overflow-hidden bg-background py-24"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <motion.div
@@ -120,21 +115,18 @@ const ServicesSection: React.FC = () => {
           viewport={{ once: true }}
           variants={containerVariants}
         >
-          <motion.div
-            variants={itemVariants}
-            className={`mb-1 inline-block ${NB.tag}`}
-          >
-            Especialidades
+          <motion.div variants={itemVariants} className="mb-4 inline-block">
+            <NeoBadge variant="main">Especialidades</NeoBadge>
           </motion.div>
           <motion.h2
-            className="mb-1 font-[Outfit] text-3xl font-extrabold tracking-tighter text-white sm:text-5xl md:text-7xl"
+            className="mb-4 font-heading text-2xl font-extrabold tracking-tighter text-foreground md:text-4xl"
             variants={itemVariants}
           >
-            Nuestos{" "}
-            <span className="text-glow-blue text-blue-500">Servicios</span>
+            Nuestros{" "}
+            <span className="text-main">Servicios</span>
           </motion.h2>
           <motion.p
-            className="mx-auto max-w-2xl font-[Outfit] text-base text-slate-400 sm:text-xl"
+            className="mx-auto max-w-2xl font-base text-base text-foreground/70 md:text-lg"
             variants={itemVariants}
           >
             En Gurú Soluciones nos especializamos en una variedad de servicios
@@ -151,41 +143,41 @@ const ServicesSection: React.FC = () => {
           variants={containerVariants}
         >
           {services.map((service) => (
-            <motion.div
-              key={service.id}
-              variants={itemVariants}
-              className="group relative"
-            >
-              <div className={`relative flex h-full flex-col ${NB.card} sm:p-8`}>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center border-4 border-[#000080] bg-[#0000FF] text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] sm:mb-6 sm:h-14 sm:w-14">
-                  {service.icon}
-                </div>
+            <motion.div key={service.id} variants={itemVariants} className="group">
+              <NeoCard className="relative flex h-full flex-col transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none sm:p-8">
+                <NeoCardContent className="flex h-full flex-col p-0">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-shadow sm:mb-6 sm:h-14 sm:w-14">
+                    {service.icon}
+                  </div>
 
-                <h3 className="mb-3 font-[Outfit] text-xl font-bold text-white transition-colors group-hover:text-blue-400 sm:mb-4 sm:text-2xl">
-                  {service.name}
-                </h3>
+                  <h3 className="mb-3 font-heading text-xl font-bold text-foreground transition-colors group-hover:text-main sm:mb-4 sm:text-2xl">
+                    {service.name}
+                  </h3>
 
-                <p className="mb-6 flex-grow font-[Outfit] text-sm text-slate-400 sm:mb-8 sm:text-base">
-                  {service.description}
-                </p>
+                  <p className="mb-6 flex-grow font-base text-base text-foreground/70 sm:mb-8">
+                    {service.description}
+                  </p>
 
-                <div className="flex items-center gap-2 font-[Space_Grotesk] text-xs font-bold tracking-widest text-blue-400 uppercase opacity-0 transition-opacity group-hover:opacity-100">
-                  Saber más <ArrowRight size={14} />
-                </div>
-              </div>
+                  <div className="flex items-center gap-2 font-base text-xs font-bold tracking-widest text-main uppercase opacity-0 transition-opacity group-hover:opacity-100">
+                    Saber más <ArrowRight size={14} />
+                  </div>
+                </NeoCardContent>
+              </NeoCard>
             </motion.div>
           ))}
         </motion.div>
 
         <div className="mt-20 flex justify-center">
-          <a
-            href="https://wa.me/18298049017"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${NB.btn} px-10 py-5 font-[Space_Grotesk] text-lg font-bold tracking-widest`}
-          >
-            CONTACTAR AHORA
-          </a>
+          <NeoButton size="lg" asChild>
+            <a
+              href="https://wa.me/18298049017"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-base text-lg font-bold tracking-widest"
+            >
+              CONTACTAR AHORA
+            </a>
+          </NeoButton>
         </div>
       </div>
     </section>

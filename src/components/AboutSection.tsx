@@ -2,10 +2,7 @@ import React, { Suspense, useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
-
-const NB = {
-  card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
-};
+import { NeoCard, NeoCardContent } from "./ui/neo";
 
 /* ── 3D Lady Justice Model ── */
 function LadyJusticeModel() {
@@ -100,7 +97,7 @@ const AboutSection: React.FC = () => {
   return (
     <section
       id="sobre-guru"
-      className="relative overflow-hidden bg-gradient-to-b from-[#0000FF] to-[#000080] py-24 pb-12"
+      className="relative overflow-hidden bg-secondary-background py-24 pb-12"
     >
       <motion.div
         className="relative z-10 mx-auto max-w-6xl px-6"
@@ -112,7 +109,7 @@ const AboutSection: React.FC = () => {
         {/* Accent Line */}
         <motion.div
           variants={itemVariants}
-          className="mb-8 h-1 w-12 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]"
+          className="mb-8 h-1 w-12 bg-main shadow-shadow"
         />
 
         {/* Two-column layout: 3D left, text right */}
@@ -128,44 +125,45 @@ const AboutSection: React.FC = () => {
           {/* Text — Right */}
           <div className="flex-1 text-center lg:text-left">
             <motion.h2
-              className="mb-8 font-[Outfit] text-5xl font-extrabold tracking-tighter text-white md:text-6xl"
+              className="mb-8 font-heading text-2xl font-extrabold tracking-tighter text-foreground md:text-4xl"
               variants={itemVariants}
             >
-              <span className="mb-4 block font-[Space_Grotesk] text-2xl tracking-[0.3em] uppercase text-white/70 md:text-3xl">
+              <span className="mb-4 block font-base text-base font-bold tracking-[0.3em] uppercase text-foreground/70 md:text-lg">
                 Nuestra Historia
               </span>
               ¿Quiénes{" "}
-              <span className="text-[#00FFFF]">
+              <span className="text-main">
                 Somos?
               </span>
             </motion.h2>
 
-            <motion.div
-              className={`relative rounded-none ${NB.card} md:p-10`}
-              variants={itemVariants}
-            >
-              <p className="font-[Outfit] text-xl leading-relaxed text-slate-200 md:text-2xl">
-                <span className="mb-6 block bg-gradient-to-r from-white to-blue-200 bg-clip-text text-2xl font-bold text-transparent md:text-4xl">
-                  ¡Somos una empresa de servicios legales automatizados!
-                </span>
-                Con la capacidad de realizar cualquier tipo de documentación legal
-                de manera{" "}
-                <span className="font-semibold text-blue-400">
-                  personalizada y actualizada
-                </span>
-                . Nuestra misión es simplificar tus procesos más complejos para
-                que puedas cumplir tus sueños con total seguridad.
-              </p>
+            <motion.div variants={itemVariants}>
+              <NeoCard className="rounded-base md:p-10">
+                <NeoCardContent className="p-0">
+                  <p className="font-base text-base leading-relaxed text-foreground md:text-lg">
+                    <span className="mb-6 block font-heading text-xl font-bold text-foreground md:text-2xl">
+                      ¡Somos una empresa de servicios legales automatizados!
+                    </span>
+                    Con la capacidad de realizar cualquier tipo de documentación legal
+                    de manera{" "}
+                    <span className="font-semibold text-main">
+                      personalizada y actualizada
+                    </span>
+                    . Nuestra misión es simplificar tus procesos más complejos para
+                    que puedas cumplir tus sueños con total seguridad.
+                  </p>
+                </NeoCardContent>
+              </NeoCard>
             </motion.div>
           </div>
         </div>
       </motion.div>
 
-      {/* Cyber HUD elements */}
-      <div className="absolute top-1/2 left-0 hidden -translate-y-1/2 opacity-20 lg:block">
+      {/* Decorative sidebar line */}
+      <div className="absolute top-1/2 left-0 hidden -translate-y-1/2 opacity-30 lg:block">
         <div className="flex flex-col gap-2 p-4">
-          <div className="h-32 w-1 bg-blue-500/50" />
-          <div className="h-8 w-1 bg-blue-500" />
+          <div className="h-32 w-1 bg-foreground/50" />
+          <div className="h-8 w-1 bg-main" />
         </div>
       </div>
     </section>

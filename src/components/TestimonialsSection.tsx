@@ -1,11 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
-
-const NB = {
-  tag: "border-3 border-[#000080] bg-[#0000FF] text-white px-4 py-1.5 text-xs font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
-  card: "border-4 border-[#000080] bg-black p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
-};
+import { NeoCard, NeoCardContent, NeoBadge } from "./ui/neo";
 
 const TestimonialsSection: React.FC = () => {
   const containerVariants = {
@@ -57,7 +53,7 @@ const TestimonialsSection: React.FC = () => {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[#020617] py-24">
+    <section className="relative overflow-hidden bg-background py-24">
       <div className="mx-auto max-w-7xl px-6">
         <motion.div
           className="mb-20 text-center"
@@ -66,18 +62,15 @@ const TestimonialsSection: React.FC = () => {
           viewport={{ once: true }}
           variants={containerVariants}
         >
-          <motion.div
-            variants={itemVariants}
-            className={`mb-4 inline-block ${NB.tag}`}
-          >
-            Feedback
+          <motion.div variants={itemVariants} className="mb-4 inline-block">
+            <NeoBadge variant="main">Feedback</NeoBadge>
           </motion.div>
           <motion.h2
-            className="mb-6 font-[Outfit] text-5xl font-extrabold tracking-tighter text-white md:text-7xl"
+            className="mb-6 font-heading text-2xl font-extrabold tracking-tighter text-foreground md:text-4xl"
             variants={itemVariants}
           >
             Lo que dicen{" "}
-            <span className="text-glow-blue text-blue-500">
+            <span className="text-main">
               nuestros clientes
             </span>
           </motion.h2>
@@ -91,39 +84,37 @@ const TestimonialsSection: React.FC = () => {
           variants={containerVariants}
         >
           {testimonials.map((testimonial) => (
-            <motion.div
-              key={testimonial.id}
-              variants={itemVariants}
-              className={`group relative overflow-hidden ${NB.card} p-10`}
-            >
-              {/* Massive Quote Icon Background */}
-              <Quote
-                size={120}
-                className="absolute -top-10 -right-10 rotate-12 text-blue-500/5"
-              />
+            <motion.div key={testimonial.id} variants={itemVariants}>
+              <NeoCard className="group relative overflow-hidden p-10">
+                <NeoCardContent className="relative z-10 p-0">
+                  {/* Massive Quote Icon Background */}
+                  <Quote
+                    size={120}
+                    className="absolute -top-10 -right-10 rotate-12 text-main/10"
+                  />
 
-              <div className="relative z-10">
-                <div className="mb-6 flex gap-1">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={18}
-                      className="fill-blue-500 text-blue-400"
-                    />
-                  ))}
-                </div>
+                  <div className="mb-6 flex gap-1">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star
+                        key={i}
+                        size={18}
+                        className="fill-main text-main"
+                      />
+                    ))}
+                  </div>
 
-                <p className="mb-8 font-[Outfit] text-xl leading-relaxed text-slate-200 italic md:text-2xl">
-                  "{testimonial.text}"
-                </p>
+                  <p className="mb-8 font-base text-base leading-relaxed text-foreground italic md:text-lg">
+                    "{testimonial.text}"
+                  </p>
 
-                <div className="flex items-center gap-4">
-                  <div className="h-[1px] w-10 bg-blue-500/50" />
-                  <span className="font-[Space_Grotesk] text-xs font-bold tracking-widest text-blue-400 uppercase">
-                    {testimonial.author}
-                  </span>
-                </div>
-              </div>
+                  <div className="flex items-center gap-4">
+                    <div className="h-[1px] w-10 bg-main/50" />
+                    <span className="font-base text-xs font-bold tracking-widest text-main uppercase">
+                      {testimonial.author}
+                    </span>
+                  </div>
+                </NeoCardContent>
+              </NeoCard>
             </motion.div>
           ))}
         </motion.div>

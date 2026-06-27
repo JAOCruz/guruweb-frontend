@@ -14,25 +14,24 @@ const CTASection = lazy(() => import("../src/components/CTASection"));
 const LocationSection = lazy(() => import("../src/components/LocationSection"));
 const Footer = lazy(() => import("../src/components/Footer"));
 
-const SectionFallback = () => <div className="h-96 bg-[#0000FF]" />;
+const SectionFallback = () => (
+  <div className="h-96 border-b-2 border-border bg-secondary-background" />
+);
 
 function App() {
   return (
-    <div className="relative overflow-x-hidden bg-[#020617]">
+    <div className="relative overflow-x-hidden bg-background text-foreground">
       <div className="pt-0">
         <HeroSection />
         <Suspense fallback={<SectionFallback />}>
           <TypewriterSection />
         </Suspense>
-        {/* Smooth gradient transition from dark hero to blue about */}
-        <div className="h-24 w-full bg-gradient-to-b from-[#020617] to-[#0000FF]" />
         <Suspense fallback={<SectionFallback />}>
           <AboutSection />
         </Suspense>
         <Suspense fallback={<SectionFallback />}>
           <HistorySection />
         </Suspense>
-        <div className="h-24 w-full bg-gradient-to-b from-[#000080] to-[#020617]" />
         <Suspense fallback={<SectionFallback />}>
           <VideoSection />
         </Suspense>

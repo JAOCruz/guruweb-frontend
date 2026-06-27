@@ -70,27 +70,26 @@ const serviceMarks = [
 
 const TypewriterSection: React.FC = () => {
   return (
-    <section className="relative overflow-hidden bg-[#020617] py-16 md:py-24">
+    <section className="relative overflow-hidden bg-secondary-background py-16 md:py-24">
       {/* Service marks watermark background */}
       <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.08]">
-        <div className="grid h-full w-full grid-cols-2 auto-rows-fr gap-3 p-3 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid h-full w-full auto-rows-fr grid-cols-2 gap-3 p-3 md:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 48 }).map((_, i) => {
             const mark = serviceMarks[i % serviceMarks.length];
             const Icon = mark.icon;
             const cols = 4;
             const row = Math.floor(i / cols);
             const col = i % cols;
-            // Artistic angle pattern based on row/col parity
             const rotations = [-4, 2, -2, 4, 3, -3, 0, 5];
             const angle = rotations[(row + col) % rotations.length];
             return (
               <div
                 key={i}
-                className="flex items-center justify-center gap-2 text-white"
+                className="flex items-center justify-center gap-2 text-foreground"
                 style={{ transform: `rotate(${angle}deg)` }}
               >
                 <Icon size={28} />
-                <span className="whitespace-nowrap font-[Space_Grotesk] text-xl font-black uppercase tracking-widest md:text-2xl lg:text-3xl">
+                <span className="whitespace-nowrap font-heading text-xl font-black uppercase tracking-widest md:text-2xl lg:text-3xl">
                   {mark.name}
                 </span>
               </div>
@@ -100,7 +99,7 @@ const TypewriterSection: React.FC = () => {
       </div>
 
       {/* Subtle vignette to keep focus on typewriter */}
-      <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_center,_transparent_40%,_#020617_90%)]" />
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_center,_transparent_40%,_var(--background)_90%)]" />
 
       <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6">
         <motion.div

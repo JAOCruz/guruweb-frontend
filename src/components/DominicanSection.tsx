@@ -1,9 +1,6 @@
 import React, { useRef } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-
-const NB = {
-  tag: "border-3 border-[#000080] bg-[#0000FF] text-white px-4 py-1.5 text-xs font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,128,1)]",
-};
+import { NeoBadge, NeoCard, NeoCardContent } from "./ui/neo";
 
 const DominicanSection: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -29,7 +26,7 @@ const DominicanSection: React.FC = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#020617] py-24">
+    <section className="relative overflow-hidden bg-background py-24">
       <div className="relative z-10 mx-auto max-w-7xl px-6">
         <div className="flex flex-col items-center gap-16 md:flex-row md:items-center">
           {/* Interactive Map Part */}
@@ -67,29 +64,31 @@ const DominicanSection: React.FC = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              <div className={`mb-6 inline-flex items-center gap-2 ${NB.tag}`}>
-                <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
-                Sede Central
+              <div className="mb-6 inline-flex items-center gap-2">
+                <NeoBadge variant="main">
+                  <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-main-foreground" />
+                  Sede Central
+                </NeoBadge>
               </div>
 
-              <h2 className="mb-8 font-[Outfit] text-5xl font-extrabold tracking-tighter text-white md:text-7xl">
+              <h2 className="mb-8 font-heading text-2xl font-extrabold tracking-tighter text-foreground md:text-4xl">
                 Basados en{" "}
-                <span className="text-glow-blue inline-block text-blue-500">
+                <span className="inline-block text-main">
                   República Dominicana
                 </span>
               </h2>
 
               <div className="space-y-6">
-                <p className="font-[Outfit] text-xl leading-relaxed text-slate-300 md:text-2xl">
+                <p className="font-base text-base leading-relaxed text-foreground md:text-lg">
                   Orgullosamente dominicanos, ofrecemos nuestros servicios
                   legales y documentales con la{" "}
-                  <span className="font-semibold text-white">
+                  <span className="font-semibold text-foreground">
                     calidez y profesionalismo
                   </span>{" "}
                   que nos caracteriza.
                 </p>
 
-                <p className="font-[Outfit] text-lg leading-relaxed text-slate-400 md:text-xl">
+                <p className="font-base text-base leading-relaxed text-foreground/70 md:text-lg">
                   Ubicados estratégicamente en Santo Domingo, atendemos clientes
                   en toda la isla, fusionando tradición legal con tecnología de
                   vanguardia para brindarte soluciones eficientes.
@@ -97,7 +96,7 @@ const DominicanSection: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Tech Stats Indicator */}
+            {/* Stats Indicator */}
             <motion.div
               className="flex justify-center gap-12 pt-8 md:justify-start"
               initial={{ opacity: 0 }}
@@ -105,22 +104,26 @@ const DominicanSection: React.FC = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.4 }}
             >
-              <div>
-                <div className="font-[Space_Grotesk] text-2xl font-bold tracking-tighter text-blue-400">
-                  100%
-                </div>
-                <div className="font-[Space_Grotesk] text-[10px] tracking-widest text-slate-500 uppercase">
-                  Local_Support
-                </div>
-              </div>
-              <div>
-                <div className="font-[Space_Grotesk] text-2xl font-bold tracking-tighter text-blue-400">
-                  ISO_CERT
-                </div>
-                <div className="font-[Space_Grotesk] text-[10px] tracking-widest text-slate-500 uppercase">
-                  Security_Protocol
-                </div>
-              </div>
+              <NeoCard className="min-w-[120px] text-center">
+                <NeoCardContent className="p-0">
+                  <div className="font-heading text-2xl font-bold tracking-tighter text-main">
+                    100%
+                  </div>
+                  <div className="font-base text-[10px] tracking-widest text-foreground/50 uppercase">
+                    Local_Support
+                  </div>
+                </NeoCardContent>
+              </NeoCard>
+              <NeoCard className="min-w-[120px] text-center">
+                <NeoCardContent className="p-0">
+                  <div className="font-heading text-2xl font-bold tracking-tighter text-main">
+                    ISO_CERT
+                  </div>
+                  <div className="font-base text-[10px] tracking-widest text-foreground/50 uppercase">
+                    Security_Protocol
+                  </div>
+                </NeoCardContent>
+              </NeoCard>
             </motion.div>
           </div>
         </div>
