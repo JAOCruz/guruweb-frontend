@@ -2,93 +2,108 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 const LoadingScreen: React.FC = () => {
-  const [loadingText, setLoadingText] = useState("INITIALIZING_SYSTEM");
+  const [loadingText, setLoadingText] = useState("CARGANDO");
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const texts = [
-      "ESTABLISHING_SECURE_CONNECTION",
-      "DECRYPTING_USER_DATA",
-      "LOADING_ASSETS",
-      "SYSTEM_READY",
+      "CARGANDO",
+      "PREPARANDO PANEL",
+      "CONECTANDO SERVICIOS",
+      "LISTO",
     ];
     let index = 0;
 
     const interval = setInterval(() => {
       setLoadingText(texts[index]);
       index = (index + 1) % texts.length;
-    }, 800);
+    }, 700);
 
-    return () => clearInterval(interval);
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => (prev >= 100 ? 100 : prev + 5));
+    }, 120);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(progressInterval);
+    };
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#020617] text-white">
-      {/* Background Effects */}
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-[#020617] to-[#020617]" />
-      <div className="scanlines absolute inset-0 z-10 opacity-20" />
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background p-6">
+      {/* Background grid */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+      />
 
-      {/* Central Loader */}
-      <div className="relative z-20 flex flex-col items-center">
-        {/* Pulsing Logo (CSS-based) */}
-        <style>{`
-          @keyframes pulse-scale { 0%, 100% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1); opacity: 1; } }
-          .logo-pulse { animation: pulse-scale 2s ease-in-out infinite; will-change: transform; }
-        `}</style>
-        <div className="logo-pulse mb-12 flex flex-col items-center leading-tight">
-          <span className="font-[Outfit] text-5xl font-extrabold tracking-tighter text-white drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+      {/* Central neo-brutalist loader */}
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center">
+        {/* Main card */}
+        <div className="mb-8 flex flex-col items-center rounded-base border-4 border-border bg-main p-8 shadow-shadow">
+          <span className="font-heading text-6xl font-black tracking-tighter text-main-foreground md:text-7xl">
             GURÚ
           </span>
-          <span className="font-[Space_Grotesk] text-xs tracking-[0.5em] text-blue-400 uppercase">
+          <span className="mt-1 font-base text-sm font-black tracking-[0.5em] text-main-foreground/80 uppercase">
             Soluciones
           </span>
         </div>
 
-        {/* Cyber Spinner (CSS-based for better performance) */}
-        <style>{`
-          @keyframes spin-cw { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-          @keyframes spin-ccw { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
-          .spinner-outer { animation: spin-cw 2s linear infinite; will-change: transform; }
-          .spinner-inner { animation: spin-ccw 3s linear infinite; will-change: transform; }
-        `}</style>
-        <div className="relative mb-8 h-24 w-24">
-          {/* Outer Ring */}
-          <div className="spinner-outer absolute inset-0 rounded-full border-2 border-transparent border-t-blue-500 border-r-blue-500/30" />
-          {/* Inner Ring (Reverse) */}
-          <div className="spinner-inner absolute inset-2 rounded-full border-2 border-transparent border-b-cyan-400 border-l-cyan-400/30" />
-          {/* Center Dot */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6]" />
-          </div>
+        {/* Spinner blocks */}
+        <div className="mb-8 grid grid-cols-3 gap-2">
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <motion.div
+              key={i}
+              className="h-4 w-4 rounded-sm border-2 border-border bg-main"
+              animate={{
+                scale: [1, 1.2, 1],
+                backgroundColor: ["#0000FF", "#ffffff", "#0000FF"],
+              }}
+              transition={{
+                duration: 0.8,
+                repeat: Infinity,
+                delay: i * 0.08,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
         </div>
 
-        {/* Dynamic Loading Text */}
-        <div className="flex h-16 flex-col items-center gap-2">
-          <motion.div
+        {/* Loading text */}
+        <div className="mb-4 flex h-8 items-center justify-center">
+          <motion.span
             key={loadingText}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="font-[Space_Grotesk] text-sm tracking-[0.2em] text-blue-300"
+            exit={{ opacity: 0, y: -8 }}
+            className="font-base text-lg font-black uppercase tracking-[0.2em] text-foreground"
           >
             {loadingText}
             <span className="animate-pulse">_</span>
-          </motion.div>
-
-          {/* Progress Bar */}
-          <style>{`
-            @keyframes progress-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-            .progress-bar { animation: progress-slide 1.5s ease-in-out infinite; will-change: transform; }
-          `}</style>
-          <div className="mt-2 h-1 w-48 overflow-hidden rounded-full bg-blue-900/30">
-            <div className="progress-bar h-full bg-gradient-to-r from-blue-500 to-cyan-400" />
-          </div>
+          </motion.span>
         </div>
+
+        {/* Progress bar */}
+        <div className="h-4 w-full overflow-hidden rounded-base border-2 border-border bg-secondary-background shadow-[inset_2px_2px_0_0_rgba(0,0,0,0.1)]">
+          <motion.div
+            className="h-full bg-main"
+            initial={{ width: "0%" }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.1 }}
+          />
+        </div>
+        <span className="mt-2 font-mono text-sm font-black text-foreground/60">
+          {progress}%
+        </span>
       </div>
 
-      {/* Footer System Info */}
-      <div className="absolute bottom-12 text-center font-mono text-[10px] tracking-widest text-blue-500/40">
-        <div>SYSTEM_V.2.0.4 // SECURE_BOOT</div>
-        <div className="mt-1">© GURÚ SOLUCIONES</div>
+      {/* Footer */}
+      <div className="absolute bottom-8 text-center font-base text-xs font-black tracking-widest text-foreground/40 uppercase">
+        <div>GURÚ SOLUCIONES // SISTEMA V2.0</div>
       </div>
     </div>
   );

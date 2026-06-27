@@ -4,7 +4,11 @@ type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
+  headingFont: "space" | "barlow";
+  darkBg: "solid" | "dots";
   toggleTheme: () => void;
+  setHeadingFont: (font: "space" | "barlow") => void;
+  setDarkBg: (bg: "solid" | "dots") => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -13,28 +17,58 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [theme, setTheme] = useState<Theme>("light");
+  const [headingFont, setHeadingFontState] = useState<"space" | "barlow">("space");
+  const [darkBg, setDarkBgState] = useState<"solid" | "dots">("solid");
 
   useEffect(() => {
-    const saved = localStorage.getItem("guru-theme") as Theme | null;
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    const initial = saved || (prefersDark ? "dark" : "light");
-    setTheme(initial);
-    document.documentElement.classList.toggle("dark", initial === "dark");
+    const savedTheme = localStorage.getItem("guru-theme") as Theme | null;
+    const savedFont = localStorage.getItem("guru-heading-font") as "space" | "barlow" | null;
+    const savedBg = localStorage.getItem("guru-dark-bg") as "solid" | "dots" | null;
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    const initialTheme = savedTheme || (prefersDark ? "dark" : "light");
+    const initialFont = savedFont || "space";
+    const initialBg = savedBg || "solid";
+
+    setTheme(initialTheme);
+    setHeadingFontState(initialFont);
+    setDarkBgState(initialBg);
+
+    const root = document.documentElement;
+    root.classList.toggle("dark", initialTheme === "dark");
+    root.classList.toggle("font-barlow", initialFont === "barlow");
+    root.classList.toggle("font-space", initialFont === "space");
+    root.classList.toggle("dark-bg-dots", initialTheme === "dark" && initialBg === "dots");
   }, []);
 
   const toggleTheme = () => {
     setTheme((prev) => {
       const next = prev === "light" ? "dark" : "light";
       localStorage.setItem("guru-theme", next);
-      document.documentElement.classList.toggle("dark", next === "dark");
+      const root = document.documentElement;
+      root.classList.toggle("dark", next === "dark");
+      root.classList.toggle("dark-bg-dots", next === "dark" && darkBg === "dots");
       return next;
     });
   };
 
+  const setHeadingFont = (font: "space" | "barlow") => {
+    setHeadingFontState(font);
+    localStorage.setItem("guru-heading-font", font);
+    const root = document.documentElement;
+    root.classList.toggle("font-barlow", font === "barlow");
+    root.classList.toggle("font-space", font === "space");
+  };
+
+  const setDarkBg = (bg: "solid" | "dots") => {
+    setDarkBgState(bg);
+    localStorage.setItem("guru-dark-bg", bg);
+    const root = document.documentElement;
+    root.classList.toggle("dark-bg-dots", theme === "dark" && bg === "dots");
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, headingFont, darkBg, toggleTheme, setHeadingFont, setDarkBg }}>
       {children}
     </ThemeContext.Provider>
   );

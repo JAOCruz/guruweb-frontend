@@ -25,6 +25,7 @@ import {
   Brain,
   Bot,
   Sun,
+  Palette,
   Moon,
 } from "lucide-react";
 
@@ -37,8 +38,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [whatsappOpen, setWhatsappOpen] = useState(false);
+  const [showThemeMenu, setShowThemeMenu] = useState(false);
   const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, headingFont, darkBg, toggleTheme, setHeadingFont, setDarkBg } = useTheme();
 
   const whatsappPaths = [
     "/dashboard/whatsapp",
@@ -254,14 +256,63 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </h2>
           </div>
 
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-2 md:flex">
             <button
               onClick={toggleTheme}
-              className="rounded-base border-2 border-border bg-secondary-background p-2 text-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+              className="rounded-base border-2 border-border bg-main p-2 text-main-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
               title={theme === "light" ? "Modo oscuro" : "Modo claro"}
             >
               {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
             </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowThemeMenu((v) => !v)}
+                className="rounded-base border-2 border-border bg-secondary-background p-2 text-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                title="Opciones de tema"
+              >
+                <Palette size={20} />
+              </button>
+              {showThemeMenu && (
+                <div className="absolute right-0 top-full mt-2 w-56 rounded-base border-2 border-border bg-background p-3 shadow-shadow">
+                  <p className="mb-2 text-xs font-black uppercase tracking-wider text-foreground/60">Fuente títulos</p>
+                  <div className="mb-3 flex gap-2">
+                    <button
+                      onClick={() => { setHeadingFont("space"); setShowThemeMenu(false); }}
+                      className={`flex-1 rounded-base border-2 px-2 py-1.5 text-xs font-black transition-all ${headingFont === "space" ? "border-border bg-main text-main-foreground" : "border-border bg-secondary-background text-foreground"}`}
+                    >
+                      Space
+                    </button>
+                    <button
+                      onClick={() => { setHeadingFont("barlow"); setShowThemeMenu(false); }}
+                      className={`flex-1 rounded-base border-2 px-2 py-1.5 text-xs font-black transition-all ${headingFont === "barlow" ? "border-border bg-main text-main-foreground" : "border-border bg-secondary-background text-foreground"}`}
+                    >
+                      Barlow
+                    </button>
+                  </div>
+                  {theme === "dark" && (
+                    <>
+                      <p className="mb-2 text-xs font-black uppercase tracking-wider text-foreground/60">Fondo oscuro</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setDarkBg("solid"); setShowThemeMenu(false); }}
+                          className={`flex-1 rounded-base border-2 px-2 py-1.5 text-xs font-black transition-all ${darkBg === "solid" ? "border-border bg-main text-main-foreground" : "border-border bg-secondary-background text-foreground"}`}
+                        >
+                          Sólido
+                        </button>
+                        <button
+                          onClick={() => { setDarkBg("dots"); setShowThemeMenu(false); }}
+                          className={`flex-1 rounded-base border-2 px-2 py-1.5 text-xs font-black transition-all ${darkBg === "dots" ? "border-border bg-main text-main-foreground" : "border-border bg-secondary-background text-foreground"}`}
+                        >
+                          Puntos
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
             <span className="text-xs font-black tracking-widest uppercase text-foreground/60">
               Sesión: <span className="text-main">{user?.username}</span>
             </span>

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;700;900&display=swap");
 @import "tailwindcss";
 
 /* ── Neo-brutalism theme tokens ───────────────────────────────────── */
@@ -90,7 +90,9 @@
   --font-weight-base: var(--base-font-weight);
   --font-weight-heading: var(--heading-font-weight);
 
-  --font-heading: "Space Grotesk", sans-serif;
+  --font-heading-space: "Space Grotesk", sans-serif;
+  --font-heading-barlow: "Barlow Condensed", sans-serif;
+  --font-heading: var(--font-heading-space);
   --font-base: "Outfit", sans-serif;
 }
 
@@ -399,4 +401,19 @@ body {
     text-shadow: none;
     opacity: 0.85;
   }
+}
+
+/* Font options */
+.font-space {
+  --font-heading: var(--font-heading-space);
+}
+.font-barlow {
+  --font-heading: var(--font-heading-barlow);
+}
+
+/* Dark mode background options */
+.dark-bg-dots {
+  background-color: #0a0a0a;
+  background-image: radial-gradient(circle, #d4af3722 1px, transparent 1px);
+  background-size: 20px 20px;
 }
