@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import LoadingScreen from "../components/LoadingScreen";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import AdminDataTable from "../components/dashboard/AdminDataTable";
 import EmployeeDataTable from "../components/dashboard/EmployeeDataTable";
@@ -21,6 +21,7 @@ import ServicesCatalog from "./ServicesCatalog";
 import MotherBrain from "./MotherBrain";
 import BotSimulator from "./BotSimulator";
 import SimulatorReview from "./SimulatorReview";
+import { NeoButton } from "../components/ui/neo/NeoButton";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap, Eye, EyeOff } from "lucide-react";
@@ -33,6 +34,8 @@ const Dashboard: React.FC = () => {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const getTodayString = () => new Date().toISOString().split("T")[0];
+
+  const navigate = useNavigate();
 
   const [startDate, setStartDate] = useState(getTodayString());
   const [endDate, setEndDate] = useState(getTodayString());
@@ -166,72 +169,80 @@ const Dashboard: React.FC = () => {
               {/* Header / Top Bar for Page */}
               <div className="mb-10 flex flex-col items-start justify-between gap-6 xl:flex-row xl:items-center">
                 <div>
-                  <h2 className="font-display mb-2 text-2xl font-bold text-white md:text-3xl">
+                  <h2 className="font-heading mb-2 text-2xl font-black tracking-tight text-foreground md:text-4xl">
                     Resumen Operativo
                   </h2>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm font-medium text-foreground/70">
                     Gestiona y visualiza el rendimiento en tiempo real.
                   </p>
                 </div>
                 <div className="flex w-full flex-col gap-3 xl:w-auto">
-                  {/* Privacy toggle */}
-                  <button
-                    onClick={() => setShowEarnings((v) => !v)}
-                    className="flex items-center justify-center gap-2 rounded-xl border-4 border-[#000080] bg-[#0000FF] px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
-                    title={showEarnings ? "Ocultar ganancias" : "Mostrar ganancias"}
-                  >
-                    {showEarnings ? <EyeOff size={14} /> : <Eye size={14} />}
-                    {showEarnings ? "Ocultar" : "Mostrar"} Ganancias
-                  </button>
-                  {/* Date Filter Integrated into Header style */}
-                  <div className="flex w-full flex-col gap-1.5 rounded-2xl border border-slate-700/50 bg-[#151E32]/50 p-1.5 backdrop-blur-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-2 sm:p-2">
-                    <div className="flex min-w-0 items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/50 px-2 py-1.5 sm:gap-2 sm:px-3">
-                      <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <NeoButton
+                      variant="default"
+                      onClick={() => setShowEarnings((v) => !v)}
+                      className="text-xs"
+                    >
+                      {showEarnings ? <EyeOff size={14} /> : <Eye size={14} />}
+                      {showEarnings ? "Ocultar" : "Mostrar"} Ganancias
+                    </NeoButton>
+                    <NeoButton
+                      variant="neutral"
+                      onClick={() => navigate("/dashboard/ai-insights")}
+                      className="text-xs"
+                    >
+                      <Zap size={14} />
+                      Insights IA
+                    </NeoButton>
+                  </div>
+
+                  {/* Date Filter */}
+                  <div className="flex w-full flex-col gap-2 rounded-base border-2 border-border bg-secondary-background p-3 shadow-shadow sm:flex-row sm:flex-wrap sm:items-center">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-base border-2 border-border bg-background px-3 py-2">
+                      <span className="text-[10px] font-black tracking-widest uppercase text-foreground/60">
                         Desde
                       </span>
                       <input
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-xs text-white focus:outline-none sm:text-sm"
+                        className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-sm text-foreground focus:outline-none"
                       />
                     </div>
-                    <div className="flex min-w-0 items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/50 px-2 py-1.5 sm:gap-2 sm:px-3">
-                      <span className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-base border-2 border-border bg-background px-3 py-2">
+                      <span className="text-[10px] font-black tracking-widest uppercase text-foreground/60">
                         Hasta
                       </span>
                       <input
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-xs text-white focus:outline-none sm:text-sm"
+                        className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-sm text-foreground focus:outline-none"
                       />
                     </div>
-                    <div className="flex gap-1">
-                      <button
+                    <div className="flex gap-2">
+                      <NeoButton
+                        variant="outline"
                         onClick={() => {
                           setStartDate(getTodayString());
                           setEndDate(getTodayString());
                         }}
-                        className="rounded-xl border border-blue-500/20 bg-blue-600/20 px-3 py-1.5 text-[10px] font-bold tracking-widest text-blue-400 uppercase transition-all hover:bg-blue-600 hover:text-white"
+                        className="text-[10px]"
                       >
                         Hoy
-                      </button>
-                      <button
+                      </NeoButton>
+                      <NeoButton
+                        variant="ghost"
                         onClick={() => {
                           setStartDate("");
                           setEndDate("");
                         }}
-                        className="rounded-xl border border-slate-600 bg-slate-700/50 px-3 py-1.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-700 hover:text-white"
+                        className="text-[10px]"
                       >
                         Limpiar
-                      </button>
+                      </NeoButton>
                     </div>
                   </div>
-                  <button className="flex w-full items-center justify-center gap-2 rounded-2xl bg-purple-600 px-5 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(147,51,234,0.5)] transition-all duration-300 hover:bg-purple-500 sm:w-auto">
-                    <Zap size={16} />
-                    Insights IA
-                  </button>
                 </div>
               </div>
 
@@ -247,7 +258,7 @@ const Dashboard: React.FC = () => {
                       ),
                     )}
                     subValue={`${services.length} serv.`}
-                    color="text-white"
+                    variant="main"
                     delay={0.1}
                     sensitive
                     visible={showEarnings}
@@ -275,7 +286,7 @@ const Dashboard: React.FC = () => {
                         ),
                       ).length
                     } serv.`}
-                    color="text-white"
+                    variant="main"
                     delay={0.15}
                     sensitive
                     visible={showEarnings}
@@ -296,7 +307,7 @@ const Dashboard: React.FC = () => {
                         ),
                     )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "HENGI").length} serv.`}
-                    color="text-white"
+                    variant="main"
                     delay={0.2}
                     sensitive
                     visible={showEarnings}
@@ -315,7 +326,7 @@ const Dashboard: React.FC = () => {
                         ),
                     )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "MARLENI").length} serv.`}
-                    color="text-white"
+                    variant="main"
                     delay={0.3}
                     sensitive
                     visible={showEarnings}
@@ -334,7 +345,7 @@ const Dashboard: React.FC = () => {
                         ),
                     )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "ISRAEL").length} serv.`}
-                    color="text-white"
+                    variant="main"
                     delay={0.4}
                     sensitive
                     visible={showEarnings}
@@ -353,7 +364,7 @@ const Dashboard: React.FC = () => {
                         ),
                     )}
                     subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "THAICAR").length} serv.`}
-                    color="text-white"
+                    variant="main"
                     delay={0.5}
                     sensitive
                     visible={showEarnings}

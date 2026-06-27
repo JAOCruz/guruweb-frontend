@@ -230,28 +230,28 @@ const AIInsights: React.FC = () => {
           label="Total Conversaciones"
           value={String(s.totalConversations)}
           subValue={`${s.activeConversations} activas`}
-          color="text-blue-400"
+          variant="main"
           delay={0.05}
         />
         <StatsCard
           label="Manejadas por IA"
           value={String(s.aiHandled)}
           subValue={pct(s.aiHandled, s.totalConversations)}
-          color="text-emerald-400"
+          variant="success"
           delay={0.1}
         />
         <StatsCard
           label="Manejadas por Humano"
           value={String(s.humanHandled)}
           subValue={pct(s.humanHandled, s.totalConversations)}
-          color="text-purple-400"
+          variant="main"
           delay={0.15}
         />
         <StatsCard
           label="Intervenciones Humanas"
           value={String(s.humanTakeovers)}
           subValue={`${pct(s.humanTakeovers, s.totalConversations)} escalados`}
-          color="text-amber-400"
+          variant="warning"
           delay={0.2}
         />
       </div>

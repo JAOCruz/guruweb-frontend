@@ -1,0 +1,42 @@
+plugins = []
+headers = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "/home/jay/Projects/guru-whatsapp-dashboard/dist"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "npm install && npm run netlify-build"
+
+[build.environment]
+NODE_VERSION = "20.11.1"
+SKIP_TYPESCRIPT = "true"
+NPM_FLAGS = "--no-package-lock"
+CI = "false"
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]

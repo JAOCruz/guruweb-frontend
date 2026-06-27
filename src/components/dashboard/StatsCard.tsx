@@ -2,28 +2,71 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 
+type StatsVariant = "default" | "main" | "success" | "warning" | "danger";
+
 interface StatsCardProps {
   label: string;
   value: string;
   subValue?: string;
-  color?: string;
+  variant?: StatsVariant;
   delay?: number;
   sensitive?: boolean;
   visible?: boolean;
 }
 
+const variantStyles: Record<StatsVariant, string> = {
+  default: "bg-background text-foreground",
+  main: "bg-main text-main-foreground",
+  success: "bg-green-500 text-white",
+  warning: "bg-yellow-400 text-black",
+  danger: "bg-red-500 text-white",
+};
+
+const variantSubtle: Record<StatsVariant, string> = {
+  default: "text-foreground/60",
+  main: "text-white/80",
+  success: "text-white/80",
+  warning: "text-black/70",
+  danger: "text-white/80",
+};
+
+const variantButton: Record<StatsVariant, string> = {
+  default:
+    "border-border bg-secondary-background text-foreground hover:bg-main hover:text-main-foreground",
+  main: "border-white/30 bg-white/10 text-white hover:bg-white hover:text-main",
+  success:
+    "border-white/30 bg-white/10 text-white hover:bg-white hover:text-green-600",
+  warning:
+    "border-black/20 bg-black/10 text-black hover:bg-black hover:text-yellow-400",
+  danger: "border-white/30 bg-white/10 text-white hover:bg-white hover:text-red-600",
+};
+
+const variantBadge: Record<StatsVariant, string> = {
+  default: "border-border bg-secondary-background text-foreground/70",
+  main: "border-white/30 bg-white/10 text-white/90",
+  success: "border-white/30 bg-white/10 text-white/90",
+  warning: "border-black/20 bg-black/10 text-black/80",
+  danger: "border-white/30 bg-white/10 text-white/90",
+};
+
+const variantWatermark: Record<StatsVariant, string> = {
+  default: "text-foreground/5",
+  main: "text-white/10",
+  success: "text-white/10",
+  warning: "text-black/10",
+  danger: "text-white/10",
+};
+
 const StatsCard: React.FC<StatsCardProps> = ({
   label,
   value,
   subValue,
-  color = "text-white",
+  variant = "default",
   delay = 0,
   sensitive = false,
   visible = true,
 }) => {
   const hiddenValue = "••••••";
-  // Local override: each card manages its own reveal state,
-  // but syncs with the global 'visible' prop when it changes.
   const [revealed, setRevealed] = useState(visible);
 
   useEffect(() => {
@@ -37,11 +80,12 @@ const StatsCard: React.FC<StatsCardProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className="group relative overflow-hidden rounded-xl border-4 border-[#000080] bg-[#0000FF] p-4 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,128,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none sm:p-5"
+      className={`group relative overflow-hidden rounded-base border-2 border-border p-4 shadow-shadow transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none sm:p-5 ${variantStyles[variant]}`}
     >
-      {/* Top row: label + eye toggle */}
       <div className="mb-3 flex items-start justify-between">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">
+        <p
+          className={`text-[10px] font-black uppercase tracking-[0.2em] ${variantSubtle[variant]}`}
+        >
           {label}
         </p>
         {sensitive && (
@@ -50,7 +94,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
               e.stopPropagation();
               setRevealed((v) => !v);
             }}
-            className="rounded border border-white/20 bg-white/10 p-1 text-white/80 transition-all hover:bg-white/20 hover:text-white"
+            className={`rounded-base border-2 p-1 transition-all ${variantButton[variant]}`}
             title={isVisible ? "Ocultar monto" : "Mostrar monto"}
           >
             {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -58,24 +102,27 @@ const StatsCard: React.FC<StatsCardProps> = ({
         )}
       </div>
 
-      {/* Value */}
       <h3
-        className={`font-display text-2xl font-black tracking-tight sm:text-3xl ${color} ${!isVisible && sensitive ? "tracking-widest" : ""}`}
+        className={`font-heading text-2xl font-black tracking-tight sm:text-3xl ${
+          !isVisible && sensitive ? "tracking-widest" : ""
+        }`}
       >
         {isVisible || !sensitive ? value : hiddenValue}
       </h3>
 
-      {/* Subvalue */}
       {subValue && (
         <div className="mt-2">
-          <span className="inline-block rounded border border-white/30 bg-white/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white/80">
+          <span
+            className={`inline-block rounded-base border-2 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${variantBadge[variant]}`}
+          >
             {subValue}
           </span>
         </div>
       )}
 
-      {/* Decorative number watermark */}
-      <div className="pointer-events-none absolute -right-2 -bottom-4 text-6xl font-black text-white/5 select-none">
+      <div
+        className={`pointer-events-none absolute -right-2 -bottom-4 text-6xl font-black select-none ${variantWatermark[variant]}`}
+      >
         {label.charAt(0)}
       </div>
     </motion.div>

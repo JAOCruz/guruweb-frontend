@@ -1,0 +1,99 @@
+import * as React from "react";
+import { cn } from "../../../lib/utils";
+
+interface NeoCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "main" | "outline";
+}
+
+const NeoCard = React.forwardRef<HTMLDivElement, NeoCardProps>(
+  ({ className, variant = "default", ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "rounded-base flex flex-col border-2 gap-4 p-5 font-base",
+          {
+            "bg-background text-foreground border-border shadow-shadow":
+              variant === "default",
+          },
+          {
+            "bg-main text-main-foreground border-border shadow-shadow":
+              variant === "main",
+          },
+          {
+            "bg-transparent text-foreground border-border":
+              variant === "outline",
+          },
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
+NeoCard.displayName = "NeoCard";
+
+const NeoCardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col gap-1.5", className)}
+    {...props}
+  />
+));
+NeoCardHeader.displayName = "NeoCardHeader";
+
+const NeoCardTitle = React.forwardRef<
+  HTMLHeadingElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn("font-heading leading-none text-lg", className)}
+    {...props}
+  />
+));
+NeoCardTitle.displayName = "NeoCardTitle";
+
+const NeoCardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm font-base text-foreground/70", className)}
+    {...props}
+  />
+));
+NeoCardDescription.displayName = "NeoCardDescription";
+
+const NeoCardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("", className)} {...props} />
+));
+NeoCardContent.displayName = "NeoCardContent";
+
+const NeoCardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center gap-2 pt-2", className)}
+    {...props}
+  />
+));
+NeoCardFooter.displayName = "NeoCardFooter";
+
+export {
+  NeoCard,
+  NeoCardHeader,
+  NeoCardTitle,
+  NeoCardDescription,
+  NeoCardContent,
+  NeoCardFooter,
+};

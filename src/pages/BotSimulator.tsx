@@ -68,13 +68,6 @@ interface UploadedMedia {
   mediaType: string;
 }
 
-const statusLabels: Record<string, string> = {
-  open: "Abierto",
-  reviewed: "Revisado",
-  needs_fix: "Necesita ajuste",
-  archived: "Archivado",
-};
-
 const statusColors: Record<string, string> = {
   open: "bg-blue-600",
   reviewed: "bg-emerald-600",

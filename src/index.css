@@ -1,15 +1,79 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
+/* ── Neo-brutalism theme tokens ───────────────────────────────────── */
+:root {
+  --border-radius: 5px;
+  --box-shadow-x: 4px;
+  --box-shadow-y: 4px;
+  --reverse-box-shadow-x: -4px;
+  --reverse-box-shadow-y: -4px;
+
+  --heading-font-weight: 800;
+  --base-font-weight: 500;
+
+  --background: #ffffff;
+  --secondary-background: #ffffff;
+  --foreground: #000000;
+  --main-foreground: #ffffff;
+
+  --main: #0000ff;
+  --border: #000000;
+  --ring: #000000;
+  --overlay: rgba(0, 0, 0, 0.8);
+
+  --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
+
+  --chart-1: #0000ff;
+  --chart-2: #000080;
+  --chart-3: #ffd700;
+  --chart-4: #ff0000;
+  --chart-5: #00ff00;
+  --chart-active-dot: #000000;
+}
+
+@theme inline {
+  --color-main: var(--main);
+  --color-background: var(--background);
+  --color-secondary-background: var(--secondary-background);
+  --color-foreground: var(--foreground);
+  --color-main-foreground: var(--main-foreground);
+  --color-border: var(--border);
+  --color-overlay: var(--overlay);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --spacing-boxShadowX: var(--box-shadow-x);
+  --spacing-boxShadowY: var(--box-shadow-y);
+  --spacing-reverseBoxShadowX: var(--reverse-box-shadow-x);
+  --spacing-reverseBoxShadowY: var(--reverse-box-shadow-y);
+
+  --radius-base: var(--border-radius);
+
+  --shadow-shadow: var(--shadow);
+  --shadow-nav: 4px 4px 0px 0px var(--border);
+
+  --font-weight-base: var(--base-font-weight);
+  --font-weight-heading: var(--heading-font-weight);
+
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-base: "Outfit", sans-serif;
+}
+
 html,
 body {
   min-height: 100dvh;
   width: 100%;
-  background-color: #020617; /* Matches Hero deep navy */
+  background-color: var(--background);
   margin: 0;
   padding: 0;
   font-family: "Outfit", sans-serif;
-  color: #f8fafc;
+  color: var(--foreground);
 }
 
 /* 3D Perspective Container */
