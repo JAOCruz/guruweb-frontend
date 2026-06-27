@@ -101,7 +101,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Outfit", sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   color: var(--foreground);
 }
 
@@ -403,9 +403,11 @@ body {
 /* Font options */
 .font-space {
   --font-heading: var(--font-heading-space);
+  letter-spacing: 0.01em;
 }
 .font-barlow {
   --font-heading: var(--font-heading-barlow);
+  letter-spacing: 0.04em;
 }
 
 /* Dark mode background options */
