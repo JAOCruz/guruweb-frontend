@@ -13,6 +13,7 @@ import {
   Printer,
 } from "lucide-react";
 import api, { getAPIUrl } from "../services/api";
+import { NeoCard, NeoButton, NeoBadge } from "../components/ui/neo";
 
 interface QuotationItem {
   desc?: string;
@@ -93,19 +94,10 @@ export default function Cotizaciones() {
     return `${getAPIUrl()}/api/invoices/pdf/${filename}`;
   }, [selectedQuotation]);
 
-  const statusStyles = {
-    draft: {
-      badge: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
-      dot: "bg-yellow-400",
-    },
-    approved: {
-      badge: "bg-blue-500/15 text-blue-300 border-blue-500/30",
-      dot: "bg-blue-400",
-    },
-    sent: {
-      badge: "bg-green-500/15 text-green-300 border-green-500/30",
-      dot: "bg-green-400",
-    },
+  const statusBadgeVariant = {
+    draft: "neutral" as const,
+    approved: "main" as const,
+    sent: "outline" as const,
   };
 
   const statusLabel: Record<string, string> = {
@@ -116,21 +108,23 @@ export default function Cotizaciones() {
 
   return (
     <div
-      className="-m-3 md:-m-8 flex overflow-hidden bg-slate-950"
+      className="-m-3 md:-m-8 flex overflow-hidden bg-background text-foreground"
       style={{ height: "calc(100vh - 4rem)" }}
     >
       {/* ═══════ LEFT PANEL — Quotations List ═══════ */}
       <div
         className={`${
           showRightPanel ? "hidden md:flex" : "flex"
-        } w-full md:w-80 flex-shrink-0 flex-col overflow-hidden border-r border-slate-700 bg-[#0F172A]`}
+        } w-full md:w-80 flex-shrink-0 flex-col overflow-hidden border-r-2 border-border bg-secondary-background`}
       >
-        <div className="border-b border-slate-700 bg-[#151E32] p-4">
-          <div className="flex items-center gap-2">
-            <FileText size={20} className="text-blue-400" />
-            <h2 className="text-lg font-bold text-white">Cotizaciones</h2>
+        <div className="border-b-2 border-border bg-secondary-background p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-button">
+              <FileText size={20} />
+            </div>
+            <h2 className="font-heading text-xl md:text-2xl font-bold">Cotizaciones</h2>
           </div>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-2 text-base text-foreground/70">
             {quotations.length} total
             {quotations.filter((q) => q.status === "draft").length > 0 &&
               ` · ${quotations.filter((q) => q.status === "draft").length} pendientes`}
@@ -138,50 +132,48 @@ export default function Cotizaciones() {
         </div>
 
         {loading ? (
-          <div className="flex flex-1 items-center justify-center text-slate-400">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-600 border-t-blue-500" />
+          <div className="flex flex-1 items-center justify-center text-foreground/50">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-main" />
           </div>
         ) : error ? (
-          <div className="flex flex-1 items-center justify-center p-4 text-center text-red-400">
-            {error}
+          <div className="flex flex-1 items-center justify-center p-4 text-center text-foreground">
+            <NeoBadge variant="outline" className="text-base">{error}</NeoBadge>
           </div>
         ) : quotations.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center p-4 text-center text-slate-400">
-            <FileText size={40} className="mb-3 text-slate-600" />
-            <p className="text-sm font-medium">No hay cotizaciones</p>
+          <div className="flex flex-1 flex-col items-center justify-center p-4 text-center text-foreground/50">
+            <FileText size={40} className="mb-3 opacity-40" />
+            <p className="text-base font-medium">No hay cotizaciones</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto custom-scroll">
+          <div className="flex-1 overflow-y-auto custom-scroll p-3 space-y-2">
             {quotations.map((quote) => (
               <button
                 key={quote.id}
                 onClick={() => handleSelectQuotation(quote)}
-                className={`w-full border-b border-slate-700/50 p-4 text-left transition-all ${
+                className={`w-full text-left rounded-base border-2 p-4 transition-all ${
                   selectedQuotation?.id === quote.id
-                    ? "bg-blue-600/10 border-l-4 border-l-blue-500"
-                    : "hover:bg-slate-800/50 border-l-4 border-l-transparent"
+                    ? "border-border bg-secondary-background shadow-shadow"
+                    : "border-transparent hover:border-border hover:bg-secondary-background"
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-base font-semibold text-white">
+                    <p className="truncate text-base font-semibold">
                       {quote.doc_number}
                     </p>
-                    <p className="truncate text-sm text-slate-400">
+                    <p className="truncate text-base text-foreground/70">
                       {quote.client_name}
                     </p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase ${statusStyles[quote.status].badge}`}
-                  >
+                  <NeoBadge variant={statusBadgeVariant[quote.status]} className="shrink-0 text-xs">
                     {statusLabel[quote.status]}
-                  </span>
+                  </NeoBadge>
                 </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <p className="text-xs font-medium text-slate-300">
+                <div className="mt-2 flex items-center justify-between text-base">
+                  <p className="font-medium text-foreground/90">
                     RD$ {quote.total.toLocaleString("es-DO")}
                   </p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-foreground/50">
                     {new Date(quote.created_at).toLocaleDateString("es-DO")}
                   </p>
                 </div>
@@ -196,22 +188,24 @@ export default function Cotizaciones() {
         <div
           className={`${
             !showRightPanel ? "hidden" : "flex"
-          } flex-1 flex-col overflow-hidden bg-slate-950`}
+          } flex-1 flex-col overflow-hidden bg-background`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-700 bg-[#151E32] px-4 py-3">
+          <div className="flex items-center justify-between border-b-2 border-border bg-secondary-background px-4 py-3">
             <div className="flex items-center gap-3 min-w-0">
-              <button
+              <NeoButton
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowRightPanel(false)}
-                className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white md:hidden"
+                className="md:hidden"
               >
                 <ChevronLeft size={20} />
-              </button>
+              </NeoButton>
               <div className="min-w-0">
-                <h3 className="truncate text-base font-bold text-white">
+                <h3 className="truncate font-heading text-lg">
                   {selectedQuotation.doc_number}
                 </h3>
-                <p className="truncate text-xs text-slate-400">
+                <p className="truncate text-base text-foreground/70">
                   {selectedQuotation.client_name}
                 </p>
               </div>
@@ -219,43 +213,51 @@ export default function Cotizaciones() {
 
             <div className="flex items-center gap-2">
               {/* Toggle Details (mobile / small screens) */}
-              <button
+              <NeoButton
+                variant="outline"
+                size="icon"
                 onClick={() => setShowDetails((v) => !v)}
-                className="rounded-lg border border-slate-700 bg-slate-800/50 p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white lg:hidden"
+                className="lg:hidden"
                 title={showDetails ? "Ocultar detalles" : "Ver detalles"}
               >
                 {showDetails ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+              </NeoButton>
 
               {/* Download */}
               {pdfUrl && (
-                <a
-                  href={pdfUrl}
-                  download
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                <NeoButton
+                  variant="neutral"
+                  size="sm"
+                  onClick={() => {
+                    const a = document.createElement("a");
+                    a.href = pdfUrl;
+                    a.download = "";
+                    a.click();
+                  }}
                 >
                   <Download size={14} />
                   <span className="hidden sm:inline">Descargar</span>
-                </a>
+                </NeoButton>
               )}
 
               {/* Print */}
               {pdfUrl && (
-                <button
+                <NeoButton
+                  variant="neutral"
+                  size="sm"
                   onClick={() => window.open(pdfUrl, "_blank")}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs font-semibold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
                 >
                   <Printer size={14} />
                   <span className="hidden sm:inline">Imprimir</span>
-                </button>
+                </NeoButton>
               )}
 
-              <span
-                className={`hidden sm:inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold tracking-wider uppercase ${statusStyles[selectedQuotation.status].badge}`}
+              <NeoBadge
+                variant={statusBadgeVariant[selectedQuotation.status]}
+                className="hidden sm:inline-flex text-xs"
               >
-                <span className={`h-1.5 w-1.5 rounded-full ${statusStyles[selectedQuotation.status].dot}`} />
                 {statusLabel[selectedQuotation.status]}
-              </span>
+              </NeoBadge>
             </div>
           </div>
 
@@ -265,53 +267,50 @@ export default function Cotizaciones() {
             <div
               className={`${
                 showDetails ? "flex" : "hidden"
-              } w-full flex-col overflow-y-auto border-r border-slate-700 bg-[#0F172A] p-4 custom-scroll lg:flex lg:w-80`}
+              } w-full flex-col overflow-y-auto border-r-2 border-border bg-secondary-background p-4 custom-scroll lg:flex lg:w-80`}
             >
               {/* Client Card */}
-              <div className="mb-4 rounded-xl border border-slate-700/50 bg-[#151E32] p-4">
-                <p className="mb-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+              <NeoCard className="mb-4 p-4">
+                <p className="mb-2 text-base font-black uppercase tracking-widest text-foreground/60">
                   Cliente
                 </p>
-                <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                  <User size={14} className="text-blue-400" />
+                <div className="flex items-center gap-2 text-base font-semibold">
+                  <User size={16} className="text-main" />
                   {selectedQuotation.client_name}
                 </div>
                 {selectedQuotation.client_phone && (
-                  <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-400">
-                    <Phone size={12} className="text-slate-500" />
+                  <div className="mt-1.5 flex items-center gap-2 text-base text-foreground/70">
+                    <Phone size={16} />
                     {selectedQuotation.client_phone}
                   </div>
                 )}
-                <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-500">
-                  <Calendar size={12} />
+                <div className="mt-2 flex items-center gap-2 text-base text-foreground/60">
+                  <Calendar size={16} />
                   {new Date(selectedQuotation.created_at).toLocaleDateString("es-DO", {
                     day: "2-digit",
                     month: "long",
                     year: "numeric",
                   })}
                 </div>
-              </div>
+              </NeoCard>
 
               {/* Items */}
               <div className="mb-4">
-                <p className="mb-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <p className="mb-2 text-base font-black uppercase tracking-widest text-foreground/60">
                   Artículos ({selectedQuotation.items?.length || 0})
                 </p>
                 <div className="space-y-2">
                   {selectedQuotation.items?.map((item, i) => (
-                    <div
-                      key={i}
-                      className="rounded-lg border border-slate-700/50 bg-[#151E32]/60 p-3"
-                    >
-                      <p className="text-sm font-medium text-white">
+                    <NeoCard key={i} className="p-3">
+                      <p className="text-base font-medium">
                         {item.desc || item.name || `Artículo ${i + 1}`}
                       </p>
-                      <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                      <div className="mt-1 flex items-center justify-between text-base text-foreground/70">
                         <span>
                           {item.cantidad || item.quantity || 1} x RD${" "}
                           {(item.precio || item.unitPrice || 0).toLocaleString("es-DO")}
                         </span>
-                        <span className="font-semibold text-slate-300">
+                        <span className="font-semibold text-foreground">
                           RD${" "}
                           {(
                             (item.cantidad || item.quantity || 1) *
@@ -319,71 +318,71 @@ export default function Cotizaciones() {
                           ).toLocaleString("es-DO")}
                         </span>
                       </div>
-                    </div>
+                    </NeoCard>
                   ))}
                 </div>
               </div>
 
               {/* Totals */}
-              <div className="mb-4 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+              <NeoCard variant="main" className="mb-4 p-4">
                 {selectedQuotation.subtotal !== undefined && (
-                  <div className="mb-1 flex items-center justify-between text-xs text-slate-400">
+                  <div className="mb-1 flex items-center justify-between text-base text-main-foreground/80">
                     <span>Subtotal</span>
                     <span>RD$ {selectedQuotation.subtotal.toLocaleString("es-DO")}</span>
                   </div>
                 )}
                 {selectedQuotation.itbis ? (
-                  <div className="mb-2 flex items-center justify-between text-xs text-slate-400">
+                  <div className="mb-2 flex items-center justify-between text-base text-main-foreground/80">
                     <span>ITBIS (18%)</span>
                     <span>RD$ {selectedQuotation.itbis.toLocaleString("es-DO")}</span>
                   </div>
                 ) : (
-                  <div className="mb-2 flex items-center justify-between text-[10px] text-slate-500 italic">
+                  <div className="mb-2 flex items-center justify-between text-base text-main-foreground/70 italic">
                     <span>ITBIS no aplicado</span>
                   </div>
                 )}
-                <div className="flex items-center justify-between border-t border-slate-700/50 pt-2">
-                  <span className="text-xs font-bold tracking-wider text-slate-400 uppercase">
+                <div className="flex items-center justify-between border-t-2 border-main-foreground/30 pt-2">
+                  <span className="text-base font-black uppercase tracking-wider text-main-foreground/80">
                     Total
                   </span>
-                  <span className="font-display text-lg font-bold text-white">
+                  <span className="font-heading text-xl md:text-2xl font-bold text-main-foreground">
                     RD$ {selectedQuotation.total.toLocaleString("es-DO")}
                   </span>
                 </div>
-              </div>
+              </NeoCard>
 
               {/* Notes */}
               {selectedQuotation.notes && (
-                <div className="mb-4 rounded-lg border border-amber-500/10 bg-amber-500/5 p-3">
-                  <p className="mb-1 text-[10px] font-bold tracking-wider text-amber-400/80 uppercase">
+                <NeoCard variant="outline" className="mb-4 p-4">
+                  <p className="mb-1 text-base font-black uppercase tracking-wider text-foreground/80">
                     Notas
                   </p>
-                  <p className="whitespace-pre-wrap text-xs leading-relaxed text-amber-100/70">
+                  <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground/80">
                     {selectedQuotation.notes}
                   </p>
-                </div>
+                </NeoCard>
               )}
 
               {/* Actions */}
               {selectedQuotation.status === "draft" && (
                 <div className="mt-auto flex gap-2 pt-4">
-                  <button
+                  <NeoButton
                     onClick={handleApprove}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-green-500 active:scale-95"
+                    className="flex-1"
                   >
                     <CheckCircle size={16} />
                     Aprobar
-                  </button>
-                  <button className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-400 transition-all hover:bg-red-500/20 active:scale-95">
+                  </NeoButton>
+                  <NeoButton variant="outline" className="flex-1">
                     <XCircle size={16} />
                     Rechazar
-                  </button>
+                  </NeoButton>
                 </div>
               )}
             </div>
 
             {/* PDF Viewer */}
-            <div className="relative flex flex-1 flex-col bg-slate-900">
+            <div className="relative flex flex-1 flex-col bg-secondary-background">
               {pdfUrl ? (
                 <iframe
                   src={pdfUrl}
@@ -392,12 +391,12 @@ export default function Cotizaciones() {
                   sandbox="allow-same-origin allow-scripts"
                 />
               ) : (
-                <div className="flex flex-1 flex-col items-center justify-center text-slate-400">
-                  <FileText size={48} className="mb-3 text-slate-600" />
-                  <p className="text-sm font-medium text-slate-300">
+                <div className="flex flex-1 flex-col items-center justify-center text-foreground/50">
+                  <FileText size={48} className="mb-3 opacity-40" />
+                  <p className="text-base font-medium text-foreground">
                     PDF no disponible
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-base text-foreground/70">
                     Esta cotización aún no tiene un PDF generado.
                   </p>
                 </div>

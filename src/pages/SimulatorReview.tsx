@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
-import { Bot, User } from "lucide-react";
+import { Bot, User, FileText } from "lucide-react";
+import { NeoCard } from "../components/ui/neo/NeoCard";
+import { NeoButton } from "../components/ui/neo/NeoButton";
+import { NeoSelect } from "../components/ui/neo/NeoSelect";
+import { NeoBadge } from "../components/ui/neo/NeoBadge";
 
 interface StoredMessage {
   id: number;
@@ -33,11 +37,11 @@ const statusLabels: Record<string, string> = {
   archived: "Archivado",
 };
 
-const statusColors: Record<string, string> = {
-  open: "bg-blue-600",
-  reviewed: "bg-emerald-600",
-  needs_fix: "bg-amber-600",
-  archived: "bg-slate-600",
+const statusBadges: Record<string, "main" | "neutral" | "outline"> = {
+  open: "main",
+  reviewed: "neutral",
+  needs_fix: "outline",
+  archived: "neutral",
 };
 
 const SimulatorReview: React.FC = () => {
@@ -99,46 +103,46 @@ const SimulatorReview: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-140px)] min-h-[500px] overflow-hidden rounded-2xl border border-slate-700/50 bg-[#0F172A]">
+    <div className="flex h-[calc(100vh-140px)] min-h-[500px] overflow-hidden rounded-base border-2 border-border bg-background shadow-shadow">
       {/* List */}
-      <div className="hidden w-80 flex-col border-r border-slate-700/50 bg-[#151E32] md:flex">
-        <div className="border-b border-slate-700/50 p-4">
-          <h2 className="mb-3 font-display text-lg font-bold text-white">Revisiones del Simulador</h2>
-          <select
+      <div className="hidden w-80 flex-col border-r-2 border-border bg-secondary-background md:flex">
+        <div className="border-b-2 border-border p-4">
+          <h2 className="mb-3 font-heading text-xl font-bold md:text-2xl">
+            Revisiones del Simulador
+          </h2>
+          <NeoSelect
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full rounded-lg border border-slate-600 bg-[#0B1120] px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+            className="h-10 text-sm"
           >
             <option value="">Todos los estados</option>
             <option value="open">Abiertos</option>
             <option value="needs_fix">Necesita ajuste</option>
             <option value="reviewed">Revisados</option>
             <option value="archived">Archivados</option>
-          </select>
+          </NeoSelect>
         </div>
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 overflow-y-auto p-2 custom-scroll">
           {conversations.map((conv) => (
             <button
               key={conv.session_id}
               onClick={() => loadMessages(conv.session_id)}
-              className={`mb-2 w-full rounded-lg p-3 text-left text-xs transition-colors ${
+              className={`mb-2 w-full rounded-base border-2 p-3 text-left text-sm font-base transition-all ${
                 selected?.session_id === conv.session_id
-                  ? "bg-blue-600/30 text-blue-200"
-                  : "bg-slate-800/50 text-slate-300 hover:bg-slate-700"
+                  ? "border-border bg-main text-main-foreground shadow-shadow"
+                  : "border-border bg-background text-foreground hover:bg-secondary-background"
               }`}
             >
-              <div className="mb-1 flex items-center justify-between">
+              <div className="mb-1 flex items-center justify-between gap-2">
                 <span className="truncate font-semibold">{conv.title}</span>
-                <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold text-white ${
-                    statusColors[conv.status] || "bg-slate-600"
-                  }`}
-                >
+                <NeoBadge variant={statusBadges[conv.status] || "neutral"}>
                   {statusLabels[conv.status] || conv.status}
-                </span>
+                </NeoBadge>
               </div>
-              <p className="mb-1 line-clamp-2 text-[10px] text-slate-400">{conv.notes || "Sin notas"}</p>
-              <div className="flex items-center justify-between text-[10px] opacity-70">
+              <p className="mb-1 line-clamp-2 text-xs text-foreground/60">
+                {conv.notes || "Sin notas"}
+              </p>
+              <div className="flex items-center justify-between text-xs opacity-70">
                 <span>{conv.message_count || 0} mensajes</span>
                 <span>{conv.last_message_at ? new Date(conv.last_message_at).toLocaleString() : ""}</span>
               </div>
@@ -151,38 +155,39 @@ const SimulatorReview: React.FC = () => {
       <div className="flex flex-1 flex-col">
         {selected ? (
           <>
-            <div className="border-b border-slate-700/50 bg-[#151E32] p-4">
+            <div className="border-b-2 border-border bg-secondary-background p-4">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="font-display text-lg font-bold text-white">{selected.title}</h3>
+                <h3 className="font-heading text-lg font-bold md:text-xl">{selected.title}</h3>
                 <div className="flex items-center gap-2">
-                  <select
+                  <NeoSelect
                     value={selected.status}
                     onChange={(e) => updateStatus(e.target.value)}
-                    className="rounded-lg border border-slate-600 bg-[#0B1120] px-2 py-1 text-xs text-white"
+                    className="h-9 w-auto text-xs"
                   >
                     <option value="open">Abierto</option>
                     <option value="needs_fix">Necesita ajuste</option>
                     <option value="reviewed">Revisado</option>
                     <option value="archived">Archivado</option>
-                  </select>
-                  <button
-                    onClick={exportConversation}
-                    className="rounded-lg border border-slate-600 bg-slate-800 px-3 py-1 text-xs text-white hover:bg-slate-700"
-                  >
+                  </NeoSelect>
+                  <NeoButton variant="neutral" size="sm" onClick={exportConversation}>
+                    <FileText size={14} className="mr-1" />
                     Exportar JSON
-                  </button>
+                  </NeoButton>
                 </div>
               </div>
               {selected.notes && (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-900/10 p-3 text-sm text-amber-200">
-                  <strong>Notas:</strong> {selected.notes}
-                </div>
+                <NeoCard variant="outline" className="p-3">
+                  <strong className="font-base font-bold">Notas:</strong>{" "}
+                  <span className="font-base text-foreground/80">{selected.notes}</span>
+                </NeoCard>
               )}
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto p-4 md:p-6">
+            <div className="flex-1 space-y-4 overflow-y-auto bg-background p-4 md:p-6 custom-scroll">
               {loading ? (
-                <div className="py-8 text-center text-slate-500">Cargando mensajes...</div>
+                <div className="py-8 text-center font-base text-foreground/50">
+                  Cargando mensajes...
+                </div>
               ) : (
                 messages.map((msg) => (
                   <div
@@ -195,35 +200,40 @@ const SimulatorReview: React.FC = () => {
                       }`}
                     >
                       <div
-                        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
-                          msg.role === "user" ? "bg-blue-600" : "bg-gradient-to-br from-purple-600 to-blue-600"
+                        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                          msg.role === "user"
+                            ? "border-border bg-main text-main-foreground"
+                            : "border-border bg-secondary-background text-foreground"
                         }`}
                       >
                         {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
                       </div>
                       <div
-                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                        className={`rounded-base border-2 px-4 py-3 text-base font-base leading-relaxed whitespace-pre-wrap shadow-shadow ${
                           msg.role === "user"
-                            ? "bg-blue-600 text-white"
-                            : "border border-slate-700 bg-[#1E293B] text-slate-200"
+                            ? "border-border bg-main text-main-foreground"
+                            : "border-border bg-secondary-background text-foreground"
                         }`}
                       >
                         {msg.text}
                         {msg.media_type && (
-                          <div className="mt-2 rounded-lg border border-white/20 bg-white/10 p-2 text-xs">
+                          <div className="mt-2 rounded-base border-2 border-border bg-background/50 p-2 text-sm">
                             <span className="font-semibold">{msg.media_original_name}</span>
                             <span className="ml-2 opacity-70">({msg.media_type})</span>
                             {msg.media_analysis && (
-                              <p className="mt-1 text-[10px] opacity-80">{msg.media_analysis}</p>
+                              <p className="mt-1 text-xs opacity-80">{msg.media_analysis}</p>
                             )}
                           </div>
                         )}
                         {msg.role === "bot" && (msg.feedback || msg.rating !== undefined) && (
-                          <div className="mt-2 rounded border border-slate-600 bg-slate-800/50 p-2 text-[10px] text-slate-300">
-                            {msg.rating === 1 && <span className="text-emerald-400">👍 Buena respuesta</span>}
-                            {msg.rating === -1 && <span className="text-red-400">👍 Necesita corrección</span>}
-                            {msg.feedback && <p className="mt-1">{msg.feedback}</p>}
-                          </div>
+                          <NeoCard
+                            variant={msg.rating === -1 ? "main" : "neutral"}
+                            className="mt-2 gap-1 p-2 text-xs"
+                          >
+                            {msg.rating === 1 && <span>👍 Buena respuesta</span>}
+                            {msg.rating === -1 && <span>👎 Necesita corrección</span>}
+                            {msg.feedback && <p>{msg.feedback}</p>}
+                          </NeoCard>
                         )}
                       </div>
                     </div>
@@ -233,7 +243,7 @@ const SimulatorReview: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="flex flex-1 items-center justify-center text-slate-500">
+          <div className="flex flex-1 items-center justify-center font-base text-foreground/50">
             Selecciona una conversación para revisar
           </div>
         )}

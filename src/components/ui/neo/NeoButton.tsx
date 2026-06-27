@@ -5,13 +5,32 @@ export interface NeoButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "neutral" | "reverse" | "outline" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
+  asChild?: boolean;
 }
 
+const Slot = React.forwardRef<
+  HTMLElement,
+  React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }
+>(({ children, ...props }, ref) => {
+  if (!React.isValidElement(children)) return null;
+  return React.cloneElement(children as React.ReactElement<any>, {
+    ...props,
+    ...(children as React.ReactElement<any>).props,
+    className: cn(
+      props.className,
+      (children as React.ReactElement<any>).props.className
+    ),
+    ref,
+  });
+});
+Slot.displayName = "Slot";
+
 const NeoButton = React.forwardRef<HTMLButtonElement, NeoButtonProps>(
-  ({ className, variant = "default", size = "default", ...props }, ref) => {
+  ({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button";
     return (
-      <button
-        ref={ref}
+      <Comp
+        ref={ref as any}
         className={cn(
           "inline-flex items-center justify-center whitespace-nowrap rounded-base text-base font-base ring-offset-white transition-all gap-2",
           "disabled:pointer-events-none disabled:opacity-50",
@@ -50,4 +69,4 @@ const NeoButton = React.forwardRef<HTMLButtonElement, NeoButtonProps>(
 );
 NeoButton.displayName = "NeoButton";
 
-export { NeoButton };
+export { NeoButton, Slot };

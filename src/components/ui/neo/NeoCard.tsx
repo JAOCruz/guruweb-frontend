@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "../../../lib/utils";
 
-interface NeoCardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface NeoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "main" | "neutral" | "outline";
 }
 

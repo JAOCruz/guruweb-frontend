@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { serviceCatalogAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { NeoCard, NeoButton, NeoInput, NeoSelect, NeoBadge } from "../components/ui/neo";
 
 interface PriceTier { min: number; max: number | null; label: string; price: number; }
 interface Service {
@@ -59,16 +60,6 @@ const CATEGORY_EMOJIS: Record<string, string> = {
 
 const getCategoryEmoji = (name: string | null) =>
   name ? CATEGORY_EMOJIS[name] || "⭐" : "📋";
-
-/* ── Style helpers ── */
-const NB = {
-  card: "border-2 border-slate-700 bg-slate-900 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] transition-all hover:shadow-[2px_2px_0px_0px_rgba(30,41,59,1)] hover:translate-x-[2px] hover:translate-y-[2px]",
-  btnBlue: "border-2 border-[#000080] bg-[#0000FF] text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all hover:shadow-[2px_2px_0px_0px_rgba(0,0,128,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
-  btnSecondary: "border-2 border-slate-700 bg-slate-800 text-slate-300 shadow-[3px_3px_0px_0px_rgba(30,41,59,1)] transition-all hover:shadow-[1px_1px_0px_0px_rgba(30,41,59,1)] hover:translate-x-[1px] hover:translate-y-[1px] active:shadow-none",
-  input: "w-full rounded-xl border-2 border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-[#0000FF] focus:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] transition-all",
-  chipActive: "border-2 border-[#000080] bg-[#0000FF] text-white shadow-[3px_3px_0px_0px_rgba(0,0,128,1)]",
-  chipInactive: "border-2 border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200",
-};
 
 const fmtMoney = (v: string | number | null) => {
   const n = Number(v) || 0;
@@ -191,9 +182,9 @@ export default function ServicesCatalog() {
   const toggleTiers = (id: number) => setExpandedTiers((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   if (!isAdmin) return (
-    <div className="flex flex-col items-center justify-center py-20 text-[#0000FF]">
-      <AlertTriangle size={48} className="mb-4 text-[#0000FF]" />
-      <p className="text-lg font-black">Acceso restringido</p>
+    <div className="flex flex-col items-center justify-center py-20 text-main">
+      <AlertTriangle size={48} className="mb-4 text-main" />
+      <p className="text-xl md:text-2xl font-black">Acceso restringido</p>
     </div>
   );
 
@@ -210,65 +201,73 @@ export default function ServicesCatalog() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ delay: idx * 0.03 }}
-        className="flex flex-col overflow-hidden rounded-xl border-4 border-[#000080] bg-[#0000FF] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"
       >
-        <div className="mb-2 flex items-start justify-between gap-2">
-          <h3 className="text-base font-black leading-tight text-white">{svc.name}</h3>
-          {svc.category_name && selectedSubcat === "all" && (
-            <span className="shrink-0 rounded-lg border-2 border-[#000080] bg-white px-2 py-0.5 text-[10px] font-black text-[#0000FF] whitespace-nowrap shadow-[2px_2px_0px_0px_rgba(0,0,128,1)]">
-              {getCategoryEmoji(svc.category_name)} {svc.category_name}
-            </span>
-          )}
-        </div>
-        {svc.description && <p className="mb-3 text-xs text-white/70 line-clamp-2">{svc.description}</p>}
-
-        {showNota ? (
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-xl border-2 border-[#000080] bg-white p-3 text-center shadow-[3px_3px_0px_0px_rgba(0,0,128,1)]">
-              <p className="text-[10px] font-black uppercase tracking-wider text-[#0000FF]">Digitación</p>
-              <p className="mt-1 text-lg font-black text-[#000080]">{fmtMoney(svc.digitacion_price)}</p>
-            </div>
-            <div className="rounded-xl border-2 border-[#000080] bg-white p-3 text-center shadow-[3px_3px_0px_0px_rgba(0,0,128,1)]">
-              <p className="text-[10px] font-black uppercase tracking-wider text-[#0000FF]">Notarización</p>
-              <p className="mt-1 text-lg font-black text-[#000080]">{fmtMoney(svc.notarizacion_price)}</p>
-            </div>
+        <NeoCard variant="main" className="p-5">
+          <div className="mb-2 flex items-start justify-between gap-2">
+            <h3 className="text-base md:text-lg font-heading font-black leading-tight text-main-foreground">{svc.name}</h3>
+            {svc.category_name && selectedSubcat === "all" && (
+              <NeoBadge variant="neutral" className="shrink-0 whitespace-nowrap text-xs">
+                {getCategoryEmoji(svc.category_name)} {svc.category_name}
+              </NeoBadge>
+            )}
           </div>
-        ) : (
-          <div className="rounded-xl border-2 border-[#000080] bg-white p-3 text-center shadow-[3px_3px_0px_0px_rgba(0,0,128,1)]">
-            <p className="text-[10px] font-black uppercase tracking-wider text-[#0000FF]">Precio</p>
-            <p className="mt-1 text-xl font-black text-[#000080]">{fmtMoney(svc.digitacion_price)}</p>
-          </div>
-        )}
+          {svc.description && <p className="mb-3 text-base text-main-foreground/70 line-clamp-2">{svc.description}</p>}
 
-        {showTiers && (
-          <button onClick={() => toggleTiers(svc.id)} className="mt-3 flex items-center gap-2 self-start rounded-lg border-2 border-[#000080] bg-white px-3 py-1.5 text-xs font-black text-[#0000FF] shadow-[2px_2px_0px_0px_rgba(0,0,128,1)] hover:bg-white/90">
-            <Layers size={14} /> {svc.price_tiers!.length} rangos {tiersOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
-        )}
-
-        <AnimatePresence>
-          {tiersOpen && showTiers && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
-              <div className="mt-3 space-y-2 rounded-xl border-2 border-[#000080] bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,128,1)]">
-                {svc.price_tiers!.map((t, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-lg border-2 border-[#000080] bg-[#0000FF] px-3 py-2 shadow-[2px_2px_0px_0px_rgba(0,0,128,1)]">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-black text-white">{t.label || `Rango ${i + 1}`}</span>
-                      <span className="text-[10px] text-white/70">{t.min.toLocaleString("es-DO")} — {t.max === null || t.max === undefined ? "∞" : t.max.toLocaleString("es-DO")}</span>
-                    </div>
-                    <span className="text-sm font-black text-white">RD$ {t.price.toLocaleString("es-DO")}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
+          {showNota ? (
+            <div className="grid grid-cols-2 gap-2">
+              <NeoCard className="p-3 text-center">
+                <p className="text-xs font-black uppercase tracking-wider text-foreground/60">Digitación</p>
+                <p className="mt-1 text-lg font-black text-foreground">{fmtMoney(svc.digitacion_price)}</p>
+              </NeoCard>
+              <NeoCard className="p-3 text-center">
+                <p className="text-xs font-black uppercase tracking-wider text-foreground/60">Notarización</p>
+                <p className="mt-1 text-lg font-black text-foreground">{fmtMoney(svc.notarizacion_price)}</p>
+              </NeoCard>
+            </div>
+          ) : (
+            <NeoCard className="p-3 text-center">
+              <p className="text-xs font-black uppercase tracking-wider text-foreground/60">Precio</p>
+              <p className="mt-1 text-xl font-black text-foreground">{fmtMoney(svc.digitacion_price)}</p>
+            </NeoCard>
           )}
-        </AnimatePresence>
 
-        <div className="flex-1" />
-        <div className="mt-4 flex items-center justify-end gap-2 border-t-2 border-white/30 pt-3">
-          <button onClick={() => openEdit(svc)} className="flex items-center gap-2 rounded-lg border-2 border-[#000080] bg-white px-3 py-2 text-xs font-black text-[#0000FF] shadow-[2px_2px_0px_0px_rgba(0,0,128,1)] hover:bg-white/90"><Pencil size={14} /> Editar</button>
-          <button onClick={() => handleDelete(svc.id)} className="flex items-center gap-2 rounded-lg border-2 border-[#000080] bg-white px-3 py-2 text-xs font-black text-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,128,1)] hover:bg-white/90"><Trash2 size={14} /> Eliminar</button>
-        </div>
+          {showTiers && (
+            <NeoButton
+              variant="neutral"
+              size="sm"
+              onClick={() => toggleTiers(svc.id)}
+              className="mt-3 self-start"
+            >
+              <Layers size={14} /> {svc.price_tiers!.length} rangos {tiersOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </NeoButton>
+          )}
+
+          <AnimatePresence>
+            {tiersOpen && showTiers && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
+                <NeoCard className="mt-3 p-3 space-y-2">
+                  {svc.price_tiers!.map((t, i) => (
+                    <NeoCard key={i} variant="main" className="px-3 py-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-base font-black text-main-foreground">{t.label || `Rango ${i + 1}`}</span>
+                          <span className="text-sm text-main-foreground/70">{t.min.toLocaleString("es-DO")} — {t.max === null || t.max === undefined ? "∞" : t.max.toLocaleString("es-DO")}</span>
+                        </div>
+                        <span className="text-base font-black text-main-foreground">RD$ {t.price.toLocaleString("es-DO")}</span>
+                      </div>
+                    </NeoCard>
+                  ))}
+                </NeoCard>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex-1" />
+          <div className="mt-4 flex items-center justify-end gap-2 border-t-2 border-main-foreground/30 pt-3">
+            <NeoButton variant="neutral" size="sm" onClick={() => openEdit(svc)}><Pencil size={14} /> Editar</NeoButton>
+            <NeoButton variant="outline" size="sm" onClick={() => handleDelete(svc.id)}><Trash2 size={14} /> Eliminar</NeoButton>
+          </div>
+        </NeoCard>
       </motion.div>
     );
   };
@@ -279,33 +278,39 @@ export default function ServicesCatalog() {
   const HomeView = () => (
     <div className="flex flex-col gap-8">
       <div className="text-center">
-        <div className="inline-flex items-center gap-3 rounded-xl border-2 border-[#000080] bg-[#0000FF] px-6 py-3 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-          <Sparkles className="h-8 w-8 text-white" />
+        <NeoCard variant="main" className="inline-flex flex-row items-center gap-3 px-6 py-3">
+          <Sparkles className="h-8 w-8 text-main-foreground" />
           <div className="text-left">
-            <h1 className="text-2xl font-black uppercase tracking-wider text-white">Catálogo de Precios</h1>
-            <p className="text-xs font-bold text-white/70">Servicios y tarifas</p>
+            <h1 className="font-heading text-xl md:text-2xl font-black uppercase tracking-wider text-main-foreground">Catálogo de Precios</h1>
+            <p className="text-base font-black text-main-foreground/70">Servicios y tarifas</p>
           </div>
-        </div>
-        <p className="mt-3 text-sm font-bold text-[#3333FF]">{services.length} servicios · 3 categorías</p>
+        </NeoCard>
+        <p className="mt-3 text-base font-bold text-main">{services.length} servicios · 3 categorías</p>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {Object.keys(GROUP_MAP).map((group) => {
           const stats = groupStats[group];
           return (
-            <button key={group} onClick={() => { setSelectedGroup(group); setSelectedSubcat("all"); setSearch(""); }} className="group flex flex-col items-center gap-4 rounded-xl border-4 border-[#000080] bg-[#0000FF] p-8 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none">
+            <button
+              key={group}
+              onClick={() => { setSelectedGroup(group); setSelectedSubcat("all"); setSearch(""); }}
+              className="group flex flex-col items-center gap-4 rounded-base border-2 border-border bg-main p-8 text-main-foreground shadow-shadow transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none active:translate-x-boxShadowX active:translate-y-boxShadowY active:shadow-none"
+            >
               <span className="text-6xl drop-shadow-lg transition-transform group-hover:scale-110">{GROUP_EMOJIS[group]}</span>
-              <h2 className="text-center text-xl font-black uppercase tracking-wide text-white">{group}</h2>
+              <h2 className="text-center text-xl md:text-2xl font-black uppercase tracking-wide">{group}</h2>
               <div className="flex flex-wrap justify-center gap-1">
                 {stats?.subcats.slice(0, 4).map((sub) => (
-                  <span key={sub} className="rounded bg-white/20 px-2 py-0.5 text-[10px] font-black text-white border border-white/30">{getCategoryEmoji(sub)} {sub}</span>
+                  <NeoBadge key={sub} variant="neutral" className="text-xs">
+                    {getCategoryEmoji(sub)} {sub}
+                  </NeoBadge>
                 ))}
-                {(stats?.subcats.length || 0) > 4 && <span className="rounded bg-white/10 px-2 py-0.5 text-[10px] font-black text-white/70">+{(stats?.subcats.length || 0) - 4}</span>}
+                {(stats?.subcats.length || 0) > 4 && <NeoBadge variant="outline" className="text-xs">+{(stats?.subcats.length || 0) - 4}</NeoBadge>}
               </div>
               <div className="flex gap-2">
-                <span className="rounded-lg bg-white/20 px-3 py-1 text-xs font-black text-white border-2 border-white/30">{stats?.count || 0} servicios</span>
-                {stats?.hasNota && <span className="rounded-lg bg-white/20 px-3 py-1 text-xs font-black text-white border-2 border-white/30">✍️ Nota</span>}
+                <NeoBadge variant="neutral" className="text-xs">{stats?.count || 0} servicios</NeoBadge>
+                {stats?.hasNota && <NeoBadge variant="neutral" className="text-xs">✍️ Nota</NeoBadge>}
               </div>
-              {stats && stats.count > 0 && <p className="text-xs font-bold text-white/60">{fmtMoney(stats.min)} — {fmtMoney(stats.max)}</p>}
+              {stats && stats.count > 0 && <p className="text-base font-bold text-main-foreground/60">{fmtMoney(stats.min)} — {fmtMoney(stats.max)}</p>}
             </button>
           );
         })}
@@ -328,42 +333,59 @@ export default function ServicesCatalog() {
       <div className="flex flex-col gap-6">
         {/* Header */}
         <div className="flex flex-wrap items-center gap-4">
-          <button onClick={() => { setSelectedGroup(null); setSelectedSubcat("all"); }} className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-black ${NB.btnSecondary}`}>
+          <NeoButton variant="neutral" onClick={() => { setSelectedGroup(null); setSelectedSubcat("all"); }}>
             <ArrowLeft size={16} /> Volver
-          </button>
-          <div className="flex items-center gap-3 rounded-xl border-4 border-[#000080] bg-[#0000FF] px-5 py-3 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
+          </NeoButton>
+          <NeoCard variant="main" className="flex flex-row items-center gap-3 px-5 py-3">
             <span className="text-3xl">{GROUP_EMOJIS[selectedGroup]}</span>
             <div>
-              <h2 className="text-xl font-black uppercase text-white">{selectedGroup}</h2>
-              <p className="text-xs font-bold text-white/70">{filteredServices.length} de {stats?.count || 0} servicios</p>
+              <h2 className="font-heading text-xl md:text-2xl font-black uppercase text-main-foreground">{selectedGroup}</h2>
+              <p className="text-base font-bold text-main-foreground/70">{filteredServices.length} de {stats?.count || 0} servicios</p>
             </div>
-          </div>
-          <button onClick={openCreate} className={`ml-auto flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-black uppercase ${NB.btnBlue}`}><Plus size={18} /> Nuevo</button>
+          </NeoCard>
+          <NeoButton onClick={openCreate} className="ml-auto"><Plus size={18} /> Nuevo</NeoButton>
         </div>
 
         {/* Sub-category chips */}
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setSelectedSubcat("all")} className={`rounded-lg px-3 py-1.5 text-xs font-black uppercase transition-all ${selectedSubcat === "all" ? NB.chipActive : NB.chipInactive}`}>🗂️ Todos</button>
+          <NeoButton
+            variant={selectedSubcat === "all" ? "default" : "neutral"}
+            size="sm"
+            onClick={() => setSelectedSubcat("all")}
+          >
+            🗂️ Todos
+          </NeoButton>
           {stats?.subcats.map((sub) => (
-            <button key={sub} onClick={() => setSelectedSubcat((p) => (p === sub ? "all" : sub))} className={`rounded-lg px-3 py-1.5 text-xs font-black uppercase transition-all ${selectedSubcat === sub ? NB.chipActive : NB.chipInactive}`}>
+            <NeoButton
+              key={sub}
+              variant={selectedSubcat === sub ? "default" : "neutral"}
+              size="sm"
+              onClick={() => setSelectedSubcat((p) => (p === sub ? "all" : sub))}
+            >
               {getCategoryEmoji(sub)} {sub}
-            </button>
+            </NeoButton>
           ))}
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0000FF]" />
-          <input type="text" placeholder={`🔍 Buscar en ${selectedGroup}...`} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full rounded-xl border-2 border-[#000080] bg-white py-3 pl-12 pr-4 text-[#000080] placeholder-[#0000FF]/50 outline-none focus:border-[#0000FF] focus:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground/50" />
+          <NeoInput
+            type="text"
+            placeholder={`Buscar en ${selectedGroup}...`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-12"
+          />
         </div>
 
         {/* Services */}
         {filteredServices.length === 0 ? (
-          <div className="rounded-xl border-4 border-dashed border-[#000080] bg-[#0000FF]/20 p-12 text-center">
+          <NeoCard variant="outline" className="border-dashed p-12 text-center">
             <span className="text-4xl">🕸️</span>
-            <p className="mt-2 text-lg font-bold text-[#0000FF]">No hay servicios aquí</p>
-            <p className="text-sm text-[#0000FF]/60">Prueba con otra búsqueda o subcategoría</p>
-          </div>
+            <p className="mt-2 text-lg font-bold text-foreground">No hay servicios aquí</p>
+            <p className="text-base text-foreground/70">Prueba con otra búsqueda o subcategoría</p>
+          </NeoCard>
         ) : selectedSubcat !== "all" ? (
           /* Single sub-category — flat grid */
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -376,12 +398,15 @@ export default function ServicesCatalog() {
               <div key={subcat} className="flex flex-col gap-3">
                 {/* Section header */}
                 <div className="flex items-center gap-3">
-                  <div className="h-1 flex-1 bg-[#0000FF]" />
-                  <button onClick={() => setSelectedSubcat(subcat)} className="flex items-center gap-2 rounded-lg border-2 border-[#000080] bg-[#0000FF] px-4 py-2 text-sm font-black text-white shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,128,1)]">
+                  <div className="h-1 flex-1 bg-main" />
+                  <NeoButton
+                    variant="default"
+                    onClick={() => setSelectedSubcat(subcat)}
+                  >
                     <span className="text-lg">{getCategoryEmoji(subcat)}</span> {subcat}
-                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{servicesBySubcat[subcat].length}</span>
-                  </button>
-                  <div className="h-1 flex-1 bg-[#0000FF]" />
+                    <NeoBadge variant="neutral" className="ml-1 text-xs">{servicesBySubcat[subcat].length}</NeoBadge>
+                  </NeoButton>
+                  <div className="h-1 flex-1 bg-main" />
                 </div>
                 {/* Cards */}
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -401,78 +426,80 @@ export default function ServicesCatalog() {
   const Modal = () => {
     if (!showModal) return null;
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-        <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border-4 border-[#0000AA] bg-[#0b1120] p-6 shadow-[8px_8px_0px_0px_rgba(0,0,128,1)]">
-          <div className="mb-6 flex items-center justify-between border-b-2 border-[#000080]/50 pb-4">
-            <h3 className="text-xl font-black text-white">{editingService ? "✏️ Editar Servicio" : "➕ Nuevo Servicio"}</h3>
-            <button onClick={() => setShowModal(false)} className="rounded-lg border-2 border-slate-700 bg-slate-800 p-2 text-slate-400 hover:border-slate-500 hover:text-white shadow-[2px_2px_0px_0px_rgba(30,41,59,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"><X size={20} /></button>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4">
+        <NeoCard className="max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
+          <div className="mb-6 flex items-center justify-between border-b-2 border-border pb-4">
+            <h3 className="font-heading text-xl md:text-2xl font-black text-foreground">{editingService ? "✏️ Editar Servicio" : "➕ Nuevo Servicio"}</h3>
+            <NeoButton variant="ghost" size="icon" onClick={() => setShowModal(false)}><X size={20} /></NeoButton>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-xs font-black uppercase tracking-wider text-slate-500">Nombre del servicio *</label>
-              <input type="text" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} className={NB.input} placeholder="Ej: Acto de Venta - Bien Inmueble" />
+              <label className="mb-1 block text-base font-black uppercase tracking-wider text-foreground/60">Nombre del servicio *</label>
+              <NeoInput type="text" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Ej: Acto de Venta - Bien Inmueble" />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-black uppercase tracking-wider text-slate-500">Categoría</label>
-              <select value={form.category_id || ""} onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value ? Number(e.target.value) : null }))} className={NB.input}>
+              <label className="mb-1 block text-base font-black uppercase tracking-wider text-foreground/60">Categoría</label>
+              <NeoSelect value={form.category_id || ""} onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value ? Number(e.target.value) : null }))}>
                 <option value="">Sin categoría</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{getCategoryEmoji(c.name)} {c.name}</option>)}
-              </select>
+              </NeoSelect>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-black uppercase tracking-wider text-slate-500">Descripción</label>
-              <textarea value={form.description || ""} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} className={NB.input} rows={2} placeholder="Descripción opcional..." />
+              <label className="mb-1 block text-base font-black uppercase tracking-wider text-foreground/60">Descripción</label>
+              
+                <textarea className="flex min-h-[80px] w-full rounded-base border-2 border-border bg-secondary-background px-4 py-2 text-base font-base text-foreground placeholder:text-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border focus-visible:ring-offset-2" value={form.description || ""} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} rows={2} placeholder="Descripción opcional..." />
+              
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <label className="mb-1 block text-xs font-black uppercase tracking-wider text-slate-500">Precio / Digitación (RD$) *</label>
+                <label className="mb-1 block text-base font-black uppercase tracking-wider text-foreground/60">Precio / Digitación (RD$) *</label>
                 <div className="relative">
-                  <DollarSign size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-500" />
-                  <input type="number" min={0} value={form.digitacion_price} onChange={(e) => setForm((p) => ({ ...p, digitacion_price: Number(e.target.value) }))} className={`${NB.input} pl-9`} />
+                  <DollarSign size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-foreground/50" />
+                  <NeoInput type="number" min={0} value={form.digitacion_price} onChange={(e) => setForm((p) => ({ ...p, digitacion_price: Number(e.target.value) }))} className="pl-9" />
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-black uppercase tracking-wider text-slate-500">Notarización (RD$)</label>
+                <label className="mb-1 block text-base font-black uppercase tracking-wider text-foreground/60">Notarización (RD$)</label>
                 <div className="relative">
-                  <DollarSign size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-500" />
-                  <input type="number" min={0} value={form.notarizacion_price} onChange={(e) => setForm((p) => ({ ...p, notarizacion_price: Number(e.target.value) }))} className={`${NB.input} pl-9`} />
+                  <DollarSign size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-foreground/50" />
+                  <NeoInput type="number" min={0} value={form.notarizacion_price} onChange={(e) => setForm((p) => ({ ...p, notarizacion_price: Number(e.target.value) }))} className="pl-9" />
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-black uppercase tracking-wider text-slate-500">Unidad</label>
+                <label className="mb-1 block text-base font-black uppercase tracking-wider text-foreground/60">Unidad</label>
                 <div className="relative">
-                  <Package size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-500" />
-                  <input type="text" value={form.unit_type || ""} onChange={(e) => setForm((p) => ({ ...p, unit_type: e.target.value }))} className={`${NB.input} pl-9`} placeholder="por documento" />
+                  <Package size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-foreground/50" />
+                  <NeoInput type="text" value={form.unit_type || ""} onChange={(e) => setForm((p) => ({ ...p, unit_type: e.target.value }))} className="pl-9" placeholder="por documento" />
                 </div>
               </div>
             </div>
-            <div className="rounded-xl border-2 border-slate-700 bg-slate-800/20 p-4">
+            <NeoCard variant="outline" className="p-4">
               <div className="mb-3 flex items-center justify-between">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Rangos de precio (por valor del bien)</label>
-                <button onClick={addTier} className="flex items-center gap-1 rounded-lg border border-purple-800 bg-purple-950/20 px-3 py-1.5 text-xs font-black text-purple-400 hover:bg-purple-950/30"><Plus size={14} /> Agregar rango</button>
+                <label className="text-base font-black uppercase tracking-wider text-foreground/60">Rangos de precio (por valor del bien)</label>
+                <NeoButton size="sm" onClick={addTier}><Plus size={14} /> Agregar rango</NeoButton>
               </div>
-              {(form.price_tiers || []).length === 0 ? <p className="text-xs text-slate-500">Sin rangos. El precio será fijo.</p> : (
+              {(form.price_tiers || []).length === 0 ? <p className="text-base text-foreground/50">Sin rangos. El precio será fijo.</p> : (
                 <div className="space-y-3">
                   {(form.price_tiers || []).map((tier, idx) => (
-                    <div key={idx} className="grid grid-cols-1 gap-2 rounded-lg border-2 border-slate-700/50 bg-slate-800/30 p-3 sm:grid-cols-5">
-                      <input type="text" placeholder="Etiqueta" value={tier.label} onChange={(e) => updateTier(idx, "label", e.target.value)} className="rounded-lg border-2 border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-purple-500 focus:shadow-[2px_2px_0px_0px_rgba(88,28,135,1)] transition-all sm:col-span-2" />
-                      <input type="number" placeholder="Mín" value={tier.min} onChange={(e) => updateTier(idx, "min", Number(e.target.value))} className="rounded-lg border-2 border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-purple-500 focus:shadow-[2px_2px_0px_0px_rgba(88,28,135,1)] transition-all" />
-                      <input type="number" placeholder="Máx (vacío = ∞)" value={tier.max === null || tier.max === undefined ? "" : tier.max} onChange={(e) => { const val = e.target.value; updateTier(idx, "max", val === "" ? null : Number(val)); }} className="rounded-lg border-2 border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-purple-500 focus:shadow-[2px_2px_0px_0px_rgba(88,28,135,1)] transition-all" />
+                    <div key={idx} className="grid grid-cols-1 gap-2 rounded-base border-2 border-border bg-secondary-background p-3 sm:grid-cols-5">
+                      <NeoInput type="text" placeholder="Etiqueta" value={tier.label} onChange={(e) => updateTier(idx, "label", e.target.value)} className="sm:col-span-2" />
+                      <NeoInput type="number" placeholder="Mín" value={tier.min} onChange={(e) => updateTier(idx, "min", Number(e.target.value))} />
+                      <NeoInput type="number" placeholder="Máx (vacío = ∞)" value={tier.max === null || tier.max === undefined ? "" : tier.max} onChange={(e) => { const val = e.target.value; updateTier(idx, "max", val === "" ? null : Number(val)); }} />
                       <div className="flex items-center gap-2">
-                        <input type="number" placeholder="Precio" value={tier.price} onChange={(e) => updateTier(idx, "price", Number(e.target.value))} className="flex-1 rounded-lg border-2 border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none focus:border-purple-500 focus:shadow-[2px_2px_0px_0px_rgba(88,28,135,1)] transition-all" />
-                        <button onClick={() => removeTier(idx)} className="rounded-lg border border-slate-700 p-2 text-slate-400 hover:border-red-800 hover:text-red-400"><Trash2 size={14} /></button>
+                        <NeoInput type="number" placeholder="Precio" value={tier.price} onChange={(e) => updateTier(idx, "price", Number(e.target.value))} className="flex-1" />
+                        <NeoButton variant="outline" size="icon" onClick={() => removeTier(idx)}><Trash2 size={14} /></NeoButton>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </NeoCard>
           </div>
-          <div className="mt-6 flex items-center justify-end gap-3 border-t-2 border-[#000080]/50 pt-4">
-            <button onClick={() => setShowModal(false)} className="rounded-xl border-2 border-slate-600 bg-slate-800 px-5 py-2.5 text-sm font-black text-slate-300 hover:bg-slate-700 hover:text-white">Cancelar</button>
-            <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 rounded-xl border-2 border-[#000080] bg-[#0000CC] px-5 py-2.5 text-sm font-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all hover:shadow-[2px_2px_0px_0px_rgba(0,0,128,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] disabled:opacity-50`}><Save size={16} /> {saving ? "Guardando..." : "Guardar"}</button>
+          <div className="mt-6 flex items-center justify-end gap-3 border-t-2 border-border pt-4">
+            <NeoButton variant="outline" onClick={() => setShowModal(false)}>Cancelar</NeoButton>
+            <NeoButton onClick={handleSave} disabled={saving}><Save size={16} /> {saving ? "Guardando..." : "Guardar"}</NeoButton>
           </div>
-        </div>
+        </NeoCard>
       </div>
     );
   };
@@ -480,9 +507,9 @@ export default function ServicesCatalog() {
   return (
     <div className="custom-scroll flex h-full flex-col gap-6 overflow-y-auto p-6">
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-[#0000FF]">
-          <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-[#000080] border-t-[#0000FF]" />
-          <p className="text-lg font-black">Cargando precios...</p>
+        <div className="flex flex-col items-center justify-center py-20 text-main">
+          <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-border border-t-main" />
+          <p className="text-xl md:text-2xl font-black">Cargando precios...</p>
         </div>
       ) : selectedGroup ? <GroupView /> : <HomeView />}
       <Modal />

@@ -23,6 +23,32 @@
   --overlay: rgba(0, 0, 0, 0.8);
 
   --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
+  --shadow-sidebar: 4px 0px 0px 0px var(--border);
+  --shadow-header: 0px 4px 0px 0px var(--border);
+  --shadow-button: 2px 2px 0px 0px var(--border);
+
+  --chart-1: #0000ff;
+  --chart-2: #000080;
+  --chart-3: #ffd700;
+  --chart-4: #ff0000;
+  --chart-5: #00ff00;
+  --chart-active-dot: #000000;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --secondary-background: #171717;
+  --foreground: #ffffff;
+  --main-foreground: #ffffff;
+
+  --border: #ffffff;
+  --ring: #ffffff;
+  --overlay: rgba(0, 0, 0, 0.9);
+
+  --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
+  --shadow-sidebar: 4px 0px 0px 0px var(--border);
+  --shadow-header: 0px 4px 0px 0px var(--border);
+  --shadow-button: 2px 2px 0px 0px var(--border);
 
   --chart-1: #0000ff;
   --chart-2: #000080;
@@ -57,6 +83,9 @@
 
   --shadow-shadow: var(--shadow);
   --shadow-nav: 4px 4px 0px 0px var(--border);
+  --shadow-sidebar: var(--shadow-sidebar);
+  --shadow-header: var(--shadow-header);
+  --shadow-button: var(--shadow-button);
 
   --font-weight-base: var(--base-font-weight);
   --font-weight-heading: var(--heading-font-weight);
@@ -73,7 +102,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Outfit", sans-serif;
-  font-size: 17px;
+  font-size: 18px;
   color: var(--foreground);
 }
 

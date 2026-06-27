@@ -22,15 +22,15 @@ const CATEGORY_CONFIG: Record<
 
 /* ── Neo-Brutalist helpers ── */
 const NB = {
-  card: "flex flex-col gap-3 rounded-xl border-2 border-slate-700 bg-slate-900 p-4 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] transition-all hover:shadow-[2px_2px_0px_0px_rgba(30,41,59,1)] hover:translate-x-[2px] hover:translate-y-[2px]",
+  card: "flex flex-col gap-3 rounded-base border-2 border-border bg-main p-5 shadow-shadow transition-all hover:shadow-[2px_2px_0px_0px_var(--border)] hover:translate-x-[2px] hover:translate-y-[2px]",
   btnBlue:
-    "border-2 border-[#000080] bg-[#0000FF] text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all hover:shadow-[2px_2px_0px_0px_rgba(0,0,128,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
+    "border-2 border-border bg-main text-main-foreground shadow-[4px_4px_0px_0px_var(--border)] transition-all hover:shadow-[2px_2px_0px_0px_var(--border)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
   btnSecondary:
-    "border-2 border-slate-700 bg-slate-800 text-slate-300 shadow-[3px_3px_0px_0px_rgba(30,41,59,1)] transition-all hover:shadow-[1px_1px_0px_0px_rgba(30,41,59,1)] hover:translate-x-[1px] hover:translate-y-[1px] active:shadow-none",
+    "border-2 border-border bg-secondary-background text-foreground shadow-[3px_3px_0px_0px_var(--border)] transition-all hover:shadow-[1px_1px_0px_0px_var(--border)] hover:translate-x-[1px] hover:translate-y-[1px] active:shadow-none",
   chipActive:
-    "border-2 border-[#000080] bg-[#0000FF] text-white shadow-[3px_3px_0px_0px_rgba(0,0,128,1)]",
+    "border-2 border-border bg-main text-main-foreground shadow-[3px_3px_0px_0px_var(--border)]",
   chipInactive:
-    "border-2 border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200",
+    "border-2 border-border bg-secondary-background text-foreground hover:bg-background",
 };
 
 /* ── Law Card (blue neo-brutalist like ServiceCatalog) ── */
@@ -39,38 +39,38 @@ function LawCard({ law }: { law: (typeof LAWS)[0] }) {
   const docCount = law.relatedDocCategories.length;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border-4 border-[#000080] bg-[#0000FF] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none">
+    <div className="flex h-full flex-col overflow-hidden rounded-base border-2 border-border bg-main p-6 shadow-shadow transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_var(--border)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none">
       {/* Header */}
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <div className="mb-1 text-3xl">{cfg.emoji}</div>
-          <h3 className="text-base font-black leading-tight text-white line-clamp-2">
+          <div className="mb-1 text-4xl">{cfg.emoji}</div>
+          <h3 className="text-lg font-black leading-tight text-white line-clamp-2">
             {law.institution}
           </h3>
         </div>
       </div>
 
       {/* Category badge */}
-      <span className="mb-3 w-fit rounded-lg border-2 border-[#000080] bg-white px-2.5 py-1 text-[10px] font-black uppercase text-[#0000FF] shadow-[2px_2px_0px_0px_rgba(0,0,128,1)]">
+      <span className="mb-3 w-fit rounded-base border-2 border-border bg-background px-3 py-1 text-xs font-black uppercase text-main shadow-button">
         {law.category}
       </span>
 
       {/* Description */}
-      <p className="mb-3 line-clamp-3 text-xs text-white/80">
+      <p className="mb-3 line-clamp-3 text-sm text-white/90">
         {law.description}
       </p>
 
       {/* Related document categories */}
       {docCount > 0 && (
         <div className="mb-3 space-y-1 border-t-2 border-white/30 pt-2">
-          <p className="text-[10px] font-black uppercase tracking-wider text-white/60">
+          <p className="text-xs font-black uppercase tracking-wider text-white/70">
             Documentos relacionados
           </p>
           <div className="flex flex-wrap gap-1">
             {law.relatedDocCategories.map((cat, i) => (
               <span
                 key={i}
-                className="rounded border border-white/30 bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white whitespace-nowrap"
+                className="rounded-base border border-white/30 bg-white/20 px-2 py-0.5 text-xs font-bold text-white whitespace-nowrap"
               >
                 {cat}
               </span>
@@ -84,9 +84,9 @@ function LawCard({ law }: { law: (typeof LAWS)[0] }) {
         href={law.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-auto flex items-center justify-center gap-2 rounded-lg border-2 border-[#000080] bg-white px-3 py-2.5 text-xs font-black uppercase text-[#0000FF] shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,128,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+        className="mt-auto flex items-center justify-center gap-2 rounded-base border-2 border-border bg-background px-4 py-3 text-sm font-black uppercase text-main shadow-button transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none active:translate-x-[3px] active:translate-y-[3px]"
       >
-        <ExternalLink className="h-3.5 w-3.5" />
+        <ExternalLink className="h-4 w-4" />
         Abrir enlace
       </a>
     </div>
@@ -133,24 +133,24 @@ export default function Laws() {
     <div className="flex flex-col gap-8">
       {/* Header */}
       <div className="text-center">
-        <div className="inline-flex items-center gap-3 rounded-xl border-2 border-[#000080] bg-[#0000FF] px-6 py-3 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
+        <div className="inline-flex items-center gap-3 rounded-base border-2 border-border bg-main px-6 py-4 shadow-shadow">
           <Sparkles className="h-8 w-8 text-white" />
           <div className="text-left">
-            <h1 className="text-2xl font-black uppercase tracking-wider text-white">
+            <h1 className="text-2xl md:text-3xl font-black uppercase tracking-wider text-white">
               Base Legal
             </h1>
-            <p className="text-xs font-bold text-white/70">
+            <p className="text-sm font-bold text-white/80">
               Leyes, regulaciones y enlaces gubernamentales
             </p>
           </div>
         </div>
-        <p className="mt-3 text-sm font-bold text-[#3333FF]">
+        <p className="mt-3 text-base font-bold text-main">
           {LAWS.length} enlaces · {categories.length} categorías
         </p>
       </div>
 
       {/* Category Grid */}
-      <div className="grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid auto-rows-fr grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {categories.map((cat) => {
           const cfg = CATEGORY_CONFIG[cat];
           const count = categoryStats[cat] || 0;
@@ -161,15 +161,15 @@ export default function Laws() {
                 setSelectedCategory(cat);
                 setSearchQuery("");
               }}
-              className="group flex flex-col items-center gap-3 rounded-xl border-4 border-[#000080] bg-[#0000FF] p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"
+              className="group flex flex-col items-center gap-3 rounded-base border-2 border-border bg-main p-6 shadow-shadow transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_var(--border)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"
             >
               <span className="text-5xl drop-shadow-lg transition-transform group-hover:scale-110">
                 {cfg.emoji}
               </span>
-              <h2 className="text-center text-lg font-black uppercase tracking-wide text-white">
+              <h2 className="text-center text-lg md:text-xl font-black uppercase tracking-wide text-white">
                 {cat}
               </h2>
-              <span className="rounded-lg bg-white/20 px-3 py-1 text-xs font-black text-white border-2 border-white/30">
+              <span className="rounded-base bg-white/20 px-3 py-1 text-sm font-black text-white border-2 border-white/30">
                 {count} {count === 1 ? "enlace" : "enlaces"}
               </span>
             </button>
@@ -202,17 +202,17 @@ export default function Laws() {
               setSelectedCategory(null);
               setSearchQuery("");
             }}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-black ${NB.btnSecondary}`}
+            className={`flex items-center gap-2 rounded-base px-4 py-2 text-base font-black ${NB.btnSecondary}`}
           >
-            <ArrowLeft size={16} /> Volver
+            <ArrowLeft size={18} /> Volver
           </button>
-          <div className="flex items-center gap-3 rounded-xl border-4 border-[#000080] bg-[#0000FF] px-5 py-3 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
+          <div className="flex items-center gap-3 rounded-base border-2 border-border bg-main px-5 py-3 shadow-shadow">
             <span className="text-3xl">{cfg.emoji}</span>
             <div>
-              <h2 className="text-xl font-black uppercase text-white">
+              <h2 className="text-xl md:text-2xl font-black uppercase text-white">
                 {selectedCategory}
               </h2>
-              <p className="text-xs font-bold text-white/70">
+              <p className="text-sm font-bold text-white/80">
                 {filteredLaws.length} de {categoryStats[selectedCategory] || 0}{" "}
                 enlaces
               </p>
@@ -223,31 +223,31 @@ export default function Laws() {
         {/* Search */}
         <div className="relative">
           <Search
-            size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0000FF]"
+            size={20}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-main"
           />
           <input
             type="text"
             placeholder={`🔍 Buscar en ${selectedCategory}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border-2 border-[#000080] bg-white py-3 pl-12 pr-4 text-[#000080] placeholder-[#0000FF]/50 outline-none focus:border-[#0000FF] focus:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all"
+            className="w-full rounded-base border-2 border-border bg-secondary-background py-3 pl-12 pr-4 text-base text-foreground placeholder-foreground/50 outline-none focus:ring-2 focus:ring-border transition-all"
           />
         </div>
 
         {/* Content */}
         {filteredLaws.length === 0 ? (
-          <div className="rounded-xl border-4 border-dashed border-[#000080] bg-[#0000FF]/20 p-12 text-center">
+          <div className="rounded-base border-2 border-dashed border-border bg-main/20 p-12 text-center">
             <span className="text-4xl">🕸️</span>
-            <p className="mt-2 text-lg font-bold text-[#0000FF]">
+            <p className="mt-2 text-lg font-bold text-main">
               No se encontraron enlaces
             </p>
-            <p className="text-sm text-[#0000FF]/60">
+            <p className="text-base text-foreground/60">
               Prueba con otra búsqueda
             </p>
           </div>
         ) : (
-          <div className="grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid auto-rows-fr grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filteredLaws.map((law) => (
               <LawCard key={law.id} law={law} />
             ))}
@@ -266,7 +266,7 @@ export default function Laws() {
 
       {/* Footer */}
       <div className="text-right">
-        <p className="text-xs font-bold text-slate-600">
+        <p className="text-sm font-bold text-foreground/60">
           {filteredLaws.length} de {LAWS.length} enlaces
         </p>
       </div>

@@ -12,6 +12,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { botAPI } from "../services/botApi";
+import { NeoCard, NeoButton, NeoInput, NeoBadge } from "../components/ui/neo";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -125,44 +126,44 @@ const ConvItem: React.FC<ConvItemProps> = ({
   return (
     <div
       onClick={onSelect}
-      className={`flex cursor-pointer items-start gap-3 px-4 py-3 transition-all hover:bg-slate-800/50 ${
+      className={`flex cursor-pointer items-start gap-3 border-b-2 border-border px-4 py-3 transition-all ${
         isSelected
-          ? "border-l-2 border-blue-500 bg-slate-800"
-          : "border-l-2 border-transparent"
+          ? "bg-main text-main-foreground"
+          : "bg-background text-foreground hover:bg-secondary-background"
       }`}
     >
       {/* Avatar */}
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-sm font-bold text-white shadow-md">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-black text-main-foreground shadow-button">
         {initials}
       </div>
 
       {/* Name + preview */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-semibold text-white">{name}</p>
-          <span className="flex-shrink-0 text-[10px] text-slate-500">{time}</span>
+          <p className="truncate font-base text-base font-semibold">{name}</p>
+          <span className={`flex-shrink-0 font-base text-xs ${isSelected ? "text-main-foreground/70" : "text-foreground/50"}`}>
+            {time}
+          </span>
         </div>
-        <p className="mt-0.5 truncate text-xs text-slate-500">{preview}</p>
+        <p className={`mt-0.5 truncate font-base text-sm ${isSelected ? "text-main-foreground/80" : "text-foreground/60"}`}>
+          {preview}
+        </p>
       </div>
 
-      {/* IA toggle switch */}
-      <button
+      {/* IA toggle button */}
+      <NeoButton
         onClick={(e) => onToggleAI(conv.phone, e)}
         title={
           conv.botActive
             ? "IA activa — click para desactivar"
             : "Manual — click para activar IA"
         }
-        className={`mt-1 flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors ${
-          conv.botActive ? "bg-emerald-500" : "bg-slate-600"
-        }`}
+        variant={conv.botActive ? "default" : "neutral"}
+        size="icon"
+        className="mt-1 h-8 w-8 flex-shrink-0"
       >
-        <div
-          className={`ml-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
-            conv.botActive ? "translate-x-4" : "translate-x-0"
-          }`}
-        />
-      </button>
+        {conv.botActive ? <Bot size={14} /> : <User size={14} />}
+      </NeoButton>
     </div>
   );
 };
@@ -204,7 +205,7 @@ const MediaAttachment: React.FC<{ apiPath: string; isOut: boolean }> = ({ apiPat
 
   if (!blobUrl) {
     return (
-      <div className={`mb-1.5 text-xs italic ${isOut ? "text-emerald-300/60" : "text-slate-400"}`}>
+      <div className={`mb-1.5 font-base text-xs italic ${isOut ? "text-main-foreground/60" : "text-foreground/50"}`}>
         Cargando media…
       </div>
     );
@@ -215,7 +216,7 @@ const MediaAttachment: React.FC<{ apiPath: string; isOut: boolean }> = ({ apiPat
       <img
         src={blobUrl}
         alt="imagen"
-        className="mb-1.5 max-h-52 w-full rounded-xl object-cover cursor-pointer"
+        className="mb-1.5 w-full max-h-52 cursor-pointer rounded-base border-2 border-border object-cover shadow-button"
         onClick={() => window.open(blobUrl, "_blank")}
       />
     );
@@ -232,7 +233,7 @@ const MediaAttachment: React.FC<{ apiPath: string; isOut: boolean }> = ({ apiPat
 
   if (mimeType.startsWith("video/")) {
     return (
-      <video controls src={blobUrl} className="mb-1.5 max-h-52 w-full rounded-xl object-cover">
+      <video controls src={blobUrl} className="mb-1.5 max-h-52 w-full rounded-base border-2 border-border object-cover shadow-button">
         Tu navegador no soporta video.
       </video>
     );
@@ -243,7 +244,7 @@ const MediaAttachment: React.FC<{ apiPath: string; isOut: boolean }> = ({ apiPat
     <a
       href={blobUrl}
       download
-      className={`mb-1.5 flex items-center gap-1.5 underline underline-offset-2 text-sm ${isOut ? "text-emerald-200" : "text-blue-300"}`}
+      className={`mb-1.5 flex items-center gap-1.5 font-base text-sm underline underline-offset-2 ${isOut ? "text-main-foreground" : "text-main"}`}
     >
       📎 Descargar archivo
     </a>
@@ -272,22 +273,18 @@ const MessageBubble: React.FC<{ msg: MsgRow; isHighlighted?: boolean }> = ({ msg
 
   return (
     <div
-      className={`flex mb-1.5 ${isOut ? "justify-end" : "justify-start"} transition-all duration-300`}
+      className={`mb-1.5 flex ${isOut ? "justify-end" : "justify-start"} transition-all duration-300`}
       id={`msg-${msg.id}`}
     >
       <div
-        className={`max-w-[75%] px-4 py-2.5 text-sm text-white shadow-sm transition-all duration-300 ${
+        className={`max-w-[75%] px-4 py-2.5 font-base text-base shadow-button transition-all duration-300 ${
           isHighlighted
-            ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-[#0B1120] scale-[1.02] shadow-lg shadow-yellow-400/30"
+            ? "scale-[1.02] ring-2 ring-main ring-offset-2 ring-offset-background"
             : ""
         } ${
           isOut
-            ? `rounded-bl-2xl rounded-tl-2xl rounded-tr-2xl ${
-                isHighlighted ? "bg-emerald-700" : "bg-emerald-800"
-              }`
-            : `rounded-br-2xl rounded-tl-2xl rounded-tr-2xl ${
-                isHighlighted ? "bg-slate-600" : "bg-slate-700"
-              }`
+            ? "rounded-bl-base rounded-tl-base rounded-tr-base border-2 border-border bg-main text-main-foreground"
+            : "rounded-br-base rounded-tl-base rounded-tr-base border-2 border-border bg-secondary-background text-foreground"
         }`}
       >
         {/* Authenticated media */}
@@ -298,13 +295,13 @@ const MessageBubble: React.FC<{ msg: MsgRow; isHighlighted?: boolean }> = ({ msg
         )}
         {/* Timestamp */}
         <p
-          className={`mt-1 text-[10px] ${
-            isOut ? "text-right text-emerald-300/60" : "text-slate-400"
+          className={`mt-1 font-base text-xs ${
+            isOut ? "text-right text-main-foreground/60" : "text-foreground/50"
           }`}
         >
           {time}
           {msg.ai_generated && (
-            <span className="ml-1.5 text-emerald-300/50">· IA</span>
+            <span className="ml-1.5 text-main-foreground/50">· IA</span>
           )}
         </p>
       </div>
@@ -316,11 +313,11 @@ const MessageBubble: React.FC<{ msg: MsgRow; isHighlighted?: boolean }> = ({ msg
 
 const DateSeparator: React.FC<{ label: string }> = ({ label }) => (
   <div className="my-4 flex items-center gap-3">
-    <div className="flex-1 border-t border-slate-800" />
-    <span className="rounded-full bg-slate-800 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+    <div className="flex-1 border-t-2 border-border" />
+    <span className="rounded-base border-2 border-border bg-secondary-background px-3 py-0.5 font-base text-xs font-black uppercase tracking-wider text-foreground/70">
       {label}
     </span>
-    <div className="flex-1 border-t border-slate-800" />
+    <div className="flex-1 border-t-2 border-border" />
   </div>
 );
 
@@ -614,67 +611,63 @@ const BotMessages: React.FC = () => {
           LEFT PANEL — Conversation List (320 px on desktop)
       ════════════════════════════════════════════════════════════ */}
       <div
-        className={`flex flex-col border-r border-slate-700 bg-slate-900 ${
+        className={`flex flex-col border-r-2 border-border bg-background ${
           showRightPanel ? "hidden md:flex" : "flex"
         } w-full flex-shrink-0 md:w-80`}
       >
         {/* Stats bar */}
-        <div className="flex-shrink-0 border-b border-slate-700 bg-slate-800/50 px-4 py-3">
+        <div className="flex-shrink-0 border-b-2 border-border bg-secondary-background px-4 py-3">
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-slate-600 bg-slate-700/50 p-2.5">
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Users size={13} />
+            <NeoCard variant="neutral" className="p-2.5">
+              <div className="flex items-center gap-2 font-base text-sm text-foreground/70">
+                <Users size={14} />
                 <span>Conversaciones</span>
               </div>
-              <div className="mt-1 text-lg font-bold text-white">
+              <div className="mt-1 font-heading text-xl font-bold text-foreground md:text-2xl">
                 {totalConversations}
               </div>
-            </div>
-            <div className="rounded-lg border border-slate-600 bg-slate-700/50 p-2.5">
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <MessageCircle size={13} />
+            </NeoCard>
+            <NeoCard variant="neutral" className="p-2.5">
+              <div className="flex items-center gap-2 font-base text-sm text-foreground/70">
+                <MessageCircle size={14} />
                 <span>Mensajes</span>
               </div>
-              <div className="mt-1 text-lg font-bold text-white">
+              <div className="mt-1 font-heading text-xl font-bold text-foreground md:text-2xl">
                 {totalMessages}
               </div>
-            </div>
+            </NeoCard>
           </div>
         </div>
 
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-slate-700 p-4">
+        <div className="flex-shrink-0 border-b-2 border-border p-4">
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 shadow-md">
-              <MessageSquare size={16} className="text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-button">
+              <MessageSquare size={16} />
             </div>
-            <h2 className="font-display text-base font-bold text-white">
+            <h2 className="font-heading text-xl font-bold text-foreground md:text-2xl">
               Conversaciones
             </h2>
-            <span className="ml-auto rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300">
+            <NeoBadge variant="neutral" className="ml-auto">
               {conversations.length}
-            </span>
+            </NeoBadge>
           </div>
 
           {/* Search */}
           <div className="relative mb-3">
             <Search
-              size={13}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50"
             />
-            <input
+            <NeoInput
               type="text"
               placeholder={search.trim().length >= 2 ? "Buscando en mensajes..." : "Buscar por nombre, número o palabra..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={`w-full rounded-xl border py-2 pl-8 pr-3 text-sm text-white outline-none transition-all focus:border-blue-500 ${
-                search.trim().length >= 2
-                  ? "border-blue-500 bg-slate-800/80 placeholder-blue-300"
-                  : "border-slate-700 bg-slate-800 placeholder-slate-500"
-              }`}
+              className="pl-10 pr-3 text-base"
             />
             {search.trim().length >= 2 && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-blue-400 font-semibold">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 font-base text-xs font-black text-main">
                 EN MENSAJES
               </span>
             )}
@@ -689,34 +682,32 @@ const BotMessages: React.FC = () => {
                 ["manual", "Manual"],
               ] as const
             ).map(([val, label]) => (
-              <button
+              <NeoButton
                 key={val}
                 onClick={() => setFilter(val)}
-                className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
-                  filter === val
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-800 text-slate-400 hover:text-white"
-                }`}
+                variant={filter === val ? "default" : "neutral"}
+                size="sm"
+                className="flex-1"
               >
                 {label}
-              </button>
+              </NeoButton>
             ))}
           </div>
         </div>
 
         {/* Conversation list */}
-        <div className="flex-1 overflow-y-auto custom-scroll">
+        <div className="custom-scroll flex-1 overflow-y-auto">
           {convLoading ? (
-            <div className="flex items-center justify-center py-16 text-slate-500">
+            <div className="flex items-center justify-center py-16 text-foreground/50">
               <RefreshCw size={20} className="animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-14 text-center text-slate-600">
+            <div className="py-14 text-center text-foreground/50">
               <MessageSquare
                 size={32}
-                className="mx-auto mb-2 opacity-20"
+                className="mx-auto mb-2 opacity-40"
               />
-              <p className="text-sm">Sin conversaciones</p>
+              <p className="font-base text-base">Sin conversaciones</p>
             </div>
           ) : (
             filtered.map((conv) => (
@@ -736,54 +727,56 @@ const BotMessages: React.FC = () => {
           RIGHT PANEL — Chat Area
       ════════════════════════════════════════════════════════════ */}
       <div
-        className={`flex flex-1 flex-col overflow-hidden bg-slate-950 ${
+        className={`flex flex-1 flex-col overflow-hidden bg-secondary-background ${
           !showRightPanel ? "hidden md:flex" : "flex"
         }`}
       >
         {/* ── Empty state ── */}
         {!selectedPhone ? (
-          <div className="flex flex-1 flex-col items-center justify-center text-slate-600">
-            <MessageSquare size={52} className="mb-4 opacity-20" />
-            <p className="text-lg font-semibold text-slate-500">
+          <div className="flex flex-1 flex-col items-center justify-center text-foreground/50">
+            <MessageSquare size={52} className="mb-4 opacity-40" />
+            <p className="font-heading text-xl font-semibold text-foreground/70 md:text-2xl">
               Selecciona una conversación
             </p>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 font-base text-base">
               Los mensajes aparecerán aquí
             </p>
           </div>
         ) : (
           <>
             {/* ── Top bar ── */}
-            <div className="flex flex-shrink-0 items-center gap-3 border-b border-slate-800 bg-slate-900 px-4 py-3">
+            <div className="flex flex-shrink-0 items-center gap-3 border-b-2 border-border bg-secondary-background px-4 py-3">
               {/* Back (mobile only) */}
-              <button
-                className="flex items-center justify-center rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white md:hidden"
+              <NeoButton
+                size="icon"
+                variant="neutral"
+                className="md:hidden"
                 onClick={() => {
                   setShowRightPanel(false);
                   setSelectedPhone(null);
                 }}
               >
                 <ChevronLeft size={20} />
-              </button>
+              </NeoButton>
 
               {/* Avatar */}
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-sm font-bold text-white shadow-md">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-black text-main-foreground shadow-button">
                 {getInitials(selectedConv?.client_name, selectedConv?.phone)}
               </div>
 
               {/* Name + phone */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <p className="truncate text-sm font-semibold text-white">
+                  <p className="truncate font-base text-base font-semibold text-foreground">
                     {selectedConv?.client_name ||
                       formatPhone(selectedPhone)}
                   </p>
                   <Circle
                     size={7}
-                    className="flex-shrink-0 fill-emerald-400 text-emerald-400"
+                    className="flex-shrink-0 fill-main text-main"
                   />
                 </div>
-                <p className="truncate text-xs text-slate-500">
+                <p className="truncate font-base text-sm text-foreground/60">
                   {selectedPhone}
                 </p>
               </div>
@@ -791,31 +784,28 @@ const BotMessages: React.FC = () => {
               {/* IA badge + toggle */}
               <div className="flex items-center gap-2">
                 {selectedConv?.botActive && (
-                  <span className="hidden rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400 sm:inline">
+                  <NeoBadge variant="main" className="hidden sm:inline">
                     IA activada
-                  </span>
+                  </NeoBadge>
                 )}
-                <button
+                <NeoButton
                   onClick={(e) => handleToggleAI(selectedPhone, e)}
-                  className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-all ${
-                    selectedConv?.botActive
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-                      : "border-yellow-500/30 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
-                  }`}
+                  variant={selectedConv?.botActive ? "default" : "neutral"}
+                  size="sm"
                 >
                   {selectedConv?.botActive ? (
-                    <Bot size={12} />
+                    <Bot size={14} />
                   ) : (
-                    <User size={12} />
+                    <User size={14} />
                   )}
                   <span className="hidden sm:inline">
                     {selectedConv?.botActive ? "Bot" : "Manual"}
                   </span>
-                </button>
+                </NeoButton>
               </div>
 
               {/* Message search button */}
-              <button
+              <NeoButton
                 onClick={() => {
                   setShowMsgSearch(!showMsgSearch);
                   if (showMsgSearch) {
@@ -824,45 +814,43 @@ const BotMessages: React.FC = () => {
                     setHighlightMessageId(null);
                   }
                 }}
-                className={`flex items-center justify-center rounded-lg p-2 transition-all ${
-                  showMsgSearch
-                    ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                }`}
+                variant={showMsgSearch ? "default" : "neutral"}
+                size="icon"
                 title="Buscar en mensajes"
               >
                 <Search size={18} />
-              </button>
+              </NeoButton>
             </div>
 
             {/* Message search bar */}
             {showMsgSearch && (
-              <div className="flex flex-shrink-0 items-center gap-2 border-b border-slate-800 bg-slate-900 px-4 py-2">
-                <Search size={16} className="text-slate-400 flex-shrink-0" />
-                <input
+              <div className="flex flex-shrink-0 items-center gap-2 border-b-2 border-border bg-secondary-background px-4 py-2">
+                <Search size={16} className="flex-shrink-0 text-foreground/50" />
+                <NeoInput
                   type="text"
                   value={msgSearch}
                   onChange={(e) => setMsgSearch(e.target.value)}
                   placeholder="Buscar en mensajes..."
                   autoFocus
-                  className="flex-1 border-0 bg-slate-800 px-3 py-1.5 text-sm text-white placeholder-slate-500 outline-none focus:bg-slate-700 rounded"
+                  className="flex-1"
                 />
                 {messageSearchMatches.length > 0 && (
-                  <span className="text-xs text-slate-400 flex-shrink-0">
+                  <span className="flex-shrink-0 font-base text-xs text-foreground/60">
                     {currentMatchIndex + 1}/{messageSearchMatches.length}
                   </span>
                 )}
-                <button
+                <NeoButton
                   onClick={() => {
                     setShowMsgSearch(false);
                     setMsgSearch("");
                     setMessageSearchMatches([]);
                     setHighlightMessageId(null);
                   }}
-                  className="text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                  variant="ghost"
+                  size="icon"
                 >
                   ✕
-                </button>
+                </NeoButton>
               </div>
             )}
 
@@ -870,15 +858,15 @@ const BotMessages: React.FC = () => {
             <div
               ref={scrollContainerRef}
               onScroll={handleScrollContainer}
-              className="flex-1 overflow-y-auto px-4 py-4 custom-scroll"
+              className="custom-scroll flex-1 overflow-y-auto px-4 py-4"
             >
               {msgLoading ? (
-                <div className="flex items-center justify-center py-16 text-slate-500">
+                <div className="flex items-center justify-center py-16 text-foreground/50">
                   <RefreshCw size={20} className="animate-spin" />
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex items-center justify-center py-16">
-                  <p className="text-sm text-slate-600">Sin mensajes aún</p>
+                  <p className="font-base text-base text-foreground/50">Sin mensajes aún</p>
                 </div>
               ) : (
                 messageGroups.map((group) => (
@@ -894,26 +882,26 @@ const BotMessages: React.FC = () => {
             </div>
 
             {/* ── Input bar ── */}
-            <div className="flex flex-shrink-0 items-center gap-2 border-t border-slate-800 bg-slate-900 px-4 py-3">
-              <input
+            <div className="flex flex-shrink-0 items-center gap-2 border-t-2 border-border bg-secondary-background px-4 py-3">
+              <NeoInput
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Escribe un mensaje..."
-                className="flex-1 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-blue-500"
+                className="flex-1"
               />
-              <button
+              <NeoButton
                 onClick={handleSend}
                 disabled={!inputText.trim() || sending}
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                size="icon"
               >
                 {sending ? (
-                  <RefreshCw size={15} className="animate-spin" />
+                  <RefreshCw size={16} className="animate-spin" />
                 ) : (
-                  <Send size={15} />
+                  <Send size={16} />
                 )}
-              </button>
+              </NeoButton>
             </div>
           </>
         )}

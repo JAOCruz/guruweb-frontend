@@ -1,5 +1,15 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import {
+  NeoCard,
+  NeoCardHeader,
+  NeoCardTitle,
+  NeoCardDescription,
+} from "../components/ui/neo/NeoCard";
+import { NeoInput } from "../components/ui/neo/NeoInput";
+import { NeoButton } from "../components/ui/neo/NeoButton";
+import { Sun, Moon } from "lucide-react";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -7,6 +17,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,61 +34,74 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
-      <div className="w-full max-w-md space-y-8 rounded-2xl border border-slate-800 bg-slate-900/50 p-8 shadow-xl backdrop-blur-sm">
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/20">
-            <span className="text-3xl font-bold text-white">G</span>
+    <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
+      <button
+        onClick={toggleTheme}
+        className="absolute top-4 right-4 rounded-base border-2 border-border bg-secondary-background p-2 text-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+        title={theme === "light" ? "Modo oscuro" : "Modo claro"}
+      >
+        {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+      </button>
+      <div className="w-full max-w-md">
+        <NeoCard variant="main" className="relative overflow-hidden">
+          <div className="absolute -right-4 -bottom-6 text-8xl font-black text-white/10 select-none">
+            G
           </div>
-          <h2 className="text-3xl font-bold text-white">Gurú Dashboard</h2>
-          <p className="mt-2 text-sm text-slate-400">
-            Ingresa a tu panel de control
-          </p>
-        </div>
+          <NeoCardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-base border-2 border-border bg-white text-3xl font-black text-main shadow-button">
+              G
+            </div>
+            <NeoCardTitle className="text-3xl md:text-4xl">Gurú Dashboard</NeoCardTitle>
+            <NeoCardDescription className="text-lg">
+              Ingresa a tu panel de control
+            </NeoCardDescription>
+          </NeoCardHeader>
 
-        {error && (
-          <div className="rounded border border-red-500/50 bg-red-500/10 px-4 py-3 text-red-300">
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="rounded-base border-2 border-red-600 bg-red-50 p-4 text-center text-base font-bold text-red-600">
+              {error}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Usuario
-            </label>
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="block w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white placeholder-slate-500 transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              placeholder="Ingresa tu usuario"
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-black uppercase tracking-wider text-white/90">
+                Usuario
+              </label>
+              <NeoInput
+                type="text"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Ingresa tu usuario"
+                required
+                className="h-14 text-lg"
+              />
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="block w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-white placeholder-slate-500 transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-              placeholder="••••••••"
-              required
-            />
-          </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-black uppercase tracking-wider text-white/90">
+                Contraseña
+              </label>
+              <NeoInput
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="h-14 text-lg"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.02] hover:shadow-blue-500/40 disabled:opacity-50 disabled:hover:scale-100"
-          >
-            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
-          </button>
-        </form>
+            <NeoButton
+              type="submit"
+              variant="neutral"
+              disabled={loading}
+              className="w-full text-lg"
+            >
+              {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+            </NeoButton>
+          </form>
+        </NeoCard>
       </div>
     </div>
   );

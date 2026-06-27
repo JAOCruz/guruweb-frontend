@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Briefcase, Search, RefreshCw, ChevronLeft, Filter, AlertCircle, Tag, ChevronDown } from "lucide-react";
+import { Briefcase, Search, RefreshCw, ChevronLeft, Filter, AlertCircle, Tag } from "lucide-react";
+import { NeoCard, NeoButton, NeoInput, NeoBadge } from "../components/ui/neo";
 
 const getAPIUrl = () => {
   if (typeof window === "undefined") return "http://localhost:3000";
@@ -269,97 +270,93 @@ const Cases: React.FC = () => {
 
   return (
     <div
-      className="-m-3 md:-m-8 flex overflow-hidden"
+      className="-m-3 md:-m-8 flex overflow-hidden bg-background text-foreground"
       style={{ height: "calc(100vh - 4rem)" }}
     >
       {/* LEFT PANEL — Sections & Filters */}
       <div
-        className={`flex flex-col border-r border-slate-700 bg-slate-900 ${
+        className={`flex flex-col border-r-2 border-border bg-secondary-background ${
           showRightPanel ? "hidden md:flex" : "flex"
         } w-full flex-shrink-0 md:w-80`}
       >
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-slate-700 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${activeSection.color}`}>
-              <Briefcase size={20} className="text-white" />
+        <div className="flex-shrink-0 border-b-2 border-border p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-button">
+              <Briefcase size={20} />
             </div>
-            <h2 className="font-display text-lg font-bold text-white">Casos</h2>
-            <span className="ml-auto rounded-full bg-slate-700 px-3 py-1 text-sm font-semibold text-slate-300">
+            <h2 className="font-heading text-xl md:text-2xl font-bold">Casos</h2>
+            <NeoBadge variant="neutral" className="ml-auto text-base">
               {filtered.length}
-            </span>
+            </NeoBadge>
           </div>
 
           {/* Search */}
           <div className="relative">
             <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50"
             />
-            <input
+            <NeoInput
               type="text"
               placeholder="Buscar caso..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 py-3 pl-10 pr-3 text-base text-white placeholder-slate-500 outline-none focus:border-blue-500"
+              className="pl-10"
             />
           </div>
         </div>
 
         {/* Status Tabs */}
-        <div className="flex-shrink-0 border-b border-slate-700 px-3 py-3 flex gap-2">
-          <button
+        <div className="flex-shrink-0 border-b-2 border-border p-3 flex gap-2">
+          <NeoButton
             onClick={() => setShowResolved(false)}
-            className={`flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all ${
-              !showResolved
-                ? "bg-blue-600 text-white"
-                : "text-slate-400 hover:text-white bg-slate-800/50"
-            }`}
+            variant={!showResolved ? "default" : "neutral"}
+            className="flex-1"
           >
             Abiertos
-          </button>
-          <button
+          </NeoButton>
+          <NeoButton
             onClick={() => setShowResolved(true)}
-            className={`flex-1 px-4 py-3 rounded-lg text-sm font-semibold transition-all ${
-              showResolved
-                ? "bg-emerald-600 text-white"
-                : "text-slate-400 hover:text-white bg-slate-800/50"
-            }`}
+            variant={showResolved ? "default" : "neutral"}
+            className="flex-1"
           >
             Resueltos
-          </button>
+          </NeoButton>
         </div>
 
         {/* Sections Tabs - Grouped */}
-        <div className="flex-shrink-0 border-b border-slate-700 px-3 py-2 space-y-1 overflow-y-auto max-h-96">
+        <div className="flex-shrink-0 border-b-2 border-border p-3 space-y-2 overflow-y-auto max-h-96 custom-scroll">
           {/* RECLAMACIONES GROUP */}
           <div>
-            <button
+            <NeoButton
               onClick={() => setExpandReclamaciones(!expandReclamaciones)}
-              className="w-full text-left px-4 py-3 rounded-lg text-base font-bold transition-all flex items-center gap-2 bg-red-950/40 hover:bg-red-950/60 text-red-400 border border-red-900/50"
+              variant="outline"
+              className="w-full justify-start text-base"
             >
-              <ChevronDown size={18} style={{ transform: expandReclamaciones ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s' }} />
+              <span
+                style={{ transform: expandReclamaciones ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s' }}
+              >
+                ▼
+              </span>
               📋 RECLAMACIONES
-            </button>
+            </NeoButton>
 
             {expandReclamaciones && (
-              <div className="space-y-1 mt-2 pl-2 border-l-2 border-red-900/50">
+              <div className="space-y-2 mt-2 pl-2 border-l-2 border-border">
                 {reclamacionesSections.slice(1).map((section) => (
-                  <button
+                  <NeoButton
                     key={section.id}
                     onClick={() => {
                       setActiveSection(section);
                       setSelectedTags(new Set());
                       setSearch("");
                     }}
-                    className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      activeSection.id === section.id
-                        ? "bg-red-600 text-white"
-                        : "text-red-200 hover:text-white hover:bg-red-900/40"
-                    }`}
+                    variant={activeSection.id === section.id ? "default" : "ghost"}
+                    className="w-full justify-start text-base"
                   >
                     {section.label}
-                  </button>
+                  </NeoButton>
                 ))}
               </div>
             )}
@@ -367,69 +364,57 @@ const Cases: React.FC = () => {
 
           {/* NORMAL CASES GROUP */}
           <div className="pt-2">
-            <div className="text-xs font-bold text-slate-500 px-4 py-2 uppercase">CASOS</div>
+            <div className="text-xs font-base uppercase text-foreground/60 px-2 py-2">
+              Casos
+            </div>
             {normalCasesSections.map((section) => (
-              <button
+              <NeoButton
                 key={section.id}
                 onClick={() => {
                   setActiveSection(section);
                   setSelectedTags(new Set());
                   setSearch("");
                 }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-base font-semibold transition-all ${
-                  activeSection.id === section.id
-                    ? "bg-slate-800 text-white border-l-4 border-blue-500"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-                }`}
+                variant={activeSection.id === section.id ? "default" : "ghost"}
+                className="w-full justify-start text-base"
               >
                 {section.label}
-              </button>
+              </NeoButton>
             ))}
           </div>
         </div>
 
         {/* Complaint Tags Filter (for Reclamaciones) */}
         {activeSection.complaint_tags.length > 0 && (
-          <div className="flex-shrink-0 border-b border-slate-700 px-4 py-4 space-y-3">
-            <button
+          <div className="flex-shrink-0 border-b-2 border-border p-4 space-y-3">
+            <NeoButton
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white w-full"
+              variant="ghost"
+              className="w-full justify-start text-base"
             >
               <Filter size={18} />
               Filtrar por tipo
-            </button>
+            </NeoButton>
 
             {showFilters && (
               <div className="space-y-2">
-                <button
+                <NeoButton
                   onClick={() => setSelectedTags(new Set())}
-                  className={`w-full text-left text-sm px-4 py-2 rounded transition-all font-medium ${
-                    selectedTags.size === 0
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "text-slate-400 hover:text-white"
-                  }`}
+                  variant={selectedTags.size === 0 ? "default" : "outline"}
+                  className="w-full justify-start text-base"
                 >
                   Todos
-                </button>
+                </NeoButton>
 
                 {activeSection.complaint_tags.map((tag) => (
-                  <button
+                  <NeoButton
                     key={tag.id}
                     onClick={() => toggleTag(tag.label)}
-                    className={`w-full text-left text-sm px-4 py-2 rounded transition-all border ${
-                      selectedTags.has(tag.label)
-                        ? "text-white border-opacity-100"
-                        : "text-slate-400 hover:text-white border-opacity-0"
-                    }`}
-                    style={{
-                      backgroundColor: selectedTags.has(tag.label)
-                        ? `${tag.color}20`
-                        : "transparent",
-                      borderColor: selectedTags.has(tag.label) ? tag.color : "transparent",
-                    }}
+                    variant={selectedTags.has(tag.label) ? "default" : "outline"}
+                    className="w-full justify-start text-base"
                   >
                     {tag.label}
-                  </button>
+                  </NeoButton>
                 ))}
               </div>
             )}
@@ -437,15 +422,15 @@ const Cases: React.FC = () => {
         )}
 
         {/* Cases List */}
-        <div className="flex-1 overflow-y-auto custom-scroll px-4 py-3 space-y-2">
+        <div className="flex-1 overflow-y-auto custom-scroll p-3 space-y-2">
           {loading ? (
-            <div className="flex items-center justify-center py-8 text-slate-500">
+            <div className="flex items-center justify-center py-8 text-foreground/50">
               <RefreshCw size={20} className="animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-8 text-center text-slate-600">
-              <AlertCircle size={32} className="mx-auto mb-2 opacity-20" />
-              <p className="text-sm">Sin casos</p>
+            <div className="py-8 text-center text-foreground/50">
+              <AlertCircle size={32} className="mx-auto mb-2 opacity-40" />
+              <p className="text-base">Sin casos</p>
             </div>
           ) : (
             filtered.map((caseItem) => (
@@ -455,14 +440,14 @@ const Cases: React.FC = () => {
                   setSelectedCase(caseItem);
                   setShowRightPanel(true);
                 }}
-                className={`cursor-pointer rounded-lg border-l-4 px-4 py-3 transition-all ${
+                className={`cursor-pointer rounded-base border-2 px-4 py-3 transition-all ${
                   selectedCase?.id === caseItem.id
-                    ? "border-l-blue-500 bg-slate-800"
-                    : "border-l-transparent hover:bg-slate-800/50"
+                    ? "border-border bg-secondary-background shadow-shadow"
+                    : "border-transparent hover:border-border hover:bg-secondary-background"
                 }`}
               >
-                <p className="font-semibold text-white truncate text-base">{caseItem.title}</p>
-                <p className="text-slate-400 text-sm mt-1">{caseItem.case_number}</p>
+                <p className="font-semibold text-base truncate">{caseItem.title}</p>
+                <p className="text-base text-foreground/70 mt-1">{caseItem.case_number}</p>
               </div>
             ))
           )}
@@ -471,39 +456,41 @@ const Cases: React.FC = () => {
 
       {/* RIGHT PANEL — Case Detail */}
       <div
-        className={`flex flex-1 flex-col overflow-hidden bg-slate-950 ${
+        className={`flex flex-1 flex-col overflow-hidden bg-background ${
           !showRightPanel ? "hidden md:flex" : "flex"
         }`}
       >
         {!selectedCase ? (
-          <div className="flex flex-1 items-center justify-center text-slate-600">
-            <p className="text-lg text-slate-500">Selecciona un caso</p>
+          <div className="flex flex-1 items-center justify-center text-foreground/50">
+            <p className="text-lg font-base">Selecciona un caso</p>
           </div>
         ) : (
           <>
             {/* Top Bar */}
-            <div className="flex flex-shrink-0 items-center gap-3 border-b border-slate-800 bg-slate-900 px-6 py-4">
-              <button
-                className="md:hidden flex items-center justify-center rounded-lg p-2 text-slate-400 hover:bg-slate-800"
+            <div className="flex flex-shrink-0 items-center gap-3 border-b-2 border-border bg-secondary-background px-6 py-4">
+              <NeoButton
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
                 onClick={() => {
                   setShowRightPanel(false);
                   setSelectedCase(null);
                 }}
               >
                 <ChevronLeft size={24} />
-              </button>
+              </NeoButton>
 
-              <div className="flex-1">
-                <p className="truncate font-semibold text-white text-lg">
+              <div className="flex-1 min-w-0">
+                <p className="truncate font-heading text-lg">
                   {selectedCase.case_number}
                 </p>
-                <p className="truncate text-sm text-slate-400 mt-1">
+                <p className="truncate text-base text-foreground/70 mt-1">
                   {selectedCase.title}
                 </p>
               </div>
 
               {selectedCase.status !== 'resolved' && (
-                <button
+                <NeoButton
                   onClick={async () => {
                     try {
                       const response = await fetch(`${getAPIUrl()}/api/cases/${selectedCase.id}/resolve`, {
@@ -519,18 +506,18 @@ const Cases: React.FC = () => {
                         console.error('Error resolving case:', response.status, data);
                         alert(`Error: ${data.error || response.statusText} (${response.status})`);
                       }
-                    } catch (err) {
+                    } catch (err: any) {
                       console.error('Error resolving case:', err);
                       alert(`Error: ${err.message}`);
                     }
                   }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg font-semibold transition-colors"
                 >
                   ✓ Resolver
-                </button>
+                </NeoButton>
               )}
               {selectedCase.status === 'resolved' && (
-                <button
+                <NeoButton
+                  variant="neutral"
                   onClick={async () => {
                     try {
                       const response = await fetch(`${getAPIUrl()}/api/cases/${selectedCase.id}/reopen`, {
@@ -546,31 +533,30 @@ const Cases: React.FC = () => {
                         console.error('Error reopening case:', response.status, data);
                         alert(`Error: ${data.error || response.statusText} (${response.status})`);
                       }
-                    } catch (err) {
+                    } catch (err: any) {
                       console.error('Error reopening case:', err);
                       alert(`Error: ${err.message}`);
                     }
                   }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg font-semibold transition-colors"
                 >
                   ↻ Re-abrir
-                </button>
+                </NeoButton>
               )}
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-8 py-8 custom-scroll space-y-8">
+            <div className="flex-1 overflow-y-auto px-6 py-6 custom-scroll space-y-6">
               {/* Title & Status */}
               <div>
-                <h2 className="text-3xl font-bold text-white mb-3">{selectedCase.title}</h2>
-                <p className="text-base text-slate-400 leading-relaxed">{selectedCase.description}</p>
+                <h2 className="font-heading text-xl md:text-2xl font-bold mb-3">{selectedCase.title}</h2>
+                <p className="text-base text-foreground/80 leading-relaxed">{selectedCase.description}</p>
               </div>
 
               {/* Message Source Reference */}
               {selectedCase.tags && selectedCase.tags.some(t => t.tag_type === 'source_phone') && (
-                <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-4">
-                  <p className="text-xs text-blue-400 mb-2">Origen del reclamo</p>
-                  <button
+                <NeoCard variant="main">
+                  <p className="text-base font-base text-main-foreground/80 mb-3">Origen del reclamo</p>
+                  <NeoButton
                     onClick={() => {
                       const sourcePhone = selectedCase.tags.find(t => t.tag_type === 'source_phone')?.tag_value;
                       if (sourcePhone) {
@@ -578,75 +564,71 @@ const Cases: React.FC = () => {
                         window.location.href = '/dashboard/bot-messages';
                       }
                     }}
-                    className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     💬 Ver mensaje original
-                  </button>
-                </div>
+                  </NeoButton>
+                </NeoCard>
               )}
 
               {/* Info Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-800/50 p-4 rounded-lg">
-                  <p className="text-xs text-slate-400 mb-1">Estado</p>
-                  <p className="text-sm font-semibold text-white capitalize">
+                <NeoCard variant="neutral" className="p-4">
+                  <p className="text-base text-foreground/60 mb-1">Estado</p>
+                  <NeoBadge variant={selectedCase.status === 'resolved' ? 'neutral' : 'main'} className="text-base">
                     {selectedCase.status}
-                  </p>
-                </div>
+                  </NeoBadge>
+                </NeoCard>
 
-                <div className="bg-slate-800/50 p-4 rounded-lg">
-                  <p className="text-xs text-slate-400 mb-1">Caso #</p>
-                  <p className="text-sm font-semibold text-white">{selectedCase.case_number}</p>
-                </div>
+                <NeoCard variant="neutral" className="p-4">
+                  <p className="text-base text-foreground/60 mb-1">Caso #</p>
+                  <p className="text-base font-semibold">{selectedCase.case_number}</p>
+                </NeoCard>
 
                 {selectedCase.court && (
-                  <div className="bg-slate-800/50 p-4 rounded-lg">
-                    <p className="text-xs text-slate-400 mb-1">Juzgado</p>
-                    <p className="text-sm font-semibold text-white">{selectedCase.court}</p>
-                  </div>
+                  <NeoCard variant="neutral" className="p-4">
+                    <p className="text-base text-foreground/60 mb-1">Juzgado</p>
+                    <p className="text-base font-semibold">{selectedCase.court}</p>
+                  </NeoCard>
                 )}
 
-                <div className="bg-slate-800/50 p-4 rounded-lg">
-                  <p className="text-xs text-slate-400 mb-1">Creado</p>
-                  <p className="text-sm font-semibold text-white">
+                <NeoCard variant="neutral" className="p-4">
+                  <p className="text-base text-foreground/60 mb-1">Creado</p>
+                  <p className="text-base font-semibold">
                     {new Date(selectedCase.created_at).toLocaleDateString("es-DO")}
                   </p>
-                </div>
+                </NeoCard>
               </div>
 
               {/* Client Info */}
               {selectedCase.client_name && (
-                <div className="bg-slate-800/50 p-4 rounded-lg">
-                  <p className="text-xs text-slate-400 mb-3">Cliente</p>
+                <NeoCard variant="neutral" className="p-4">
+                  <p className="text-base text-foreground/60 mb-3">Cliente</p>
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-sm font-bold text-white">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-bold text-main-foreground">
                       {selectedCase.client_name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-semibold text-white text-sm">
+                      <p className="font-semibold text-base">
                         {selectedCase.client_name}
                       </p>
-                      <p className="text-xs text-slate-400">{selectedCase.client_phone}</p>
+                      <p className="text-base text-foreground/70">{selectedCase.client_phone}</p>
                     </div>
                   </div>
-                </div>
+                </NeoCard>
               )}
 
               {/* Tags */}
               {selectedCase.tags.length > 0 && (
                 <div>
-                  <p className="text-xs text-slate-400 mb-3 flex items-center gap-2">
-                    <Tag size={14} />
+                  <p className="text-base text-foreground/60 mb-3 flex items-center gap-2">
+                    <Tag size={16} />
                     Etiquetas
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {selectedCase.tags.map((tag, i) => (
-                      <span
-                        key={i}
-                        className="text-sm px-3 py-1.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                      >
+                      <NeoBadge key={i} variant="outline" className="text-base">
                         {tag.tag_value}
-                      </span>
+                      </NeoBadge>
                     ))}
                   </div>
                 </div>

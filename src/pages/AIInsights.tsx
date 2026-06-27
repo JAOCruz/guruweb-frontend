@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart,
@@ -25,6 +25,14 @@ import {
 } from "lucide-react";
 import StatsCard from "../components/dashboard/StatsCard";
 import { botAPI, DashboardStats, AnalyticsData, IntentData } from "../services/botApi";
+import {
+  NeoCard,
+  NeoCardHeader,
+  NeoCardTitle,
+  NeoCardContent,
+} from "../components/ui/neo/NeoCard";
+import { NeoButton } from "../components/ui/neo/NeoButton";
+import { NeoBadge } from "../components/ui/neo/NeoBadge";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -83,26 +91,44 @@ function pct(part: number, total: number): string {
   return `${Math.round((part / total) * 100)}%`;
 }
 
+function useThemeColors() {
+  return useMemo(() => {
+    const root = typeof window !== "undefined" ? getComputedStyle(document.documentElement) : null;
+    const get = (name: string, fallback: string) =>
+      root?.getPropertyValue(name).trim() || fallback;
+    return {
+      main: get("--main", "#0000FF"),
+      chart1: get("--chart-1", "#0000FF"),
+      chart2: get("--chart-2", "#000080"),
+      chart3: get("--chart-3", "#FFD700"),
+      chart4: get("--chart-4", "#FF0000"),
+      chart5: get("--chart-5", "#00FF00"),
+      border: get("--border", "#000000"),
+      background: get("--background", "#ffffff"),
+      foreground: get("--foreground", "#000000"),
+      secondaryBg: get("--secondary-background", "#ffffff"),
+    };
+  }, []);
+}
+
 // ─── Custom tooltip for charts ────────────────────────────────────────────────
-const DarkTooltip: React.FC<{
+const NeoTooltip: React.FC<{
   active?: boolean;
   payload?: { name: string; value: number; color: string }[];
   label?: string;
 }> = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-slate-700 bg-[#1E293B] px-3 py-2 shadow-xl">
-      {label && <p className="mb-1 text-xs font-bold text-slate-300">{label}</p>}
+    <NeoCard className="gap-1 border-border bg-background p-3 text-foreground shadow-shadow">
+      {label && <p className="font-heading text-sm">{label}</p>}
       {payload.map((p, i) => (
-        <p key={i} className="text-xs" style={{ color: p.color }}>
+        <p key={i} className="text-sm font-base" style={{ color: p.color }}>
           {p.name}: <span className="font-bold">{p.value}</span>
         </p>
       ))}
-    </div>
+    </NeoCard>
   );
 };
-
-const PIE_COLORS = ["#3b82f6", "#10b981", "#a855f7", "#f59e0b", "#ef4444", "#64748b"];
 
 // ─── IntentRow ────────────────────────────────────────────────────────────────
 const IntentRow: React.FC<{ intent: IntentData; rank: number; delay: number }> = ({
@@ -114,26 +140,27 @@ const IntentRow: React.FC<{ intent: IntentData; rank: number; delay: number }> =
     initial={{ opacity: 0, x: -10 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ delay }}
-    className="flex items-center gap-3 rounded-xl border border-slate-700/40 bg-[#151E32] px-4 py-3 hover:border-blue-500/20 transition-colors"
   >
-    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-600/20 text-xs font-bold text-blue-400">
-      {rank}
-    </span>
-    <span className="flex-1 text-sm text-slate-200">{intent.intent}</span>
-    <div className="flex items-center gap-3">
-      <div className="hidden w-24 sm:block">
-        <div className="h-1.5 rounded-full bg-slate-700">
-          <div
-            className="h-1.5 rounded-full bg-blue-500"
-            style={{ width: `${intent.percentage}%` }}
-          />
-        </div>
-      </div>
-      <span className="text-xs font-bold text-slate-300">{intent.count}</span>
-      <span className="w-10 text-right text-xs text-slate-500">
-        {intent.percentage}%
+    <NeoCard className="flex-row items-center gap-3 px-4 py-3 hover:shadow-none">
+      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-main text-xs font-black text-main-foreground">
+        {rank}
       </span>
-    </div>
+      <span className="flex-1 text-base font-base text-foreground">{intent.intent}</span>
+      <div className="flex items-center gap-3">
+        <div className="hidden w-24 sm:block">
+          <div className="h-2 overflow-hidden rounded-base border-2 border-border bg-secondary-background">
+            <div
+              className="h-full bg-main"
+              style={{ width: `${intent.percentage}%` }}
+            />
+          </div>
+        </div>
+        <NeoBadge variant="neutral">{intent.count}</NeoBadge>
+        <span className="w-10 text-right text-sm font-bold text-foreground/70">
+          {intent.percentage}%
+        </span>
+      </div>
+    </NeoCard>
   </motion.div>
 );
 
@@ -143,6 +170,7 @@ const AIInsights: React.FC = () => {
   const [analytics, setAnalytics] = useState<NormalizedAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const colors = useThemeColors();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -172,9 +200,9 @@ const AIInsights: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-24 text-slate-500">
+      <div className="flex flex-col items-center justify-center gap-3 py-24 text-foreground/70">
         <RefreshCw size={24} className="animate-spin" />
-        <span className="text-sm">Cargando analytics...</span>
+        <span className="text-base">Cargando analytics...</span>
       </div>
     );
   }
@@ -182,14 +210,11 @@ const AIInsights: React.FC = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-24">
-        <AlertCircle size={32} className="text-red-400" />
-        <p className="text-sm text-slate-400">{error}</p>
-        <button
-          onClick={fetchData}
-          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-500"
-        >
-          Reintentar
-        </button>
+        <AlertCircle size={32} className="text-main" />
+        <p className="text-base text-foreground/70">{error}</p>
+        <NeoButton onClick={fetchData}>
+          <RefreshCw size={16} /> Reintentar
+        </NeoButton>
       </div>
     );
   }
@@ -208,20 +233,17 @@ const AIInsights: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-display mb-1 text-2xl font-bold text-white md:text-3xl">
+          <h2 className="font-heading text-xl font-bold text-foreground md:text-2xl">
             IA Analytics
           </h2>
-          <p className="text-sm text-slate-400">
+          <p className="text-base text-foreground/70">
             Rendimiento del bot y métricas de conversaciones
           </p>
         </div>
-        <button
-          onClick={fetchData}
-          className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-semibold text-slate-300 transition-all hover:bg-slate-700 hover:text-white"
-        >
-          <RefreshCw size={14} />
+        <NeoButton onClick={fetchData} variant="neutral">
+          <RefreshCw size={16} />
           Actualizar
-        </button>
+        </NeoButton>
       </div>
 
       {/* ── KPI Stats ───────────────────────────────────────────────────── */}
@@ -262,60 +284,64 @@ const AIInsights: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="group relative overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] p-5 hover:border-blue-500/30 transition-all"
         >
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10">
-              <Zap size={16} className="text-emerald-400" />
+          <NeoCard>
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-base border-2 border-border bg-secondary-background">
+                <Zap size={16} className="text-main" />
+              </div>
+              <span className="text-xs font-black uppercase tracking-widest text-foreground/70">
+                Tiempo respuesta IA
+              </span>
             </div>
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-              Tiempo respuesta IA
-            </span>
-          </div>
-          <p className="font-display text-3xl font-bold text-emerald-400">
-            {formatSeconds(s.avgResponseTimeAI)}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">promedio por mensaje</p>
+            <p className="font-heading text-3xl font-black text-main">
+              {formatSeconds(s.avgResponseTimeAI)}
+            </p>
+            <p className="mt-1 text-sm text-foreground/60">promedio por mensaje</p>
+          </NeoCard>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="group relative overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] p-5 hover:border-purple-500/30 transition-all"
         >
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/10">
-              <Clock size={16} className="text-purple-400" />
+          <NeoCard>
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-base border-2 border-border bg-secondary-background">
+                <Clock size={16} className="text-main" />
+              </div>
+              <span className="text-xs font-black uppercase tracking-widest text-foreground/70">
+                Tiempo respuesta Humano
+              </span>
             </div>
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-              Tiempo respuesta Humano
-            </span>
-          </div>
-          <p className="font-display text-3xl font-bold text-purple-400">
-            {formatSeconds(s.avgResponseTimeHuman)}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">promedio por mensaje</p>
+            <p className="font-heading text-3xl font-black text-main">
+              {formatSeconds(s.avgResponseTimeHuman)}
+            </p>
+            <p className="mt-1 text-sm text-foreground/60">promedio por mensaje</p>
+          </NeoCard>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="group relative overflow-hidden rounded-2xl border border-slate-700/50 bg-[#151E32] p-5 hover:border-blue-500/30 transition-all sm:col-span-2 lg:col-span-1"
+          className="sm:col-span-2 lg:col-span-1"
         >
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10">
-              <MessageSquare size={16} className="text-blue-400" />
+          <NeoCard>
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-base border-2 border-border bg-secondary-background">
+                <MessageSquare size={16} className="text-main" />
+              </div>
+              <span className="text-xs font-black uppercase tracking-widest text-foreground/70">
+                Total Mensajes
+              </span>
             </div>
-            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-              Total Mensajes
-            </span>
-          </div>
-          <p className="font-display text-3xl font-bold text-blue-400">
-            {s.totalMessages.toLocaleString()}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">mensajes procesados</p>
+            <p className="font-heading text-3xl font-black text-main">
+              {s.totalMessages.toLocaleString()}
+            </p>
+            <p className="mt-1 text-sm text-foreground/60">mensajes procesados</p>
+          </NeoCard>
         </motion.div>
       </div>
 
@@ -327,53 +353,57 @@ const AIInsights: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="lg:col-span-3 rounded-2xl border border-slate-700/50 bg-[#151E32] p-5"
+          className="lg:col-span-3"
         >
-          <div className="mb-4 flex items-center gap-2">
-            <TrendingUp size={16} className="text-blue-400" />
-            <h3 className="text-sm font-bold text-slate-200">
-              Actividad diaria — IA vs Humano
-            </h3>
-          </div>
-          {a.dailyStats.length === 0 ? (
-            <div className="flex items-center justify-center py-16 text-slate-600">
-              <span className="text-sm">Sin datos disponibles</span>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart
-                data={a.dailyStats}
-                margin={{ top: 5, right: 5, left: -20, bottom: 5 }}
-              >
-                <XAxis
-                  dataKey="date"
-                  tick={{ fill: "#64748b", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: "#64748b", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip content={<DarkTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
-                <Bar
-                  dataKey="ai"
-                  name="IA"
-                  fill="#3b82f6"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={28}
-                />
-                <Bar
-                  dataKey="human"
-                  name="Humano"
-                  fill="#a855f7"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={28}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
+          <NeoCard>
+            <NeoCardHeader>
+              <NeoCardTitle className="flex items-center gap-2">
+                <TrendingUp size={20} className="text-main" />
+                Actividad diaria — IA vs Humano
+              </NeoCardTitle>
+            </NeoCardHeader>
+            <NeoCardContent>
+              {a.dailyStats.length === 0 ? (
+                <div className="flex items-center justify-center py-16 text-foreground/60">
+                  <span className="text-base">Sin datos disponibles</span>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart
+                    data={a.dailyStats}
+                    margin={{ top: 5, right: 5, left: -20, bottom: 5 }}
+                  >
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: colors.foreground, fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: colors.foreground, fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip content={<NeoTooltip />} cursor={{ fill: colors.main, opacity: 0.08 }} />
+                    <Bar
+                      dataKey="ai"
+                      name="IA"
+                      fill={colors.main}
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={28}
+                    />
+                    <Bar
+                      dataKey="human"
+                      name="Humano"
+                      fill={colors.chart2}
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={28}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </NeoCardContent>
+          </NeoCard>
         </motion.div>
 
         {/* Pie chart — takes 2 cols */}
@@ -381,68 +411,73 @@ const AIInsights: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
-          className="lg:col-span-2 rounded-2xl border border-slate-700/50 bg-[#151E32] p-5"
+          className="lg:col-span-2"
         >
-          <div className="mb-4 flex items-center gap-2">
-            <ArrowLeftRight size={16} className="text-emerald-400" />
-            <h3 className="text-sm font-bold text-slate-200">
-              IA vs Humano
-            </h3>
-          </div>
-          {s.totalConversations === 0 ? (
-            <div className="flex items-center justify-center py-16 text-slate-600">
-              <span className="text-sm">Sin datos</span>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="45%"
-                  innerRadius={55}
-                  outerRadius={85}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {pieData.map((_, i) => (
-                    <Cell
-                      key={i}
-                      fill={PIE_COLORS[i]}
-                      stroke="transparent"
+          <NeoCard>
+            <NeoCardHeader>
+              <NeoCardTitle className="flex items-center gap-2">
+                <ArrowLeftRight size={20} className="text-main" />
+                IA vs Humano
+              </NeoCardTitle>
+            </NeoCardHeader>
+            <NeoCardContent>
+              {s.totalConversations === 0 ? (
+                <div className="flex items-center justify-center py-16 text-foreground/60">
+                  <span className="text-base">Sin datos</span>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="45%"
+                      innerRadius={55}
+                      outerRadius={85}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {pieData.map((_, i) => (
+                        <Cell
+                          key={i}
+                          fill={i === 0 ? colors.main : colors.chart2}
+                          stroke={colors.border}
+                          strokeWidth={2}
+                        />
+                      ))}
+                    </Pie>
+                    <Legend
+                      iconType="circle"
+                      iconSize={8}
+                      formatter={(value) => (
+                        <span style={{ color: colors.foreground, fontSize: 12 }}>{value}</span>
+                      )}
                     />
-                  ))}
-                </Pie>
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(value) => (
-                    <span style={{ color: "#94a3b8", fontSize: 12 }}>{value}</span>
-                  )}
-                />
-                <Tooltip content={<DarkTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-          {/* Center pct label */}
-          <div className="mt-2 flex justify-center gap-6">
-            <div className="text-center">
-              <p className="text-lg font-bold text-blue-400">
-                {pct(s.aiHandled, s.totalConversations)}
-              </p>
-              <p className="flex items-center gap-1 text-xs text-slate-500">
-                <Bot size={10} /> IA
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold text-purple-400">
-                {pct(s.humanHandled, s.totalConversations)}
-              </p>
-              <p className="flex items-center gap-1 text-xs text-slate-500">
-                <User size={10} /> Humano
-              </p>
-            </div>
-          </div>
+                    <Tooltip content={<NeoTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+              {/* Center pct label */}
+              <div className="mt-2 flex justify-center gap-6">
+                <div className="text-center">
+                  <p className="text-lg font-black text-main">
+                    {pct(s.aiHandled, s.totalConversations)}
+                  </p>
+                  <p className="flex items-center justify-center gap-1 text-sm text-foreground/70">
+                    <Bot size={12} /> IA
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-black text-chart-2">
+                    {pct(s.humanHandled, s.totalConversations)}
+                  </p>
+                  <p className="flex items-center justify-center gap-1 text-sm text-foreground/70">
+                    <User size={12} /> Humano
+                  </p>
+                </div>
+              </div>
+            </NeoCardContent>
+          </NeoCard>
         </motion.div>
       </div>
 
@@ -452,24 +487,25 @@ const AIInsights: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="rounded-2xl border border-slate-700/50 bg-[#151E32] p-5"
         >
-          <div className="mb-4 flex items-center gap-2">
-            <Bot size={16} className="text-blue-400" />
-            <h3 className="text-sm font-bold text-slate-200">
-              Intenciones más comunes
-            </h3>
-          </div>
-          <div className="space-y-2">
-            {a.topIntents.map((intent, i) => (
-              <IntentRow
-                key={intent.intent}
-                intent={intent}
-                rank={i + 1}
-                delay={0.55 + i * 0.04}
-              />
-            ))}
-          </div>
+          <NeoCard>
+            <NeoCardHeader>
+              <NeoCardTitle className="flex items-center gap-2">
+                <Bot size={20} className="text-main" />
+                Intenciones más comunes
+              </NeoCardTitle>
+            </NeoCardHeader>
+            <NeoCardContent className="space-y-2">
+              {a.topIntents.map((intent, i) => (
+                <IntentRow
+                  key={intent.intent}
+                  intent={intent}
+                  rank={i + 1}
+                  delay={0.55 + i * 0.04}
+                />
+              ))}
+            </NeoCardContent>
+          </NeoCard>
         </motion.div>
       )}
 
@@ -478,20 +514,21 @@ const AIInsights: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.65 }}
-        className="flex items-start gap-4 rounded-2xl border border-amber-700/30 bg-amber-900/10 p-5"
       >
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
-          <AlertCircle size={18} className="text-amber-400" />
-        </div>
-        <div>
-          <h4 className="mb-1 text-sm font-bold text-amber-300">
-            Conversaciones que requirieron intervención humana
-          </h4>
-          <p className="text-sm text-amber-200/70">
-            {s.humanTakeovers} conversaciones ({pct(s.humanTakeovers, s.totalConversations)}) fueron
-            escaladas a un agente humano. Revisar estos casos ayuda a mejorar el entrenamiento de la IA.
-          </p>
-        </div>
+        <NeoCard variant="outline" className="flex-row items-start gap-4 border-2 border-main bg-secondary-background">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-base border-2 border-border bg-main">
+            <AlertCircle size={18} className="text-main-foreground" />
+          </div>
+          <div>
+            <h4 className="mb-1 text-base font-black text-main">
+              Conversaciones que requirieron intervención humana
+            </h4>
+            <p className="text-base text-foreground/80">
+              {s.humanTakeovers} conversaciones ({pct(s.humanTakeovers, s.totalConversations)}) fueron
+              escaladas a un agente humano. Revisar estos casos ayuda a mejorar el entrenamiento de la IA.
+            </p>
+          </div>
+        </NeoCard>
       </motion.div>
     </div>
   );

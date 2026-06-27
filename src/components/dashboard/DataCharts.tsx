@@ -5,6 +5,15 @@ import {
   Area, AreaChart,
 } from "recharts";
 import { Calendar, TrendingUp, DollarSign, Activity, BarChart3, PieChart as PieIcon, Crown } from "lucide-react";
+import {
+  NeoCard,
+  NeoCardHeader,
+  NeoCardTitle,
+  NeoCardContent,
+} from "../ui/neo/NeoCard";
+import { NeoButton } from "../ui/neo/NeoButton";
+import { NeoInput } from "../ui/neo/NeoInput";
+import { NeoBadge } from "../ui/neo/NeoBadge";
 
 interface Service {
   id: number;
@@ -23,11 +32,45 @@ interface DataChartsProps {
   user?: { dataColumn?: string | null; username?: string | null; role?: string | null } | null;
 }
 
-/* ── Neo-Brutalist Colors ── */
-const COLORS = ["#0000FF", "#00FFFF", "#3333FF", "#000080", "#1E90FF", "#4169E1", "#00BFFF", "#5F9EA0"];
-const BG_DARK = "#02040a";
-const GRID_COLOR = "#1e3a8a";
-const TEXT_COLOR = "#94a3b8";
+/* ── Theme helpers ── */
+function useThemeColors() {
+  return useMemo(() => {
+    const root = typeof window !== "undefined" ? getComputedStyle(document.documentElement) : null;
+    const get = (name: string, fallback: string) =>
+      root?.getPropertyValue(name).trim() || fallback;
+    return {
+      main: get("--main", "#0000FF"),
+      chart1: get("--chart-1", "#0000FF"),
+      chart2: get("--chart-2", "#000080"),
+      chart3: get("--chart-3", "#FFD700"),
+      chart4: get("--chart-4", "#FF0000"),
+      chart5: get("--chart-5", "#00FF00"),
+      border: get("--border", "#000000"),
+      background: get("--background", "#ffffff"),
+      foreground: get("--foreground", "#000000"),
+      secondaryBg: get("--secondary-background", "#ffffff"),
+    };
+  }, []);
+}
+
+const NeoTooltip: React.FC<{
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+  label?: string;
+  formatter?: (value: any) => string;
+}> = ({ active, payload, label, formatter }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <NeoCard className="gap-1 border-border bg-background p-3 text-foreground shadow-shadow">
+      {label && <p className="font-heading text-sm">{label}</p>}
+      {payload.map((p, i) => (
+        <p key={i} className="text-sm font-base" style={{ color: p.color }}>
+          {p.name}: <span className="font-bold">{formatter ? formatter(p.value) : p.value}</span>
+        </p>
+      ))}
+    </NeoCard>
+  );
+};
 
 /* ── Date Helpers ── */
 const formatRD = (n: number) =>
@@ -45,6 +88,8 @@ export default function DataCharts({ services, isAdmin, user }: DataChartsProps)
   const [dateRange, setDateRange] = useState<"all" | "today" | "week" | "month" | "custom">("all");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const colors = useThemeColors();
+  const chartColorsList = [colors.chart1, colors.chart2, colors.chart3, colors.chart4, colors.chart5];
 
   /* ── Filter services by visibility (admin vs employee) ── */
   const userDataCol = (user?.dataColumn || "").toUpperCase();
@@ -160,141 +205,152 @@ export default function DataCharts({ services, isAdmin, user }: DataChartsProps)
   const timelineKeys = timelineData.length > 0 ? Object.keys(timelineData[0]).filter((k) => k !== "name") : [];
 
   return (
-    <div className="custom-scroll flex h-full flex-col gap-6 overflow-y-auto bg-[#02040a] p-6 font-sans text-slate-200">
+    <div className="custom-scroll flex h-full flex-col gap-6 overflow-y-auto bg-background p-6 font-base text-foreground">
       {/* ── HEADER ── */}
       <div className="text-center">
-        <div className="inline-flex items-center gap-3 rounded-xl border-2 border-[#000080] bg-[#0000FF] px-6 py-3 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-          <BarChart3 className="h-8 w-8 text-white" />
+        <NeoCard variant="main" className="inline-flex w-full max-w-md flex-row items-center gap-4 px-6 py-4 sm:w-auto">
+          <BarChart3 className="h-8 w-8 flex-shrink-0 text-main-foreground" />
           <div className="text-left">
-            <h1 className="text-2xl font-black uppercase tracking-wider text-white">
+            <h1 className="font-heading text-xl font-black uppercase tracking-wider text-main-foreground md:text-2xl">
               {isAdmin ? "Análisis General" : "Mis Estadísticas"}
             </h1>
-            <p className="text-xs font-bold text-white/70">
+            <p className="text-base font-base text-main-foreground/80">
               {isAdmin ? "Data de todos los empleados" : `Data de ${user?.dataColumn || user?.username || "ti"}`}
             </p>
           </div>
-        </div>
+        </NeoCard>
       </div>
 
       {/* ── DATE FILTERS ── */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         {dateButtons.map((btn) => (
-          <button
+          <NeoButton
             key={btn.key}
             onClick={() => setDateRange(btn.key)}
-            className={`rounded-lg border-2 px-4 py-2 text-xs font-black uppercase transition-all ${
-              dateRange === btn.key
-                ? "border-[#000080] bg-[#0000FF] text-white shadow-[3px_3px_0px_0px_rgba(0,0,128,1)]"
-                : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200"
-            }`}
+            variant={dateRange === btn.key ? "default" : "neutral"}
+            className="text-sm font-black uppercase"
           >
             <span className="mr-1">{btn.emoji}</span> {btn.label}
-          </button>
+          </NeoButton>
         ))}
         {dateRange === "custom" && (
-          <div className="flex items-center gap-2">
-            <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} className="rounded-lg border-2 border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white outline-none focus:border-[#0000FF]" />
-            <span className="text-slate-500">→</span>
-            <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} className="rounded-lg border-2 border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white outline-none focus:border-[#0000FF]" />
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <NeoInput
+              type="date"
+              value={customStart}
+              onChange={(e) => setCustomStart(e.target.value)}
+              className="h-10 flex-1 text-sm sm:w-auto"
+            />
+            <span className="text-foreground">→</span>
+            <NeoInput
+              type="date"
+              value={customEnd}
+              onChange={(e) => setCustomEnd(e.target.value)}
+              className="h-10 flex-1 text-sm sm:w-auto"
+            />
           </div>
         )}
       </div>
 
       {!hasData ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl border-4 border-dashed border-[#000080] bg-[#0000FF]/10 p-12">
+        <NeoCard className="flex flex-1 flex-col items-center justify-center gap-4 border-4 border-dashed border-border bg-secondary-background p-12">
           <span className="text-6xl">📊</span>
-          <p className="text-xl font-black text-[#0000FF]">Sin datos para este período</p>
-          <p className="text-sm text-slate-500">Intenta otro rango de fechas</p>
-        </div>
+          <p className="font-heading text-xl font-black text-main md:text-2xl">Sin datos para este período</p>
+          <p className="text-base text-foreground/70">Intenta otro rango de fechas</p>
+        </NeoCard>
       ) : (
         <>
           {/* ── KPI CARDS ── */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Total */}
-            <div className="flex flex-col items-center gap-2 rounded-xl border-4 border-[#000080] bg-[#0000FF] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-              <DollarSign className="h-8 w-8 text-white" />
-              <span className="text-2xl font-black text-white">{formatRD(kpis.totalEarnings)}</span>
-              <span className="text-xs font-black uppercase tracking-widest text-white/70">Total Ingresos</span>
-            </div>
-            {/* Count */}
-            <div className="flex flex-col items-center gap-2 rounded-xl border-4 border-[#000080] bg-[#0000FF] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-              <Activity className="h-8 w-8 text-white" />
-              <span className="text-2xl font-black text-white">{kpis.totalCount}</span>
-              <span className="text-xs font-black uppercase tracking-widest text-white/70">Servicios</span>
-            </div>
-            {/* Avg */}
-            <div className="flex flex-col items-center gap-2 rounded-xl border-4 border-[#000080] bg-[#0000FF] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-              <TrendingUp className="h-8 w-8 text-white" />
-              <span className="text-2xl font-black text-white">{formatRD(kpis.avgPerDay)}</span>
-              <span className="text-xs font-black uppercase tracking-widest text-white/70">Promedio/Día</span>
-            </div>
-            {/* Best day */}
-            <div className="flex flex-col items-center gap-2 rounded-xl border-4 border-[#000080] bg-[#0000FF] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-              <Crown className="h-8 w-8 text-white" />
-              <span className="text-2xl font-black text-white">{kpis.bestDay ? new Date(kpis.bestDay).toLocaleDateString("es-DO", { month: "short", day: "numeric" }) : "—"}</span>
-              <span className="text-xs font-black uppercase tracking-widest text-white/70">
-                Mejor Día {kpis.bestAmount > 0 ? `(${formatRD(kpis.bestAmount)})` : ""}
+            <NeoCard variant="main" className="items-center gap-2 text-center">
+              <DollarSign className="h-8 w-8 text-main-foreground" />
+              <span className="font-heading text-2xl font-black text-main-foreground">{formatRD(kpis.totalEarnings)}</span>
+              <NeoBadge variant="main" className="border-main-foreground/30 bg-main-foreground/10 text-main-foreground">
+                Total Ingresos
+              </NeoBadge>
+            </NeoCard>
+            <NeoCard variant="main" className="items-center gap-2 text-center">
+              <Activity className="h-8 w-8 text-main-foreground" />
+              <span className="font-heading text-2xl font-black text-main-foreground">{kpis.totalCount}</span>
+              <NeoBadge variant="main" className="border-main-foreground/30 bg-main-foreground/10 text-main-foreground">
+                Servicios
+              </NeoBadge>
+            </NeoCard>
+            <NeoCard variant="main" className="items-center gap-2 text-center">
+              <TrendingUp className="h-8 w-8 text-main-foreground" />
+              <span className="font-heading text-2xl font-black text-main-foreground">{formatRD(kpis.avgPerDay)}</span>
+              <NeoBadge variant="main" className="border-main-foreground/30 bg-main-foreground/10 text-main-foreground">
+                Promedio/Día
+              </NeoBadge>
+            </NeoCard>
+            <NeoCard variant="main" className="items-center gap-2 text-center">
+              <Crown className="h-8 w-8 text-main-foreground" />
+              <span className="font-heading text-2xl font-black text-main-foreground">
+                {kpis.bestDay ? new Date(kpis.bestDay).toLocaleDateString("es-DO", { month: "short", day: "numeric" }) : "—"}
               </span>
-            </div>
+              <NeoBadge variant="main" className="border-main-foreground/30 bg-main-foreground/10 text-main-foreground">
+                Mejor Día {kpis.bestAmount > 0 ? `(${formatRD(kpis.bestAmount)})` : ""}
+              </NeoBadge>
+            </NeoCard>
           </div>
 
           {/* ── AREA CHART (Trend) ── */}
-          <div className="rounded-2xl border-4 border-[#000080] bg-[#0a0c14] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-black uppercase tracking-wider text-blue-400">
-              <Calendar size={20} /> Tendencia de Ingresos
-            </h3>
-            <div className="h-72">
+          <NeoCard>
+            <NeoCardHeader>
+              <NeoCardTitle className="flex items-center gap-2">
+                <Calendar size={20} className="text-main" /> Tendencia de Ingresos
+              </NeoCardTitle>
+            </NeoCardHeader>
+            <NeoCardContent className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={areaData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0000FF" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#0000FF" stopOpacity={0} />
+                      <stop offset="5%" stopColor={colors.main} stopOpacity={0.4} />
+                      <stop offset="95%" stopColor={colors.main} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
-                  <XAxis dataKey="label" stroke={TEXT_COLOR} tick={{ fontSize: 11 }} />
-                  <YAxis stroke={TEXT_COLOR} tick={{ fontSize: 11 }} tickFormatter={(v) => `RD$${v}`} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: BG_DARK, border: "2px solid #000080", borderRadius: "12px", color: "#fff" }}
-                    formatter={(v: any) => [formatRD(Number(v)), "Ingresos"]}
-                  />
-                  <Area type="monotone" dataKey="total" stroke="#0000FF" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={colors.chart2} opacity={0.4} />
+                  <XAxis dataKey="label" stroke={colors.foreground} tick={{ fontSize: 11 }} />
+                  <YAxis stroke={colors.foreground} tick={{ fontSize: 11 }} tickFormatter={(v) => `RD$${v}`} />
+                  <Tooltip content={<NeoTooltip formatter={(v) => formatRD(Number(v))} />} />
+                  <Area type="monotone" dataKey="total" stroke={colors.main} strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
                 </AreaChart>
               </ResponsiveContainer>
-            </div>
-          </div>
+            </NeoCardContent>
+          </NeoCard>
 
           {/* ── BOTTOM ROW: Bar + Pie ── */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {/* Bar Chart */}
-            <div className="lg:col-span-2 rounded-2xl border-4 border-[#000080] bg-[#0a0c14] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-black uppercase tracking-wider text-blue-400">
-                <BarChart3 size={20} /> Top Servicios
-              </h3>
-              <div className="h-72">
+            <NeoCard className="lg:col-span-2">
+              <NeoCardHeader>
+                <NeoCardTitle className="flex items-center gap-2">
+                  <BarChart3 size={20} className="text-main" /> Top Servicios
+                </NeoCardTitle>
+              </NeoCardHeader>
+              <NeoCardContent className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={freqData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} horizontal={false} />
-                    <XAxis type="number" stroke={TEXT_COLOR} tick={{ fontSize: 11 }} />
-                    <YAxis type="category" dataKey="name" stroke={TEXT_COLOR} tick={{ fontSize: 10 }} width={180} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: BG_DARK, border: "2px solid #000080", borderRadius: "12px", color: "#fff" }}
-                      formatter={(v: any) => [`${v} veces`, "Frecuencia"]}
-                    />
-                    <Bar dataKey="count" fill="#0000FF" radius={[0, 8, 8, 0]} barSize={20} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.chart2} opacity={0.4} horizontal={false} />
+                    <XAxis type="number" stroke={colors.foreground} tick={{ fontSize: 11 }} />
+                    <YAxis type="category" dataKey="name" stroke={colors.foreground} tick={{ fontSize: 10 }} width={180} />
+                    <Tooltip content={<NeoTooltip formatter={(v) => `${v} veces`} />} />
+                    <Bar dataKey="count" fill={colors.main} radius={[0, 8, 8, 0]} barSize={20} />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
-            </div>
+              </NeoCardContent>
+            </NeoCard>
 
             {/* Pie Chart (admin only) */}
             {isAdmin && empDist.length > 0 ? (
-              <div className="rounded-2xl border-4 border-[#000080] bg-[#0a0c14] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-                <h3 className="mb-4 flex items-center gap-2 text-lg font-black uppercase tracking-wider text-blue-400">
-                  <PieIcon size={20} /> Por Empleado
-                </h3>
-                <div className="h-72">
+              <NeoCard>
+                <NeoCardHeader>
+                  <NeoCardTitle className="flex items-center gap-2">
+                    <PieIcon size={20} className="text-main" /> Por Empleado
+                  </NeoCardTitle>
+                </NeoCardHeader>
+                <NeoCardContent className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -310,58 +366,53 @@ export default function DataCharts({ services, isAdmin, user }: DataChartsProps)
                         labelLine={false}
                       >
                         {empDist.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#000" strokeWidth={2} />
+                          <Cell key={`cell-${index}`} fill={chartColorsList[index % chartColorsList.length]} stroke={colors.border} strokeWidth={2} />
                         ))}
                       </Pie>
-                      <Tooltip
-                        contentStyle={{ backgroundColor: BG_DARK, border: "2px solid #000080", borderRadius: "12px" }}
-                        itemStyle={{ color: "#fff" }}
-                        formatter={(value: any, name: any) => [formatRD(Number(value)), name]}
-                      />
+                      <Tooltip content={<NeoTooltip formatter={(v) => formatRD(Number(v))} />} />
                     </PieChart>
                   </ResponsiveContainer>
-                </div>
-              </div>
+                </NeoCardContent>
+              </NeoCard>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border-4 border-[#000080] bg-[#0a0c14] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-                <PieIcon size={40} className="text-blue-500" />
-                <p className="text-center text-sm font-bold text-slate-400">
+              <NeoCard className="flex flex-col items-center justify-center gap-3 bg-secondary-background">
+                <PieIcon size={40} className="text-main" />
+                <p className="text-center text-base font-bold text-foreground/70">
                   {isAdmin ? "Sin datos de empleados" : "Distribución solo visible para admin"}
                 </p>
-              </div>
+              </NeoCard>
             )}
           </div>
 
           {/* ── TIMELINE LINE CHART (admin: multi-line, employee: single) ── */}
-          <div className="rounded-2xl border-4 border-[#000080] bg-[#0a0c14] p-5 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-            <h3 className="mb-4 flex items-center gap-2 text-lg font-black uppercase tracking-wider text-blue-400">
-              <TrendingUp size={20} /> Evolución Diaria
-            </h3>
-            <div className="h-72">
+          <NeoCard>
+            <NeoCardHeader>
+              <NeoCardTitle className="flex items-center gap-2">
+                <TrendingUp size={20} className="text-main" /> Evolución Diaria
+              </NeoCardTitle>
+            </NeoCardHeader>
+            <NeoCardContent className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={timelineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
-                  <XAxis dataKey="name" stroke={TEXT_COLOR} tick={{ fontSize: 11 }} />
-                  <YAxis stroke={TEXT_COLOR} tick={{ fontSize: 11 }} tickFormatter={(v) => `RD$${v}`} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: BG_DARK, border: "2px solid #000080", borderRadius: "12px", color: "#fff" }}
-                    formatter={(v: any, n: any) => [formatRD(Number(v)), n]}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" stroke={colors.chart2} opacity={0.4} />
+                  <XAxis dataKey="name" stroke={colors.foreground} tick={{ fontSize: 11 }} />
+                  <YAxis stroke={colors.foreground} tick={{ fontSize: 11 }} tickFormatter={(v) => `RD$${v}`} />
+                  <Tooltip content={<NeoTooltip formatter={(v) => formatRD(Number(v))} />} />
                   {timelineKeys.map((key, i) => (
                     <Line
                       key={key}
                       type="monotone"
                       dataKey={key}
-                      stroke={COLORS[i % COLORS.length]}
+                      stroke={chartColorsList[i % chartColorsList.length]}
                       strokeWidth={3}
-                      dot={{ r: 4, fill: COLORS[i % COLORS.length], stroke: "#000", strokeWidth: 2 }}
-                      activeDot={{ r: 7, fill: "#fff" }}
+                      dot={{ r: 4, fill: chartColorsList[i % chartColorsList.length], stroke: colors.border, strokeWidth: 2 }}
+                      activeDot={{ r: 7, fill: colors.main }}
                     />
                   ))}
                 </LineChart>
               </ResponsiveContainer>
-            </div>
-          </div>
+            </NeoCardContent>
+          </NeoCard>
         </>
       )}
     </div>

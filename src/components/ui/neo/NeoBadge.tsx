@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "../../../lib/utils";
 
-interface NeoBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface NeoBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: "main" | "neutral" | "outline";
 }
 

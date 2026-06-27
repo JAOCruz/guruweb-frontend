@@ -15,6 +15,7 @@ import {
   FileIcon,
 } from "lucide-react";
 import { botAPI, BotClient, ClientDetailFull, ClientMedia } from "../services/botApi";
+import { NeoCard, NeoButton, NeoInput, NeoBadge } from "../components/ui/neo";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -55,20 +56,22 @@ const ClientItem: React.FC<{
   return (
     <div
       onClick={onSelect}
-      className={`flex items-center gap-3 border-l-2 px-4 py-3 cursor-pointer transition-all ${
+      className={`flex cursor-pointer items-center gap-3 border-b-2 border-border px-4 py-3 transition-all ${
         isSelected
-          ? "border-l-blue-500 bg-slate-800"
-          : "border-l-transparent hover:bg-slate-800/50"
+          ? "bg-main text-main-foreground"
+          : "bg-background text-foreground hover:bg-secondary-background"
       }`}
     >
-      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-bold text-white">
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-xs font-black text-main-foreground shadow-button">
         {getInitials(client.name, client.phone)}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold text-white text-sm">
+        <p className="truncate font-base text-base font-semibold">
           {client.name || "Sin nombre"}
         </p>
-        <p className="truncate text-xs text-slate-400">{client.phone}</p>
+        <p className={`truncate font-base text-sm ${isSelected ? "text-main-foreground/80" : "text-foreground/60"}`}>
+          {client.phone}
+        </p>
       </div>
     </div>
   );
@@ -83,56 +86,53 @@ const InfoTab: React.FC<{ detail: ClientDetailFull; onChat: () => void }> = ({
   <div className="space-y-6">
     {/* Avatar + Name */}
     <div className="flex items-center gap-4">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-lg font-bold text-white">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-border bg-main text-xl font-black text-main-foreground shadow-button">
         {getInitials(detail.client.name, detail.client.phone)}
       </div>
       <div>
-        <p className="text-2xl font-bold text-white">
+        <p className="font-heading text-xl font-bold text-foreground md:text-2xl">
           {detail.client.name || "Sin nombre"}
         </p>
-        <p className="text-sm text-slate-400">{detail.client.phone}</p>
+        <p className="font-base text-base text-foreground/70">{detail.client.phone}</p>
       </div>
     </div>
 
     {/* Chat Button */}
-    <button
-      onClick={onChat}
-      className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-lg transition-all"
-    >
+    <NeoButton onClick={onChat} className="w-full">
       <MessageCircle size={18} />
       Abrir Chat
-    </button>
+    </NeoButton>
 
     {/* Details Grid */}
-    <div className="space-y-4 bg-slate-800/50 p-4 rounded-lg">
+    <NeoCard variant="neutral" className="space-y-4 p-4">
       {detail.client.email && (
         <div className="flex items-start gap-3">
-          <Mail size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
+          <Mail size={16} className="mt-0.5 flex-shrink-0 text-foreground/60" />
           <div className="min-w-0">
-            <p className="text-xs text-slate-400">Email</p>
-            <p className="text-sm text-white break-all">{detail.client.email}</p>
+            <p className="font-base text-sm text-foreground/60">Email</p>
+            <p className="break-all font-base text-base text-foreground">{detail.client.email}</p>
           </div>
         </div>
       )}
       {detail.client.address && (
         <div className="flex items-start gap-3">
-          <Phone size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
+          <Phone size={16} className="mt-0.5 flex-shrink-0 text-foreground/60" />
           <div className="min-w-0">
-            <p className="text-xs text-slate-400">Dirección</p>
-            <p className="text-sm text-white">{detail.client.address}</p>
+            <p className="font-base text-sm text-foreground/60">Dirección</p>
+            <p className="font-base text-base text-foreground">{detail.client.address}</p>
           </div>
         </div>
       )}
       {detail.client.notes && (
         <div className="flex items-start gap-3">
-          <FileText size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
+          <FileText size={16} className="mt-0.5 flex-shrink-0 text-foreground/60" />
           <div className="min-w-0">
-            <p className="text-xs text-slate-400">Notas</p>
-            <p className="text-sm text-white">{detail.client.notes}</p>
+            <p className="font-base text-sm text-foreground/60">Notas</p>
+            <p className="font-base text-base text-foreground">{detail.client.notes}</p>
           </div>
         </div>
       )}
-    </div>
+    </NeoCard>
 
     {/* Stats Grid */}
     <div className="grid grid-cols-2 gap-3">
@@ -142,15 +142,15 @@ const InfoTab: React.FC<{ detail: ClientDetailFull; onChat: () => void }> = ({
         { label: "Mensajes", value: detail.stats.totalMessages, icon: MessageCircle },
         { label: "Documentos", value: detail.stats.totalDocuments, icon: FileIcon },
       ].map(({ label, value, icon: Icon }) => (
-        <div key={label} className="bg-slate-800 p-3 rounded-lg text-center">
-          <Icon size={18} className="text-blue-400 mx-auto mb-1" />
-          <p className="text-2xl font-bold text-white">{value}</p>
-          <p className="text-xs text-slate-400">{label}</p>
-        </div>
+        <NeoCard key={label} variant="neutral" className="p-3 text-center">
+          <Icon size={18} className="mx-auto mb-1 text-main" />
+          <p className="font-heading text-xl font-bold text-foreground md:text-2xl">{value}</p>
+          <p className="font-base text-sm text-foreground/60">{label}</p>
+        </NeoCard>
       ))}
     </div>
 
-    <p className="text-xs text-slate-500 text-center">
+    <p className="text-center font-base text-sm text-foreground/50">
       Registrado {formatDate(detail.client.created_at)}
     </p>
   </div>
@@ -159,37 +159,32 @@ const InfoTab: React.FC<{ detail: ClientDetailFull; onChat: () => void }> = ({
 const ServicesTab: React.FC<{ detail: ClientDetailFull }> = ({ detail }) => (
   <div className="space-y-3">
     {detail.services.length === 0 ? (
-      <p className="text-center py-8 text-slate-400">Sin servicios registrados</p>
+      <p className="py-8 text-center font-base text-base text-foreground/50">Sin servicios registrados</p>
     ) : (
       detail.services.map((service) => (
-        <div
+        <NeoCard
           key={service.id}
-          className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700"
+          variant="neutral"
+          className="flex items-start gap-3 p-3"
         >
           <div
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg font-bold text-white text-xs"
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-base border-2 border-border text-xs font-black text-main-foreground"
             style={{ backgroundColor: service.color }}
           >
             {service.abbreviation}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-white text-sm">{service.name}</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span
-                className={`text-xs px-2 py-1 rounded-full ${
-                  service.status === "active"
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "bg-slate-600/20 text-slate-400"
-                }`}
-              >
+          <div className="min-w-0 flex-1">
+            <p className="font-base text-base font-semibold text-foreground">{service.name}</p>
+            <div className="mt-1 flex items-center gap-2">
+              <NeoBadge variant={service.status === "active" ? "main" : "neutral"}>
                 {service.status === "active" ? "Activo" : "Completado"}
-              </span>
+              </NeoBadge>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="mt-1 font-base text-sm text-foreground/60">
               Desde {formatDate(service.started_at)}
             </p>
           </div>
-        </div>
+        </NeoCard>
       ))
     )}
   </div>
@@ -209,43 +204,40 @@ const CasesTab: React.FC<{ detail: ClientDetailFull }> = ({ detail }) => {
   return (
     <div className="space-y-4">
       {detail.cases.length === 0 ? (
-        <p className="text-center py-8 text-slate-400">Sin casos registrados</p>
+        <p className="py-8 text-center font-base text-base text-foreground/50">Sin casos registrados</p>
       ) : (
         Object.entries(casesByType).map(([type, cases]) => (
           <div key={type}>
-            <p className="text-xs font-bold text-slate-400 uppercase px-2 py-2">{type}</p>
+            <p className="px-2 py-2 font-base text-sm font-black uppercase tracking-wider text-foreground/60">
+              {type}
+            </p>
             <div className="space-y-2">
               {cases.map((caseItem) => (
-                <div
+                <NeoCard
                   key={caseItem.id}
-                  className="p-3 bg-slate-800/50 rounded-lg border border-slate-700 space-y-2"
+                  variant="neutral"
+                  className="space-y-2 p-3"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-white text-sm flex-1">{caseItem.title}</p>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
-                        caseItem.status === "open"
-                          ? "bg-yellow-500/20 text-yellow-400"
-                          : "bg-slate-600/20 text-slate-400"
-                      }`}
+                    <p className="flex-1 font-base text-base font-semibold text-foreground">{caseItem.title}</p>
+                    <NeoBadge
+                      variant={caseItem.status === "open" ? "main" : "neutral"}
+                      className="flex-shrink-0 whitespace-nowrap"
                     >
                       {caseItem.status === "open" ? "Abierto" : "Cerrado"}
-                    </span>
+                    </NeoBadge>
                   </div>
-                  <p className="text-xs text-slate-400">{caseItem.case_number}</p>
+                  <p className="font-base text-sm text-foreground/60">{caseItem.case_number}</p>
                   {caseItem.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {caseItem.tags.map((tag, i) => (
-                        <span
-                          key={i}
-                          className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded"
-                        >
+                        <NeoBadge key={i} variant="outline">
                           {tag.tag_value}
-                        </span>
+                        </NeoBadge>
                       ))}
                     </div>
                   )}
-                </div>
+                </NeoCard>
               ))}
             </div>
           </div>
@@ -275,25 +267,28 @@ const MediaTab: React.FC<{ media: ClientMedia[] }> = ({ media }) => {
   return (
     <div className="space-y-4">
       {media.length === 0 ? (
-        <p className="text-center py-8 text-slate-400">Sin archivos compartidos</p>
+        <p className="py-8 text-center font-base text-base text-foreground/50">Sin archivos compartidos</p>
       ) : (
         Object.entries(grouped).map(([type, files]) => (
           <div key={type}>
-            <p className="text-xs font-bold text-slate-400 uppercase px-2 py-2">{type}</p>
+            <p className="px-2 py-2 font-base text-sm font-black uppercase tracking-wider text-foreground/60">
+              {type}
+            </p>
             <div className="grid grid-cols-2 gap-2">
               {files.map((file) => (
-                <div
+                <NeoCard
                   key={file.id}
-                  className="p-3 bg-slate-800/50 rounded-lg border border-slate-700 text-center space-y-2"
+                  variant="neutral"
+                  className="space-y-2 p-3 text-center"
                 >
-                  <div className="flex justify-center text-slate-400">
+                  <div className="flex justify-center text-foreground/60">
                     {typeIcons[type] || <FileIcon size={32} />}
                   </div>
-                  <p className="text-xs text-white truncate">{file.original_name}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="truncate font-base text-sm text-foreground">{file.original_name}</p>
+                  <p className="font-base text-sm text-foreground/60">
                     {file.file_size ? `${(file.file_size / 1024).toFixed(0)} KB` : "—"}
                   </p>
-                </div>
+                </NeoCard>
               ))}
             </div>
           </div>
@@ -309,7 +304,7 @@ const MessagesTab: React.FC<{ detail: ClientDetailFull; onViewAll: () => void }>
 }) => (
   <div className="space-y-3">
     {detail.messages.length === 0 ? (
-      <p className="text-center py-8 text-slate-400">Sin mensajes</p>
+      <p className="py-8 text-center font-base text-base text-foreground/50">Sin mensajes</p>
     ) : (
       <>
         {detail.messages.slice(0, 20).map((msg, i) => (
@@ -318,24 +313,21 @@ const MessagesTab: React.FC<{ detail: ClientDetailFull; onViewAll: () => void }>
             className={`flex gap-2 ${msg.direction === "outbound" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[70%] px-3 py-2 rounded-lg text-sm ${
+              className={`max-w-[70%] rounded-base border-2 border-border px-3 py-2 font-base text-base ${
                 msg.direction === "outbound"
-                  ? "bg-emerald-800 text-white rounded-br-none"
-                  : "bg-slate-700 text-white rounded-bl-none"
+                  ? "bg-main text-main-foreground shadow-button"
+                  : "bg-secondary-background text-foreground shadow-button"
               }`}
             >
-              <p className="text-xs text-slate-300 mb-1">{formatTime(msg.created_at)}</p>
+              <p className="mb-1 font-base text-xs text-foreground/60">{formatTime(msg.created_at)}</p>
               <p className="break-words">{msg.content}</p>
             </div>
           </div>
         ))}
         {detail.messages.length > 20 && (
-          <button
-            onClick={onViewAll}
-            className="w-full text-center py-2 text-blue-400 hover:text-blue-300 text-sm font-semibold"
-          >
+          <NeoButton onClick={onViewAll} variant="outline" className="w-full">
             Ver todos ({detail.messages.length} mensajes)
-          </button>
+          </NeoButton>
         )}
       </>
     )}
@@ -410,6 +402,14 @@ const BotClients: React.FC = () => {
     return (c.name || "").toLowerCase().includes(q) || c.phone.includes(q);
   });
 
+  const tabLabels: Record<typeof activeTab, string> = {
+    info: "Info",
+    services: "Servicios",
+    cases: "Casos",
+    media: "Archivos",
+    messages: "Mensajes",
+  };
+
   return (
     <div
       className="-m-3 md:-m-8 flex overflow-hidden"
@@ -417,47 +417,47 @@ const BotClients: React.FC = () => {
     >
       {/* LEFT PANEL — Client List */}
       <div
-        className={`flex flex-col border-r border-slate-700 bg-slate-900 ${
+        className={`flex flex-col border-r-2 border-border bg-background ${
           showRightPanel ? "hidden md:flex" : "flex"
         } w-full flex-shrink-0 md:w-80`}
       >
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-slate-700 p-4">
+        <div className="flex-shrink-0 border-b-2 border-border p-4">
           <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500">
-              <Users size={16} className="text-white" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-button">
+              <Users size={16} />
             </div>
-            <h2 className="font-display text-base font-bold text-white">
+            <h2 className="font-heading text-xl font-bold text-foreground md:text-2xl">
               Clientes
             </h2>
-            <span className="ml-auto rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300">
+            <NeoBadge variant="neutral" className="ml-auto">
               {clients.length}
-            </span>
+            </NeoBadge>
           </div>
 
           {/* Search */}
           <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-            <input
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50" />
+            <NeoInput
               type="text"
               placeholder="Buscar por nombre, número..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 py-2 pl-8 pr-3 text-sm text-white placeholder-slate-500 outline-none focus:border-blue-500"
+              className="pl-10 pr-3 text-base"
             />
           </div>
         </div>
 
         {/* Client List */}
-        <div className="flex-1 overflow-y-auto custom-scroll">
+        <div className="custom-scroll flex-1 overflow-y-auto">
           {loading ? (
-            <div className="flex items-center justify-center py-8 text-slate-500">
+            <div className="flex items-center justify-center py-8 text-foreground/50">
               <RefreshCw size={20} className="animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-8 text-center text-slate-600">
-              <Users size={32} className="mx-auto mb-2 opacity-20" />
-              <p className="text-sm">Sin clientes</p>
+            <div className="py-8 text-center text-foreground/50">
+              <Users size={32} className="mx-auto mb-2 opacity-40" />
+              <p className="font-base text-base">Sin clientes</p>
             </div>
           ) : (
             filtered.map((client) => (
@@ -474,69 +474,64 @@ const BotClients: React.FC = () => {
 
       {/* RIGHT PANEL — Client Detail */}
       <div
-        className={`flex flex-1 flex-col overflow-hidden bg-slate-950 ${
+        className={`flex flex-1 flex-col overflow-hidden bg-secondary-background ${
           !showRightPanel ? "hidden md:flex" : "flex"
         }`}
       >
         {!selectedClient ? (
-          <div className="flex flex-1 items-center justify-center text-slate-600">
-            <p className="text-lg text-slate-500">Selecciona un cliente</p>
+          <div className="flex flex-1 items-center justify-center text-foreground/50">
+            <p className="font-heading text-xl text-foreground/70 md:text-2xl">Selecciona un cliente</p>
           </div>
         ) : (
           <>
             {/* Top Bar */}
-            <div className="flex flex-shrink-0 items-center gap-3 border-b border-slate-800 bg-slate-900 px-4 py-3">
-              <button
-                className="md:hidden flex items-center justify-center rounded-lg p-1.5 text-slate-400 hover:bg-slate-800"
+            <div className="flex flex-shrink-0 items-center gap-3 border-b-2 border-border bg-secondary-background px-4 py-3">
+              <NeoButton
+                size="icon"
+                variant="neutral"
+                className="md:hidden"
                 onClick={() => {
                   setShowRightPanel(false);
                   setSelectedClient(null);
                 }}
               >
                 <ChevronLeft size={20} />
-              </button>
+              </NeoButton>
 
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-sm font-bold text-white">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-black text-main-foreground shadow-button">
                 {getInitials(selectedClient.name, selectedClient.phone)}
               </div>
 
-              <div className="flex-1 min-w-0">
-                <p className="truncate font-semibold text-white">
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-base text-base font-semibold text-foreground">
                   {selectedClient.name || "Sin nombre"}
                 </p>
-                <p className="truncate text-xs text-slate-400">{selectedClient.phone}</p>
+                <p className="truncate font-base text-sm text-foreground/60">{selectedClient.phone}</p>
               </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex flex-shrink-0 border-b border-slate-800 bg-slate-900 px-4 gap-1 overflow-x-auto">
+            <div className="flex flex-shrink-0 gap-1 overflow-x-auto border-b-2 border-border bg-secondary-background px-4 py-2">
               {(["info", "services", "cases", "media", "messages"] as const).map((tab) => (
-                <button
+                <NeoButton
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-3 py-2 text-sm font-semibold whitespace-nowrap transition-colors ${
-                    activeTab === tab
-                      ? "border-b-2 border-blue-500 text-blue-400"
-                      : "text-slate-400 hover:text-white"
-                  }`}
+                  variant={activeTab === tab ? "default" : "neutral"}
+                  size="sm"
                 >
-                  {tab === "info" && "Info"}
-                  {tab === "services" && "Servicios"}
-                  {tab === "cases" && "Casos"}
-                  {tab === "media" && "Archivos"}
-                  {tab === "messages" && "Mensajes"}
-                </button>
+                  {tabLabels[tab]}
+                </NeoButton>
               ))}
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 custom-scroll">
+            <div className="custom-scroll flex-1 overflow-y-auto px-4 py-4">
               {detailLoading ? (
-                <div className="flex items-center justify-center py-8 text-slate-500">
+                <div className="flex items-center justify-center py-8 text-foreground/50">
                   <RefreshCw size={20} className="animate-spin" />
                 </div>
               ) : !detail ? (
-                <p className="text-center py-8 text-slate-600">Error cargando detalles</p>
+                <p className="py-8 text-center font-base text-base text-foreground/50">Error cargando detalles</p>
               ) : activeTab === "info" ? (
                 <InfoTab detail={detail} onChat={handleChat} />
               ) : activeTab === "services" ? (

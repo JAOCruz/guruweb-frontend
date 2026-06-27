@@ -13,6 +13,15 @@ import {
   ChevronRight,
 } from "lucide-react";
 import api from "../services/api";
+import {
+  NeoCard,
+  NeoCardContent,
+  NeoCardHeader,
+  NeoCardTitle,
+} from "../components/ui/neo/NeoCard";
+import { NeoButton } from "../components/ui/neo/NeoButton";
+import { NeoInput } from "../components/ui/neo/NeoInput";
+import { NeoBadge } from "../components/ui/neo/NeoBadge";
 
 interface DocCategory {
   id: number;
@@ -40,43 +49,17 @@ interface DocVariable {
 }
 
 /* ── Neo-Brutalist Category Styles ── */
-const CAT_STYLES: Record<
-  string,
-  {
-    emoji: string;
-    bg: string;
-    border: string;
-    shadow: string;
-    text: string;
-    accent: string;
-    tagline: string;
-  }
-> = {
+const CAT_STYLES: Record<string, { emoji: string; tagline: string }> = {
   notificaciones: {
     emoji: "📢",
-    bg: "bg-[#0000FF]",
-    border: "border-[#000080]",
-    shadow: "shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]",
-    text: "text-white",
-    accent: "bg-[#3333FF]",
     tagline: "¡Avisos oficiales con estilo!",
   },
   "contratos-civiles": {
     emoji: "📜",
-    bg: "bg-[#0000FF]",
-    border: "border-[#000080]",
-    shadow: "shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]",
-    text: "text-white",
-    accent: "bg-[#3333FF]",
     tagline: "Papelitos que salvan vidas 💼",
   },
   "instancias-y-escritos": {
     emoji: "⚖️",
-    bg: "bg-[#0000FF]",
-    border: "border-[#000080]",
-    shadow: "shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]",
-    text: "text-white",
-    accent: "bg-[#3333FF]",
     tagline: "Justicia digital al instante",
   },
 };
@@ -330,9 +313,9 @@ export default function MotherBrain() {
   /* ── Loading ── */
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center text-[#3333FF]">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0000FF] border-t-transparent" />
-        <span className="ml-3 text-lg font-bold">Cargando Mother Brain...</span>
+      <div className="flex h-full items-center justify-center text-main">
+        <Loader2 className="h-10 w-10 animate-spin" />
+        <span className="ml-3 text-lg font-base font-bold">Cargando Mother Brain...</span>
       </div>
     );
   }
@@ -344,17 +327,17 @@ export default function MotherBrain() {
     <div className="flex flex-col gap-8">
       {/* Header */}
       <div className="text-center">
-        <div className="inline-flex items-center gap-3 rounded-xl border-2 border-[#000080] bg-[#0000FF] px-6 py-3 shadow-[6px_6px_0px_0px_rgba(0,0,128,1)]">
-          <Brain className="h-8 w-8 text-white" />
-          <h1 className="text-3xl font-black uppercase tracking-wider text-white">
+        <NeoCard variant="main" className="inline-flex w-auto flex-row items-center gap-3 px-6 py-3">
+          <Brain className="h-8 w-8" />
+          <h1 className="font-heading text-xl uppercase tracking-wider md:text-2xl">
             Mother Brain
           </h1>
-          <Sparkles className="h-6 w-6 text-white" />
-        </div>
-        <p className="mt-4 text-lg font-bold text-[#6666FF]">
+          <Sparkles className="h-6 w-6" />
+        </NeoCard>
+        <p className="mt-4 text-base font-base font-bold text-foreground/70">
           🧠 Sistema de Generación de Documentos Legales
         </p>
-        <p className="text-sm text-[#0000FF]/70">
+        <p className="text-sm font-base text-foreground/50">
           161 plantillas · 3 categorías · 1 cerebro
         </p>
       </div>
@@ -375,40 +358,27 @@ export default function MotherBrain() {
             );
 
           return (
-            <button
+            <NeoCard
               key={cat.id}
+              variant="main"
+              className="group cursor-pointer items-center gap-4 p-8 text-center transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none active:translate-x-boxShadowX active:translate-y-boxShadowY active:shadow-none"
               onClick={() => selectCategory(cat.slug)}
-              className={`group relative flex flex-col items-center gap-4 rounded-xl ${style.bg} ${style.border} border-4 p-8 ${style.shadow} transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.4)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none`}
             >
-              <span className="text-6xl drop-shadow-lg transition-transform group-hover:scale-110">
+              <span className="text-6xl transition-transform group-hover:scale-110">
                 {style.emoji}
               </span>
-              <h2
-                className={`text-center text-xl font-black uppercase tracking-wide ${style.text}`}
-              >
+              <h2 className="font-heading text-xl uppercase tracking-wide md:text-2xl">
                 {cat.name}
               </h2>
-              <p className={`text-sm font-bold ${style.text} opacity-80`}>
-                {style.tagline}
-              </p>
-              <div className="mt-2 flex gap-2">
-                <span
-                  className={`rounded-lg ${style.accent} px-3 py-1 text-xs font-black uppercase ${style.text} border-2 ${style.border}`}
-                >
-                  {tmplCount} docs
-                </span>
+              <p className="text-base font-base opacity-80">{style.tagline}</p>
+              <div className="mt-2 flex flex-wrap justify-center gap-2">
+                <NeoBadge variant="main">{tmplCount} docs</NeoBadge>
                 {leafCount > 0 && (
-                  <span
-                    className={`rounded-lg bg-white/30 px-3 py-1 text-xs font-black uppercase ${style.text} border-2 ${style.border}`}
-                  >
-                    {leafCount} subcat
-                  </span>
+                  <NeoBadge variant="outline">{leafCount} subcat</NeoBadge>
                 )}
               </div>
-              <ChevronRight
-                className={`mt-2 h-6 w-6 ${style.text} opacity-60 group-hover:opacity-100 transition-opacity`}
-              />
-            </button>
+              <ChevronRight className="mt-2 h-6 w-6 opacity-60 transition-opacity group-hover:opacity-100" />
+            </NeoCard>
           );
         })}
       </div>
@@ -434,69 +404,56 @@ export default function MotherBrain() {
     return (
       <div className="flex flex-col gap-6">
         {/* Category Header */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={clearSelection}
-            className="flex items-center gap-2 rounded-lg border-2 border-slate-700 bg-slate-800 px-4 py-2 text-sm font-bold text-slate-300 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(30,41,59,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
-          >
+        <div className="flex flex-wrap items-center gap-4">
+          <NeoButton variant="neutral" size="sm" onClick={clearSelection}>
             <ArrowLeft size={16} />
             Volver
-          </button>
-          <div
-            className={`flex items-center gap-3 rounded-xl ${style.bg} ${style.border} border-4 px-5 py-3 ${style.shadow}`}
-          >
+          </NeoButton>
+          <NeoCard variant="main" className="inline-flex w-auto flex-row items-center gap-3 px-5 py-3">
             <span className="text-3xl">{style.emoji}</span>
             <div>
-              <h2 className={`text-xl font-black uppercase ${style.text}`}>
-                {activeParent.name}
-              </h2>
-              <p className={`text-xs font-bold ${style.text} opacity-70`}>
+              <h2 className="font-heading text-xl uppercase md:text-2xl">{activeParent.name}</h2>
+              <p className="text-sm font-base opacity-70">
                 {displayedTemplates.length} documentos
               </p>
             </div>
-          </div>
+          </NeoCard>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#0000FF]" />
-          <input
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-foreground/50" />
+          <NeoInput
             type="text"
             placeholder="🔍 Buscar plantilla..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border-2 border-[#000080] bg-slate-900 py-3 pl-12 pr-4 text-white placeholder-[#0000FF]/50 outline-none focus:border-[#0000FF] focus:shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all"
+            className="pl-12"
           />
         </div>
 
         {/* Subcategory Chips — show ALL leaf categories with templates */}
         {leafCategories.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            <button
+            <NeoButton
+              variant={!selectedSubcategory ? "default" : "neutral"}
+              size="sm"
               onClick={() => setSelectedSubcategory(null)}
-              className={`rounded-lg border-2 px-3 py-1.5 text-xs font-black uppercase transition-all ${
-                !selectedSubcategory
-                  ? `${style.bg} ${style.border} ${style.text} shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]`
-                  : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200"
-              }`}
             >
               🗂️ Todos
-            </button>
+            </NeoButton>
             {leafCategories.map((child) => {
               const isActive = selectedSubcategory === child.slug;
               const emoji = SUBCAT_EMOJIS[child.slug] || DEFAULT_SUBCAT_EMOJI;
               return (
-                <button
+                <NeoButton
                   key={child.id}
+                  variant={isActive ? "default" : "neutral"}
+                  size="sm"
                   onClick={() => selectSubcategory(child.slug)}
-                  className={`rounded-lg border-2 px-3 py-1.5 text-xs font-black uppercase transition-all ${
-                    isActive
-                      ? `${style.bg} ${style.border} ${style.text} shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]`
-                      : "border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500 hover:text-slate-200"
-                  }`}
                 >
                   {emoji} {child.name}
-                </button>
+                </NeoButton>
               );
             })}
           </div>
@@ -504,50 +461,45 @@ export default function MotherBrain() {
 
         {/* Templates Grid */}
         {displayedTemplates.length === 0 ? (
-          <div className="rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/50 p-12 text-center">
+          <NeoCard variant="outline" className="items-center p-12 text-center">
             <span className="text-4xl">🕸️</span>
-            <p className="mt-2 text-lg font-bold text-slate-500">
+            <p className="mt-2 text-base font-base font-bold text-foreground/70">
               No hay documentos aquí
             </p>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm font-base text-foreground/50">
               Prueba con otra búsqueda o subcategoría
             </p>
-          </div>
+          </NeoCard>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {displayedTemplates.map((t) => {
               const emoji = getTemplateEmoji(t.name);
               const isSelected = selectedTemplate?.id === t.id;
               return (
-                <button
+                <NeoCard
                   key={t.id}
+                  variant={isSelected ? "main" : "neutral"}
+                  className="cursor-pointer gap-2 p-4 text-left transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none active:translate-x-boxShadowX active:translate-y-boxShadowY active:shadow-none"
                   onClick={() => selectTemplate(t)}
-                  className={`group flex flex-col gap-2 rounded-xl border-2 p-4 text-left transition-all ${
-                    isSelected
-                      ? "border-[#0000FF] bg-[#000033]/40 shadow-[4px_4px_0px_0px_rgba(0,0,255,1)]"
-                      : "border-slate-700 bg-slate-900 shadow-[4px_4px_0px_0px_rgba(30,41,59,1)] hover:border-[#0000AA] hover:shadow-[2px_2px_0px_0px_rgba(30,41,59,1)] hover:translate-x-[2px] hover:translate-y-[2px]"
-                  }`}
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-2xl">{emoji}</span>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-bold text-white">
+                      <div className="truncate text-base font-base font-bold">
                         {t.name}
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         {t.required_roles?.length > 0 && (
-                          <span className="flex items-center gap-1 rounded bg-[#0000FF]/10 px-1.5 py-0.5 text-[10px] font-bold text-[#3333FF] border border-[#0000FF]/20">
-                            <Users size={10} />
+                          <NeoBadge variant="main">
+                            <Users size={10} className="mr-1" />
                             {t.required_roles.length} roles
-                          </span>
+                          </NeoBadge>
                         )}
-                        <span className="rounded bg-slate-700/50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-400 border border-slate-600">
-                          {t.doc_type}
-                        </span>
+                        <NeoBadge variant="outline">{t.doc_type}</NeoBadge>
                       </div>
                     </div>
                   </div>
-                </button>
+                </NeoCard>
               );
             })}
           </div>
@@ -555,107 +507,92 @@ export default function MotherBrain() {
 
         {/* Template Detail Panel (inline when selected) */}
         {selectedTemplate && templateDetail && (
-          <div className="rounded-xl border-2 border-[#0000AA] bg-slate-900 p-6 shadow-[6px_6px_0px_0px_rgba(0,0,128,0.5)]">
-            <div className="flex items-start justify-between">
+          <NeoCard variant="main">
+            <NeoCardHeader className="flex-row items-start justify-between">
               <div>
-                <div className="text-xs font-black uppercase tracking-wider text-[#3333FF]">
+                <div className="text-sm font-base font-black uppercase tracking-wider opacity-80">
                   {templateDetail.template?.category_name}
                 </div>
-                <h3 className="mt-1 text-lg font-black text-white">
-                  {selectedTemplate.name}
-                </h3>
-                <p className="mt-1 text-sm text-slate-400">
+                <NeoCardTitle>{selectedTemplate.name}</NeoCardTitle>
+                <p className="mt-1 text-base font-base opacity-80">
                   {selectedTemplate.description || "Sin descripción"}
                 </p>
               </div>
-              <button
+              <NeoButton
+                variant="neutral"
+                size="icon"
                 onClick={() => {
                   setSelectedTemplate(null);
                   setTemplateDetail(null);
                 }}
-                className="rounded-lg border-2 border-slate-700 bg-slate-800 p-2 text-slate-400 transition-all hover:border-slate-500 hover:text-white shadow-[2px_2px_0px_0px_rgba(30,41,59,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
               >
                 <X size={16} />
-              </button>
-            </div>
+              </NeoButton>
+            </NeoCardHeader>
 
-            {/* Required Roles */}
-            {templateDetail.requiredRoles &&
-              Object.keys(templateDetail.requiredRoles).length > 0 && (
-                <div className="mt-4">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-black text-white">
-                    <Users size={16} className="text-[#3333FF]" />
-                    Roles Requeridos
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(templateDetail.requiredRoles).map(
-                      ([role, fields]: [string, any]) => (
-                        <div
-                          key={role}
-                          className="rounded-lg border-2 border-[#0000AA] bg-[#000033]/50 px-3 py-2"
-                        >
-                          <div className="text-xs font-black text-[#3333FF]">
+            <NeoCardContent className="gap-4">
+              {/* Required Roles */}
+              {templateDetail.requiredRoles &&
+                Object.keys(templateDetail.requiredRoles).length > 0 && (
+                  <div>
+                    <div className="mb-2 flex items-center gap-2 text-base font-base font-black">
+                      <Users size={16} />
+                      Roles Requeridos
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(templateDetail.requiredRoles).map(
+                        ([role, fields]: [string, any]) => (
+                          <NeoBadge key={role} variant="main">
                             {role}
-                          </div>
-                          <div className="text-[10px] font-bold text-slate-500">
-                            {fields.length} campos
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-
-            {/* Variables */}
-            {templateDetail.variables && templateDetail.variables.length > 0 && (
-              <div className="mt-4">
-                <div className="mb-2 flex items-center gap-2 text-sm font-black text-white">
-                  <Tag size={16} className="text-purple-400" />
-                  Variables ({templateDetail.variables.length})
-                </div>
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                  {templateDetail.variables.map((v: DocVariable) => (
-                    <div
-                      key={v.tag}
-                      className={`rounded-lg border px-3 py-2 text-xs ${
-                        v.is_rol_dynamic
-                          ? "border-[#0000AA] bg-[#000033]/30 text-[#9999FF]"
-                          : "border-slate-700 bg-slate-800 text-slate-300"
-                      }`}
-                    >
-                      <div className="font-mono font-bold">{v.tag}</div>
-                      {v.description && (
-                        <div className="mt-1 text-[10px] text-slate-500">
-                          {v.description}
-                        </div>
+                            <span className="ml-1 opacity-70">({fields.length} campos)</span>
+                          </NeoBadge>
+                        )
                       )}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
 
-            {/* Actions */}
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                onClick={openTestModal}
-                className="flex items-center gap-2 rounded-lg border-2 border-[#000080] bg-[#0000CC] px-5 py-2.5 text-sm font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,128,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
-              >
-                <Play size={16} />
-                Probar Generación
-              </button>
-              {generatedSessionId && (
-                <button
-                  onClick={downloadGeneratedFile}
-                  className="flex items-center gap-2 rounded-lg border-2 border-green-800 bg-green-700 px-5 py-2.5 text-sm font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(20,83,45,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(20,83,45,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
-                >
-                  <Download size={16} />
-                  Descargar Último
-                </button>
+              {/* Variables */}
+              {templateDetail.variables && templateDetail.variables.length > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center gap-2 text-base font-base font-black">
+                    <Tag size={16} />
+                    Variables ({templateDetail.variables.length})
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                    {templateDetail.variables.map((v: DocVariable) => (
+                      <NeoCard
+                        key={v.tag}
+                        variant={v.is_rol_dynamic ? "main" : "neutral"}
+                        className="p-3"
+                      >
+                        <div className="font-mono text-sm font-bold">{v.tag}</div>
+                        {v.description && (
+                          <div className="mt-1 text-xs font-base opacity-70">
+                            {v.description}
+                          </div>
+                        )}
+                      </NeoCard>
+                    ))}
+                  </div>
+                </div>
               )}
-            </div>
-          </div>
+
+              {/* Actions */}
+              <div className="flex flex-wrap gap-3 pt-2">
+                <NeoButton variant="reverse" size="sm" onClick={openTestModal}>
+                  <Play size={16} />
+                  Probar Generación
+                </NeoButton>
+                {generatedSessionId && (
+                  <NeoButton variant="neutral" size="sm" onClick={downloadGeneratedFile}>
+                    <Download size={16} />
+                    Descargar Último
+                  </NeoButton>
+                )}
+              </div>
+            </NeoCardContent>
+          </NeoCard>
         )}
       </div>
     );
@@ -670,27 +607,28 @@ export default function MotherBrain() {
 
       {/* Test Generation Modal */}
       {showModal && selectedTemplate && templateDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl border-4 border-[#0000AA] bg-[#0b1120] shadow-[8px_8px_0px_0px_rgba(0,0,128,1)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4">
+          <NeoCard className="max-h-[90vh] w-full max-w-3xl overflow-hidden p-0">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b-2 border-[#000080]/50 p-5">
+            <div className="flex items-center justify-between border-b-2 border-border bg-secondary-background p-5">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">🧪</span>
                 <div>
-                  <h3 className="text-lg font-black text-white">
+                  <h3 className="font-heading text-lg md:text-xl">
                     Probar: {selectedTemplate.name}
                   </h3>
-                  <p className="text-xs font-bold text-[#3333FF]">
+                  <p className="text-sm font-base text-foreground/70">
                     Llena los datos de prueba y genera el documento
                   </p>
                 </div>
               </div>
-              <button
+              <NeoButton
+                variant="neutral"
+                size="icon"
                 onClick={() => setShowModal(false)}
-                className="rounded-lg border-2 border-slate-700 bg-slate-800 p-2 text-slate-400 transition-all hover:border-slate-500 hover:text-white shadow-[2px_2px_0px_0px_rgba(30,41,59,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
               >
                 <X size={18} />
-              </button>
+              </NeoButton>
             </div>
 
             {/* Modal Body */}
@@ -699,16 +637,16 @@ export default function MotherBrain() {
               {Object.entries(templateDetail.requiredRoles || {}).map(
                 ([role, fields]: [string, any]) => (
                   <div key={role} className="mb-6">
-                    <div className="mb-3 flex items-center gap-2 text-sm font-black text-[#3333FF]">
+                    <div className="mb-3 flex items-center gap-2 text-base font-base font-black">
                       <span>👤</span> {role}
                     </div>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       {fields.map((field: string) => (
                         <div key={`${role}-${field}`}>
-                          <label className="mb-1 block text-[11px] font-black uppercase tracking-wider text-slate-500">
+                          <label className="mb-1 block text-xs font-black uppercase tracking-wider text-foreground/60">
                             {field}
                           </label>
-                          <input
+                          <NeoInput
                             type="text"
                             value={testRoles[role]?.[field] || ""}
                             onChange={(e) =>
@@ -717,7 +655,6 @@ export default function MotherBrain() {
                                 [role]: { ...prev[role], [field]: e.target.value },
                               }))
                             }
-                            className="w-full rounded-xl border-2 border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-[#0000FF] focus:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] transition-all"
                             placeholder={`${field}...`}
                           />
                         </div>
@@ -731,7 +668,7 @@ export default function MotherBrain() {
               {templateDetail.variables?.filter((v: DocVariable) => !v.is_rol_dynamic)
                 .length > 0 && (
                 <div className="mb-6">
-                  <div className="mb-3 flex items-center gap-2 text-sm font-black text-purple-400">
+                  <div className="mb-3 flex items-center gap-2 text-base font-base font-black">
                     <span>📝</span> Datos Adicionales
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -739,10 +676,10 @@ export default function MotherBrain() {
                       .filter((v: DocVariable) => !v.is_rol_dynamic)
                       .map((v: DocVariable) => (
                         <div key={v.tag}>
-                          <label className="mb-1 block text-[11px] font-black uppercase tracking-wider text-slate-500">
+                          <label className="mb-1 block text-xs font-black uppercase tracking-wider text-foreground/60">
                             {v.tag}
                           </label>
-                          <input
+                          <NeoInput
                             type="text"
                             value={testData[v.tag] || ""}
                             onChange={(e) =>
@@ -751,7 +688,6 @@ export default function MotherBrain() {
                                 [v.tag]: e.target.value,
                               }))
                             }
-                            className="w-full rounded-xl border-2 border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-[#0000FF] focus:shadow-[3px_3px_0px_0px_rgba(0,0,128,1)] transition-all"
                             placeholder={v.description || v.tag}
                           />
                         </div>
@@ -762,28 +698,32 @@ export default function MotherBrain() {
 
               {/* Generated file */}
               {generatedFile && generatedSessionId && (
-                <div className="mb-4 rounded-xl border-2 border-green-700 bg-green-950/30 p-4">
-                  <div className="flex items-center gap-2 text-sm font-black text-green-400">
+                <NeoCard variant="neutral" className="mb-4 p-4">
+                  <div className="flex items-center gap-2 text-base font-base font-black">
                     <Download size={16} />
                     Documento generado: {generatedFile}
                   </div>
-                  <button
+                  <NeoButton
+                    variant="default"
+                    size="sm"
                     onClick={downloadGeneratedFile}
-                    className="mt-3 inline-flex items-center gap-2 rounded-lg border-2 border-green-800 bg-green-700 px-4 py-2 text-sm font-black text-white shadow-[3px_3px_0px_0px_rgba(20,83,45,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                    className="mt-3"
                   >
                     <Download size={16} />
                     Descargar Documento .docx
-                  </button>
-                </div>
+                  </NeoButton>
+                </NeoCard>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="flex gap-3 border-t-2 border-[#000080]/50 p-5">
-              <button
+            <div className="flex gap-3 border-t-2 border-border bg-secondary-background p-5">
+              <NeoButton
+                variant="default"
+                size="lg"
                 onClick={runTestGeneration}
                 disabled={generating}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#000080] bg-[#0000CC] py-3 text-sm font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(0,0,128,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,128,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1"
               >
                 {generating ? (
                   <>
@@ -796,9 +736,9 @@ export default function MotherBrain() {
                     Generar Documento
                   </>
                 )}
-              </button>
+              </NeoButton>
             </div>
-          </div>
+          </NeoCard>
         </div>
       )}
     </div>

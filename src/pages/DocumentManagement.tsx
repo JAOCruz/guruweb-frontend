@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { botAPI, DocumentIndexItem } from '../services/botApi';
 import { Search, ChevronDown, ChevronRight, FileText, Folder, Tag, MessageCircle, Loader, List, Network, Grid3x3, Scale, ExternalLink, Eye, X } from 'lucide-react';
 import { LAWS } from '../data/laws';
+import { NeoCard, NeoButton, NeoInput, NeoSelect, NeoBadge } from '../components/ui/neo';
 
 type ViewMode = 'folder' | 'tree' | 'outline';
 
@@ -162,20 +163,20 @@ export default function DocumentManagement() {
           <>
             <button
               onClick={() => toggleFolder(node.path)}
-              className="w-full flex items-center gap-2 p-2 hover:bg-slate-800/50 transition-colors text-left"
+              className="w-full flex items-center gap-2 p-2 rounded-base border-2 border-border bg-secondary-background hover:bg-background transition-colors text-left shadow-button"
               style={{ marginLeft: `${level * 16}px` }}
             >
               {isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                <ChevronDown className="w-4 h-4 text-main flex-shrink-0" />
               ) : (
-                <ChevronRight className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                <ChevronRight className="w-4 h-4 text-foreground/60 flex-shrink-0" />
               )}
-              <Folder className="w-4 h-4 text-blue-500 flex-shrink-0" />
-              <span className="font-medium text-sm">{node.name}</span>
+              <Folder className="w-4 h-4 text-main flex-shrink-0" />
+              <span className="font-medium text-base truncate">{node.name}</span>
               {totalItems > 0 && (
-                <span className="text-xs text-slate-400 ml-auto">
+                <NeoBadge variant="neutral" className="ml-auto text-xs">
                   {totalItems}
-                </span>
+                </NeoBadge>
               )}
             </button>
 
@@ -191,13 +192,15 @@ export default function DocumentManagement() {
                       <button
                         key={doc.id}
                         onClick={() => setSelectedDoc(doc)}
-                        className={`w-full flex items-center gap-2 p-2 hover:bg-slate-800/50 transition-colors text-left border-b border-slate-800/50 last:border-b-0 ${
-                          selectedDoc?.id === doc.id ? 'bg-blue-600/20 border-l-2 border-l-blue-500' : ''
+                        className={`w-full flex items-center gap-2 p-2 rounded-base border-2 text-left transition-colors ${
+                          selectedDoc?.id === doc.id
+                            ? 'border-border bg-secondary-background shadow-shadow'
+                            : 'border-transparent hover:border-border hover:bg-secondary-background'
                         }`}
                         style={{ marginLeft: `${(level + 1) * 16 + 20}px` }}
                       >
-                        <FileText className="w-4 h-4 text-slate-500 flex-shrink-0" />
-                        <p className="text-sm font-medium truncate">{doc.name}</p>
+                        <FileText className="w-4 h-4 text-foreground/60 flex-shrink-0" />
+                        <p className="text-base font-medium truncate">{doc.name}</p>
                       </button>
                     ))}
                   </>
@@ -222,20 +225,20 @@ export default function DocumentManagement() {
     const nextPrefix = prefix + (isLast ? '    ' : '│   ');
 
     return (
-      <div key={node.path} className="font-mono text-sm">
+      <div key={node.path} className="font-base text-base">
         <button
           onClick={() => toggleFolder(node.path)}
-          className="w-full text-left p-2 hover:bg-slate-800/50 transition-colors flex items-center gap-2"
+          className="w-full text-left p-2 rounded-base border-2 border-border bg-secondary-background hover:bg-background transition-colors flex items-center gap-2 shadow-button"
         >
-          <span className="text-slate-400">{prefix}{connector}</span>
+          <span className="text-foreground/60 font-mono text-sm">{prefix}{connector}</span>
           {isExpanded ? (
-            <ChevronDown className="w-3 h-3 text-blue-400" />
+            <ChevronDown className="w-3 h-3 text-main" />
           ) : (
-            <ChevronRight className="w-3 h-3 text-slate-500" />
+            <ChevronRight className="w-3 h-3 text-foreground/60" />
           )}
-          <Folder className="w-3 h-3 text-blue-500" />
-          <span className="text-slate-300">{node.name}</span>
-          {hasDocuments && <span className="text-xs text-slate-500 ml-auto">({node.documents!.length})</span>}
+          <Folder className="w-3 h-3 text-main" />
+          <span className="text-foreground truncate">{node.name}</span>
+          {hasDocuments && <span className="text-base text-foreground/60 ml-auto">({node.documents!.length})</span>}
         </button>
 
         {isExpanded && (
@@ -256,16 +259,16 @@ export default function DocumentManagement() {
                   <button
                     key={doc.id}
                     onClick={() => setSelectedDoc(doc)}
-                    className={`w-full text-left p-2 hover:bg-slate-800/50 transition-colors flex items-center gap-2 ${
-                      selectedDoc?.id === doc.id ? 'bg-blue-600/20' : ''
+                    className={`w-full text-left p-2 rounded-base border-2 transition-colors flex items-center gap-2 ${
+                      selectedDoc?.id === doc.id ? 'border-border bg-secondary-background shadow-shadow' : 'border-transparent hover:border-border hover:bg-secondary-background'
                     }`}
                   >
-                    <span className="text-slate-400">
+                    <span className="text-foreground/60 font-mono text-sm">
                       {nextPrefix}
                       {idx === node.documents!.length - 1 ? '└── ' : '├── '}
                     </span>
-                    <FileText className="w-3 h-3 text-slate-500" />
-                    <span className="text-slate-300 truncate text-xs">{doc.name}</span>
+                    <FileText className="w-3 h-3 text-foreground/60" />
+                    <span className="text-foreground truncate text-base">{doc.name}</span>
                   </button>
                 ))}
               </div>
@@ -293,10 +296,10 @@ export default function DocumentManagement() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-950">
+      <div className="h-screen flex items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-3">
-          <Loader className="w-8 h-8 text-blue-500 animate-spin" />
-          <p className="text-slate-300">Loading document index...</p>
+          <Loader className="w-8 h-8 text-main animate-spin" />
+          <p className="text-base">Loading document index...</p>
         </div>
       </div>
     );
@@ -304,114 +307,100 @@ export default function DocumentManagement() {
 
   if (error) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-950">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-          >
+      <div className="h-screen flex items-center justify-center bg-background text-foreground">
+        <NeoCard className="text-center p-8">
+          <p className="text-base mb-4">{error}</p>
+          <NeoButton onClick={() => window.location.reload()}>
             Retry
-          </button>
-        </div>
+          </NeoButton>
+        </NeoCard>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-slate-950 text-white flex flex-col overflow-hidden">
+    <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-800 p-4">
+      <div className="bg-secondary-background border-b-2 border-border p-4">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">Gestión de Documentos</h1>
+          <h1 className="font-heading text-xl md:text-2xl font-bold">Gestión de Documentos</h1>
 
           {/* View Mode Toggle */}
           <div className="flex gap-2">
-            <button
+            <NeoButton
               onClick={() => setViewMode('folder')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                viewMode === 'folder'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
+              variant={viewMode === 'folder' ? 'default' : 'neutral'}
+              size="sm"
               title="Folder View"
             >
               <List className="w-4 h-4" />
               Carpetas
-            </button>
-            <button
+            </NeoButton>
+            <NeoButton
               onClick={() => setViewMode('tree')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                viewMode === 'tree'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
+              variant={viewMode === 'tree' ? 'default' : 'neutral'}
+              size="sm"
               title="Tree Diagram"
             >
               <Network className="w-4 h-4" />
               Árbol
-            </button>
-            <button
+            </NeoButton>
+            <NeoButton
               onClick={() => setViewMode('outline')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                viewMode === 'outline'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
+              variant={viewMode === 'outline' ? 'default' : 'neutral'}
+              size="sm"
               title="Outline View"
             >
               <Grid3x3 className="w-4 h-4" />
               Esquema
-            </button>
+            </NeoButton>
           </div>
         </div>
 
         {/* Search Bar */}
         <div className="flex gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+            <NeoInput
               type="text"
               placeholder="Buscar documentos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 text-white pl-10 pr-4 py-2 rounded focus:border-blue-500 focus:outline-none transition-colors"
+              className="pl-10"
             />
           </div>
 
-          <select
+          <NeoSelect
             value={selectedCategory || 'all'}
             onChange={(e) => setSelectedCategory(e.target.value === 'all' ? null : e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-white px-4 py-2 rounded focus:border-blue-500 focus:outline-none transition-colors"
+            className="w-auto"
           >
             <option value="all">Todas las categorías</option>
             {categories.map(cat => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
-          </select>
+          </NeoSelect>
         </div>
 
         {/* Stats */}
-        <div className="flex gap-4 mt-4 text-sm">
-          <div className="bg-slate-800 rounded px-3 py-1">
-            <span className="text-slate-400">Total: </span>
-            <span className="font-semibold">{documents.length}</span>
-          </div>
-          <div className="bg-slate-800 rounded px-3 py-1">
-            <span className="text-slate-400">Mostrados: </span>
-            <span className="font-semibold">{filteredDocuments.length}</span>
-          </div>
+        <div className="flex gap-4 mt-4 text-base">
+          <NeoBadge variant="neutral" className="text-base">
+            Total: {documents.length}
+          </NeoBadge>
+          <NeoBadge variant="neutral" className="text-base">
+            Mostrados: {filteredDocuments.length}
+          </NeoBadge>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden flex">
         {/* Document Tree/List */}
-        <div className="flex-1 overflow-auto border-r border-slate-800">
+        <div className="flex-1 overflow-auto border-r-2 border-border custom-scroll">
           {viewMode === 'folder' && (
             <div className="p-4 space-y-2">
               {folderStructure.length === 0 ? (
-                <p className="text-slate-400 text-center py-8">No documents found</p>
+                <p className="text-foreground/50 text-center py-8 text-base">No documents found</p>
               ) : (
                 folderStructure.map(folder => (
                   <FolderTreeNode key={folder.path} node={folder} level={0} />
@@ -423,7 +412,7 @@ export default function DocumentManagement() {
           {viewMode === 'tree' && (
             <div className="p-4">
               {folderStructure.length === 0 ? (
-                <p className="text-slate-400 text-center py-8">No documents found</p>
+                <p className="text-foreground/50 text-center py-8 text-base">No documents found</p>
               ) : (
                 folderStructure.map((folder, idx) => (
                   <TreeDiagramNode
@@ -443,70 +432,68 @@ export default function DocumentManagement() {
 
         {/* Detail Panel */}
         {selectedDoc ? (
-          <div className="min-w-80 max-w-96 bg-slate-900 border-l border-slate-800 flex flex-col overflow-hidden">
+          <div className="min-w-80 max-w-96 bg-secondary-background border-l-2 border-border flex flex-col overflow-hidden">
             {/* Preview Button */}
             {selectedDoc.file_extension === '.pdf' && (
-              <div className="p-3 border-b border-slate-800">
-                <button
+              <div className="p-3 border-b-2 border-border">
+                <NeoButton
                   onClick={() => setShowPreview(true)}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-3
-                           bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30
-                           text-blue-300 rounded text-xs font-medium transition-colors"
+                  variant="default"
+                  className="w-full"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   Vista previa
-                </button>
+                </NeoButton>
               </div>
             )}
             {selectedDoc.file_extension === '.docx' && (
-              <div className="p-3 border-b border-slate-800">
-                <div className="flex items-center gap-2 text-xs text-slate-500 py-1 px-2
-                            bg-slate-800/50 rounded border border-slate-700/50">
+              <div className="p-3 border-b-2 border-border">
+                <NeoBadge variant="outline" className="w-full justify-center text-base">
                   <FileText className="w-3.5 h-3.5" />
                   Vista previa no disponible para .docx
-                </div>
+                </NeoBadge>
               </div>
             )}
 
             {/* Document Info */}
-            <div className="p-4 border-b border-slate-800 overflow-auto">
+            <div className="p-4 border-b-2 border-border overflow-auto custom-scroll">
               <div className="mb-4">
-                <h2 className="text-base font-bold text-white mb-2 line-clamp-2">{selectedDoc.name}</h2>
-                <p className="text-xs text-slate-400 truncate">{selectedDoc.category}</p>
+                <h2 className="font-heading text-lg font-bold mb-2 line-clamp-2">{selectedDoc.name}</h2>
+                <p className="text-base text-foreground/70 truncate">{selectedDoc.category}</p>
                 {selectedDoc.subcategory && (
-                  <p className="text-xs text-slate-400 truncate">{selectedDoc.subcategory}</p>
+                  <p className="text-base text-foreground/70 truncate">{selectedDoc.subcategory}</p>
                 )}
                 {selectedDoc.sub_subcategory && (
-                  <p className="text-xs text-slate-400 truncate">{selectedDoc.sub_subcategory}</p>
+                  <p className="text-base text-foreground/70 truncate">{selectedDoc.sub_subcategory}</p>
                 )}
               </div>
 
-              <div className="space-y-2 text-xs">
+              <div className="space-y-2 text-base">
                 <div>
-                  <p className="text-slate-500 uppercase tracking-wide">Especialización</p>
+                  <p className="text-foreground/60 uppercase tracking-wide">Especialización</p>
                   <p className="font-medium truncate">{selectedDoc.specialization}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500 uppercase tracking-wide">Tipo</p>
+                  <p className="text-foreground/60 uppercase tracking-wide">Tipo</p>
                   <p className="font-medium">{selectedDoc.file_extension}</p>
                 </div>
                 <div>
-                  <p className="text-slate-500 uppercase tracking-wide">Tamaño</p>
+                  <p className="text-foreground/60 uppercase tracking-wide">Tamaño</p>
                   <p className="font-medium">{(selectedDoc.file_size_bytes / 1024).toFixed(2)} KB</p>
                 </div>
                 <div>
-                  <p className="text-slate-500 uppercase tracking-wide">Modificado</p>
+                  <p className="text-foreground/60 uppercase tracking-wide">Modificado</p>
                   <p className="font-medium">{new Date(selectedDoc.modified_date).toLocaleDateString()}</p>
                 </div>
                 {selectedDoc.tags.length > 0 && (
                   <div>
-                    <p className="text-slate-500 uppercase tracking-wide mb-1">Etiquetas</p>
+                    <p className="text-foreground/60 uppercase tracking-wide mb-1">Etiquetas</p>
                     <div className="flex flex-wrap gap-1">
                       {selectedDoc.tags.map((tag, idx) => (
-                        <span key={idx} className="inline-flex items-center gap-0.5 bg-blue-500/20 text-blue-300 text-xs px-1.5 py-0.5 rounded border border-blue-500/30 truncate">
+                        <NeoBadge key={idx} variant="outline" className="text-xs truncate">
                           <Tag className="w-2.5 h-2.5 flex-shrink-0" />
                           <span className="truncate">{tag}</span>
-                        </span>
+                        </NeoBadge>
                       ))}
                     </div>
                   </div>
@@ -520,10 +507,10 @@ export default function DocumentManagement() {
                 );
                 if (related.length === 0) return null;
                 return (
-                  <div className="p-4 border-t border-slate-800 space-y-2">
+                  <NeoCard variant="outline" className="mt-4 p-4 space-y-2">
                     <div className="flex items-center gap-2 mb-2">
-                      <Scale className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                      <h3 className="text-xs font-semibold text-amber-300 uppercase tracking-wide">
+                      <Scale className="w-3.5 h-3.5 text-main flex-shrink-0" />
+                      <h3 className="text-base font-black uppercase tracking-wide">
                         Leyes relacionadas
                       </h3>
                     </div>
@@ -534,63 +521,61 @@ export default function DocumentManagement() {
                           href={law.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-xs text-slate-300 hover:text-blue-300
-                                   hover:bg-slate-800/50 rounded px-2 py-1.5 transition-colors group"
+                          className="flex items-center gap-2 text-base text-foreground hover:text-main hover:bg-secondary-background rounded-base px-2 py-1.5 transition-colors group"
                         >
-                          <ExternalLink className="w-3 h-3 flex-shrink-0 text-slate-500 group-hover:text-blue-400" />
+                          <ExternalLink className="w-3 h-3 flex-shrink-0 text-foreground/60 group-hover:text-main" />
                           <span className="truncate">{law.institution}</span>
                         </a>
                       ))}
                     </div>
-                  </div>
+                  </NeoCard>
                 );
               })()}
             </div>
 
             {/* Comments Section */}
-            <div className="flex-1 overflow-auto border-t border-slate-800 p-3 flex flex-col">
+            <div className="flex-1 overflow-auto border-t-2 border-border p-3 flex flex-col custom-scroll">
               <div className="flex items-center gap-2 mb-2">
-                <MessageCircle className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                <h3 className="text-xs font-semibold">Comentarios ({selectedDoc.comments.length})</h3>
+                <MessageCircle className="w-4 h-4 text-foreground/60 flex-shrink-0" />
+                <h3 className="text-base font-semibold">Comentarios ({selectedDoc.comments.length})</h3>
               </div>
 
-              <div className="flex-1 overflow-auto mb-3 space-y-2">
+              <div className="flex-1 overflow-auto mb-3 space-y-2 custom-scroll">
                 {selectedDoc.comments.length === 0 ? (
-                  <p className="text-xs text-slate-500 italic">Sin comentarios</p>
+                  <p className="text-base text-foreground/50 italic">Sin comentarios</p>
                 ) : (
                   selectedDoc.comments.map((cmt, idx) => (
-                    <div key={idx} className="bg-slate-800/50 rounded p-2">
-                      <p className="text-xs text-slate-400 mb-1">{cmt.author || 'Anónimo'}</p>
-                      <p className="text-xs text-slate-200 line-clamp-3">{cmt.text}</p>
+                    <NeoCard key={idx} className="p-2">
+                      <p className="text-base text-foreground/60 mb-1">{cmt.author || 'Anónimo'}</p>
+                      <p className="text-base text-foreground line-clamp-3">{cmt.text}</p>
                       {cmt.created_at && (
-                        <p className="text-xs text-slate-500 mt-1">{new Date(cmt.created_at).toLocaleDateString()}</p>
+                        <p className="text-base text-foreground/50 mt-1">{new Date(cmt.created_at).toLocaleDateString()}</p>
                       )}
-                    </div>
+                    </NeoCard>
                   ))
                 )}
               </div>
 
-              <div className="flex gap-1">
-                <input
+              <div className="flex gap-2">
+                <NeoInput
                   type="text"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                   placeholder="Agregar comentario..."
-                  className="flex-1 bg-slate-800 border border-slate-700 text-white text-xs px-2 py-1.5 rounded focus:border-blue-500 focus:outline-none transition-colors"
+                  className="flex-1"
                 />
-                <button
+                <NeoButton
                   onClick={handleAddComment}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 rounded text-xs font-medium transition-colors flex-shrink-0"
                 >
                   Enviar
-                </button>
+                </NeoButton>
               </div>
             </div>
           </div>
         ) : (
-          <div className="min-w-80 bg-slate-900 border-l border-slate-800 flex items-center justify-center">
-            <p className="text-slate-500 text-center px-4">
+          <div className="min-w-80 bg-secondary-background border-l-2 border-border flex items-center justify-center">
+            <p className="text-foreground/50 text-center px-4 text-base">
               Selecciona un documento para ver detalles
             </p>
           </div>
@@ -599,21 +584,22 @@ export default function DocumentManagement() {
         {/* PDF Preview Modal */}
         {showPreview && selectedDoc && selectedDoc.file_extension === '.pdf' && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
             onClick={() => setShowPreview(false)}
           >
-            <div
-              className="w-full max-w-4xl h-[80vh] bg-slate-900 rounded-xl border border-slate-700
-                         flex flex-col overflow-hidden shadow-2xl"
-              onClick={e => e.stopPropagation()}
+            <NeoCard
+              className="w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden p-0"
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-3 border-b border-slate-700 flex-shrink-0">
-                <span className="text-sm font-medium text-white truncate">{selectedDoc.name}</span>
-                <button onClick={() => setShowPreview(false)}
-                  className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors flex-shrink-0"
+              <div className="flex items-center justify-between p-3 border-b-2 border-border flex-shrink-0">
+                <span className="text-base font-medium truncate">{selectedDoc.name}</span>
+                <NeoButton
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPreview(false)}
                 >
                   <X className="w-4 h-4" />
-                </button>
+                </NeoButton>
               </div>
               <iframe
                 src={botAPI.getDocumentFileUrl(selectedDoc.id)}
@@ -621,7 +607,7 @@ export default function DocumentManagement() {
                 title={selectedDoc.name}
                 sandbox="allow-same-origin allow-scripts"
               />
-            </div>
+            </NeoCard>
           </div>
         )}
       </div>

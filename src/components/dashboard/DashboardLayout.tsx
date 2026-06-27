@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { NeoBadge } from "../ui/neo/NeoBadge";
 import { cn } from "../../lib/utils";
 import {
@@ -23,6 +24,8 @@ import {
   FileText,
   Brain,
   Bot,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -35,6 +38,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [whatsappOpen, setWhatsappOpen] = useState(false);
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   const whatsappPaths = [
     "/dashboard/whatsapp",
@@ -81,7 +85,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-40 flex h-full flex-col border-r-2 border-border bg-main shadow-[4px_0_0_0_#000] transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 z-40 flex h-full flex-col border-r-2 border-border bg-main shadow-sidebar transition-all duration-300 ease-in-out ${
           isMobile
             ? sidebarOpen
               ? "w-64 translate-x-0"
@@ -147,7 +151,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               onClick={() => setWhatsappOpen((o) => !o)}
               className={`group flex w-full items-center gap-3 rounded-base border-2 px-4 py-3 font-base transition-all ${
                 isWhatsappActive
-                  ? "border-border bg-white text-foreground shadow-shadow"
+                  ? "border-border bg-secondary-background text-foreground shadow-shadow"
                   : "border-transparent bg-[#0000CC] text-white hover:border-white/30"
               } ${!sidebarOpen && !isMobile ? "justify-center" : ""}`}
             >
@@ -205,7 +209,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div
             className={`flex items-center gap-3 ${!sidebarOpen && !isMobile ? "justify-center" : ""}`}
           >
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-base border-2 border-border bg-white text-sm font-black text-foreground shadow-[2px_2px_0_0_#000]">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-base border-2 border-border bg-secondary-background text-sm font-black text-foreground shadow-button">
               {user?.username?.charAt(0).toUpperCase()}
             </div>
             {(sidebarOpen || isMobile) && (
@@ -232,11 +236,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         }`}
       >
         {/* Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b-2 border-border bg-white px-4 shadow-[0_4px_0_0_#000] md:h-20 md:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b-2 border-border bg-background px-4 shadow-header md:h-20 md:px-8">
           <div className="flex items-center gap-4">
             <button
               onClick={toggleSidebar}
-              className="rounded-base border-2 border-border bg-main p-2 text-main-foreground shadow-[2px_2px_0_0_#000] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+              className="rounded-base border-2 border-border bg-main p-2 text-main-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
             >
               <Menu size={22} />
             </button>
@@ -250,7 +254,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </h2>
           </div>
 
-          <div className="hidden md:block">
+          <div className="hidden items-center gap-3 md:flex">
+            <button
+              onClick={toggleTheme}
+              className="rounded-base border-2 border-border bg-secondary-background p-2 text-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+              title={theme === "light" ? "Modo oscuro" : "Modo claro"}
+            >
+              {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
             <span className="text-xs font-black tracking-widest uppercase text-foreground/60">
               Sesión: <span className="text-main">{user?.username}</span>
             </span>
@@ -274,7 +285,7 @@ const NavItem = ({ to, icon, label, sidebarOpen, isMobile }: any) => (
       cn(
         "group flex w-full items-center gap-3 rounded-base border-2 px-4 py-3 font-base transition-all",
         isActive
-          ? "border-border bg-white text-foreground shadow-shadow"
+          ? "border-border bg-secondary-background text-foreground shadow-shadow"
           : "border-transparent bg-[#0000CC] text-white hover:border-white/30",
         !sidebarOpen && !isMobile && "justify-center"
       )
@@ -292,7 +303,7 @@ const SubNavLink = ({ to, icon, label }: any) => (
       cn(
         "flex items-center gap-2.5 rounded-base border-2 px-3 py-2 text-sm font-base transition-all",
         isActive
-          ? "border-border bg-white text-foreground shadow-[2px_2px_0_0_#000]"
+          ? "border-border bg-secondary-background text-foreground shadow-button"
           : "border-transparent text-white/90 hover:border-white/30 hover:bg-[#0000CC]"
       )
     }

@@ -21,6 +21,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import api from "../services/api";
+import { NeoCard } from "../components/ui/neo/NeoCard";
+import { NeoButton } from "../components/ui/neo/NeoButton";
+import { NeoInput } from "../components/ui/neo/NeoInput";
+import { NeoSelect } from "../components/ui/neo/NeoSelect";
+import { NeoBadge } from "../components/ui/neo/NeoBadge";
 
 interface StoredMessage {
   id: number;
@@ -68,11 +73,18 @@ interface UploadedMedia {
   mediaType: string;
 }
 
-const statusColors: Record<string, string> = {
-  open: "bg-blue-600",
-  reviewed: "bg-emerald-600",
-  needs_fix: "bg-amber-600",
-  archived: "bg-slate-600",
+const statusLabels: Record<string, string> = {
+  open: "Abierto",
+  reviewed: "Revisado",
+  needs_fix: "Necesita ajuste",
+  archived: "Archivado",
+};
+
+const statusBadges: Record<string, "main" | "neutral" | "outline"> = {
+  open: "main",
+  reviewed: "neutral",
+  needs_fix: "outline",
+  archived: "neutral",
 };
 
 const BotSimulator: React.FC = () => {
@@ -377,42 +389,41 @@ const BotSimulator: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-140px)] min-h-[500px] overflow-hidden rounded-2xl border border-slate-700/50 bg-[#0F172A]">
+    <div className="flex h-[calc(100vh-140px)] min-h-[500px] overflow-hidden rounded-base border-2 border-border bg-background shadow-shadow">
       {/* Sidebar */}
       <div
-        className={`flex flex-col border-r border-slate-700/50 bg-[#151E32] transition-all duration-300 ${
+        className={`flex flex-col border-r-2 border-border bg-secondary-background transition-all duration-300 ${
           showSidebar ? "w-72" : "w-0 overflow-hidden"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-slate-700/50 p-4">
-          <h3 className="flex items-center gap-2 font-display text-sm font-bold text-white">
+        <div className="flex items-center justify-between border-b-2 border-border p-4">
+          <h3 className="flex items-center gap-2 font-heading text-base font-bold">
             <History size={16} />
             Conversaciones
           </h3>
-          <button
-            onClick={startNewChat}
-            className="flex items-center gap-1 rounded-lg bg-blue-600 px-2 py-1 text-xs font-bold text-white hover:bg-blue-500"
-          >
+          <NeoButton variant="default" size="sm" onClick={startNewChat}>
             <Plus size={12} />
             Nuevo
-          </button>
+          </NeoButton>
         </div>
-        <div className="flex-1 overflow-y-auto p-2">
+        <div className="flex-1 overflow-y-auto p-2 custom-scroll">
           {conversations.map((conv) => (
             <button
               key={conv.session_id}
               onClick={() => setSessionId(conv.session_id)}
-              className={`mb-2 w-full rounded-lg p-3 text-left text-xs transition-colors ${
+              className={`mb-2 w-full rounded-base border-2 p-3 text-left text-sm font-base transition-all ${
                 conv.session_id === sessionId
-                  ? "bg-blue-600/30 text-blue-200"
-                  : "bg-slate-800/50 text-slate-300 hover:bg-slate-700"
+                  ? "border-border bg-main text-main-foreground shadow-shadow"
+                  : "border-border bg-background text-foreground hover:bg-secondary-background"
               }`}
             >
-              <div className="mb-1 flex items-center justify-between">
+              <div className="mb-1 flex items-center justify-between gap-2">
                 <span className="truncate font-semibold">{conv.title}</span>
-                <span className={`h-2 w-2 rounded-full ${statusColors[conv.status] || "bg-slate-600"}`} />
+                <NeoBadge variant={statusBadges[conv.status] || "neutral"}>
+                  {statusLabels[conv.status] || conv.status}
+                </NeoBadge>
               </div>
-              <div className="flex items-center justify-between text-[10px] opacity-70">
+              <div className="flex items-center justify-between text-xs opacity-70">
                 <span>{conv.message_count || 0} mensajes</span>
                 <span>{conv.last_message_at ? new Date(conv.last_message_at).toLocaleDateString() : ""}</span>
               </div>
@@ -424,88 +435,88 @@ const BotSimulator: React.FC = () => {
       {/* Main chat area */}
       <div className="flex flex-1 flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-700/50 bg-[#151E32] px-5 py-3">
+        <div className="flex items-center justify-between border-b-2 border-border bg-secondary-background px-5 py-3">
           <div className="flex items-center gap-3">
-            <button
+            <NeoButton
+              variant="neutral"
+              size="icon"
               onClick={() => setShowSidebar((s) => !s)}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-700 hover:text-white"
             >
               {showSidebar ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-            </button>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-blue-600 text-white">
+            </NeoButton>
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-main-foreground">
               <Bot size={20} />
             </div>
             <div>
-              <input
+              <NeoInput
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={saveMeta}
-                className="bg-transparent font-display text-base font-bold text-white focus:border-b focus:border-blue-500 focus:outline-none"
+                className="h-auto border-0 bg-transparent px-0 py-0 font-heading text-base font-bold shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
               />
-              <p className="text-xs text-slate-400">{sessionId}</p>
+              <p className="text-xs font-base text-foreground/60">{sessionId}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={startNewChat}
-              className="flex items-center gap-2 rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2 text-xs font-bold text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
-            >
+            <NeoButton variant="neutral" size="sm" onClick={startNewChat}>
               <Plus size={14} />
               Nuevo chat
-            </button>
-            <button
-              onClick={clearChat}
-              className="flex items-center gap-2 rounded-lg border border-slate-600 bg-slate-800/50 px-3 py-2 text-xs font-bold text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
-            >
+            </NeoButton>
+            <NeoButton variant="outline" size="sm" onClick={clearChat}>
               <Trash2 size={14} />
               Reiniciar
-            </button>
+            </NeoButton>
           </div>
         </div>
 
         {/* Notes / status bar */}
-        <div className="border-b border-slate-700/50 bg-[#0B1221] px-5 py-3">
+        <div className="border-b-2 border-border bg-background px-5 py-3">
           <div className="flex flex-col gap-3 md:flex-row md:items-start">
             <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              <label className="mb-1 block text-xs font-base font-bold uppercase tracking-wider text-foreground/60">
                 Notas de Leandro
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Escribe aquí qué ajustes necesita el bot, ej: 'el saludo es muy formal'..."
-                className="h-16 w-full resize-none rounded-lg border border-slate-600 bg-[#0F172A] px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none"
+                className="h-16 w-full resize-none rounded-base border-2 border-border bg-secondary-background px-3 py-2 text-sm font-base text-foreground placeholder:text-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border focus-visible:ring-offset-2"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Estado</label>
-              <select
+              <label className="text-xs font-base font-bold uppercase tracking-wider text-foreground/60">
+                Estado
+              </label>
+              <NeoSelect
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="rounded-lg border border-slate-600 bg-[#0F172A] px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                className="h-10 text-sm"
               >
                 <option value="open">Abierto</option>
                 <option value="needs_fix">Necesita ajuste</option>
                 <option value="reviewed">Revisado</option>
                 <option value="archived">Archivado</option>
-              </select>
-              <button
+              </NeoSelect>
+              <NeoButton
+                variant="default"
+                size="sm"
                 onClick={saveMeta}
                 disabled={savingMeta || !conversationId}
-                className="flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-xs font-bold text-white hover:bg-purple-500 disabled:opacity-50"
               >
                 <Save size={12} />
                 {savingMeta ? "Guardando..." : "Guardar notas"}
-              </button>
+              </NeoButton>
             </div>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 space-y-4 overflow-y-auto p-4 md:p-6">
+        <div className="flex-1 space-y-4 overflow-y-auto bg-background p-4 md:p-6 custom-scroll">
           {loadingHistory && (
-            <div className="py-4 text-center text-xs text-slate-500">Cargando historial...</div>
+            <div className="py-4 text-center text-sm font-base text-foreground/50">
+              Cargando historial...
+            </div>
           )}
           {messages.map((msg) => (
             <div
@@ -518,29 +529,31 @@ const BotSimulator: React.FC = () => {
                 }`}
               >
                 <div
-                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
-                    msg.role === "user" ? "bg-blue-600" : "bg-gradient-to-br from-purple-600 to-blue-600"
+                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 ${
+                    msg.role === "user"
+                      ? "border-border bg-main text-main-foreground"
+                      : "border-border bg-secondary-background text-foreground"
                   }`}
                 >
                   {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
                 </div>
                 <div className="min-w-0">
                   <div
-                    className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                    className={`rounded-base border-2 px-4 py-3 text-base font-base leading-relaxed whitespace-pre-wrap shadow-shadow ${
                       msg.role === "user"
-                        ? "bg-blue-600 text-white"
-                        : "border border-slate-700 bg-[#1E293B] text-slate-200"
+                        ? "border-border bg-main text-main-foreground"
+                        : "border-border bg-secondary-background text-foreground"
                     }`}
                   >
                     {msg.text}
                     {msg.media && (
-                      <div className="mt-2 rounded-lg border border-white/20 bg-white/10 p-2 text-xs">
+                      <div className="mt-2 rounded-base border-2 border-border bg-background/50 p-2 text-sm">
                         {msg.media.mediaType === "image" && <ImageIcon size={14} className="mb-1" />}
                         {msg.media.mediaType === "document" && <FileText size={14} className="mb-1" />}
                         {msg.media.mediaType === "audio" && <Mic size={14} className="mb-1" />}
                         <span className="opacity-90">{msg.media.originalName}</span>
                         {msg.media.analysis && (
-                          <p className="mt-1 text-[10px] opacity-70 line-clamp-3">
+                          <p className="mt-1 text-xs opacity-70 line-clamp-3">
                             {msg.media.analysis}
                           </p>
                         )}
@@ -550,38 +563,42 @@ const BotSimulator: React.FC = () => {
 
                   {/* Feedback for bot messages */}
                   {msg.role === "bot" && typeof msg.id === "number" && (
-                    <div className="mt-2 rounded-lg border border-slate-700 bg-[#0B1221] p-2">
+                    <NeoCard variant="neutral" className="mt-2 gap-2 p-2">
                       <div className="mb-2 flex items-center gap-2">
-                        <button
+                        <NeoButton
+                          variant={msg.rating === 1 ? "default" : "outline"}
+                          size="icon"
                           onClick={() => sendFeedback(msg.id, 1, msg.feedback || "")}
-                          className={`rounded p-1 ${msg.rating === 1 ? "bg-emerald-600 text-white" : "text-slate-400 hover:bg-slate-700"}`}
                           title="Buena respuesta"
                         >
                           <ThumbsUp size={12} />
-                        </button>
-                        <button
+                        </NeoButton>
+                        <NeoButton
+                          variant={msg.rating === -1 ? "default" : "outline"}
+                          size="icon"
                           onClick={() => sendFeedback(msg.id, -1, msg.feedback || "")}
-                          className={`rounded p-1 ${msg.rating === -1 ? "bg-red-600 text-white" : "text-slate-400 hover:bg-slate-700"}`}
                           title="Necesita corrección"
                         >
                           <ThumbsDown size={12} />
-                        </button>
-                        <span className="text-[10px] text-slate-500">¿Cómo mejoraría esta respuesta?</span>
+                        </NeoButton>
+                        <span className="text-xs font-base text-foreground/60">
+                          ¿Cómo mejoraría esta respuesta?
+                        </span>
                       </div>
                       <div className="flex gap-2">
-                        <input
+                        <NeoInput
                           type="text"
                           defaultValue={msg.feedback || ""}
                           placeholder="Ej: suena muy formal, falta precio..."
-                          className="flex-1 rounded border border-slate-700 bg-[#0F172A] px-2 py-1 text-[10px] text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none"
+                          className="h-8 text-xs"
                           onBlur={(e) => {
                             const rating = msg.rating ?? 0;
                             sendFeedback(msg.id, rating, e.target.value);
                           }}
                         />
-                        <MessageSquare size={12} className="text-slate-500" />
+                        <MessageSquare size={12} className="text-foreground/50" />
                       </div>
-                    </div>
+                    </NeoCard>
                   )}
                 </div>
               </div>
@@ -590,10 +607,10 @@ const BotSimulator: React.FC = () => {
           {loading && (
             <div className="flex justify-start">
               <div className="flex max-w-[85%] gap-3">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-blue-600">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-secondary-background text-foreground">
                   <Bot size={14} />
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl border border-slate-700 bg-[#1E293B] px-4 py-3 text-sm text-slate-400">
+                <div className="flex items-center gap-2 rounded-base border-2 border-border bg-secondary-background px-4 py-3 text-base font-base text-foreground shadow-shadow">
                   <RefreshCw size={14} className="animate-spin" />
                   El Gurú está analizando...
                 </div>
@@ -605,37 +622,34 @@ const BotSimulator: React.FC = () => {
 
         {/* Attachment preview */}
         {attachedMedia && (
-          <div className="border-t border-slate-700/50 bg-[#151E32] px-4 py-3">
-            <div className="flex items-center gap-3 rounded-xl border border-slate-600 bg-[#0B1120] p-2">
+          <div className="border-t-2 border-border bg-secondary-background px-4 py-3">
+            <NeoCard variant="neutral" className="flex-row items-center gap-3 p-2">
               {attachedMedia.mediaType === "image" && attachedMedia.previewUrl ? (
                 <img
                   src={attachedMedia.previewUrl}
                   alt="preview"
-                  className="h-16 w-16 rounded-lg object-cover"
+                  className="h-16 w-16 rounded-base object-cover"
                 />
               ) : (
-                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-slate-800 text-slate-400">
+                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-base border-2 border-border bg-background text-foreground">
                   {attachedMedia.mediaType === "audio" ? <Mic size={24} /> : <FileText size={24} />}
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">{attachedMedia.file.name}</p>
-                <p className="text-xs text-slate-400">
+                <p className="truncate text-base font-base font-medium">{attachedMedia.file.name}</p>
+                <p className="text-sm font-base text-foreground/60">
                   {attachedMedia.mediaType === "audio" ? "Nota de voz" : attachedMedia.mediaType}
                 </p>
               </div>
-              <button
-                onClick={clearAttachment}
-                className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
-              >
+              <NeoButton variant="outline" size="icon" onClick={clearAttachment}>
                 <X size={18} />
-              </button>
-            </div>
+              </NeoButton>
+            </NeoCard>
           </div>
         )}
 
         {/* Input */}
-        <form onSubmit={sendMessage} className="border-t border-slate-700/50 bg-[#151E32] p-4">
+        <form onSubmit={sendMessage} className="border-t-2 border-border bg-secondary-background p-4">
           <div className="flex items-center gap-2">
             <input
               ref={fileInputRef}
@@ -644,51 +658,55 @@ const BotSimulator: React.FC = () => {
               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,audio/*"
               onChange={handleFileSelect}
             />
-            <button
+            <NeoButton
               type="button"
+              variant="neutral"
+              size="icon"
               onClick={() => fileInputRef.current?.click()}
               disabled={loading || recording || !!attachedMedia}
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-[#0B1120] text-slate-300 transition-colors hover:bg-slate-700 hover:text-white disabled:opacity-50"
               title="Adjuntar archivo"
             >
               <Paperclip size={18} />
-            </button>
+            </NeoButton>
 
             {recording ? (
-              <button
+              <NeoButton
                 type="button"
+                variant="default"
+                size="sm"
                 onClick={stopRecording}
-                className="flex h-10 flex-shrink-0 items-center gap-2 rounded-xl bg-red-600 px-3 text-sm font-bold text-white transition-colors hover:bg-red-500"
               >
                 <Square size={14} fill="currentColor" />
                 {formatTime(recordingTime)}
-              </button>
+              </NeoButton>
             ) : (
-              <button
+              <NeoButton
                 type="button"
+                variant="neutral"
+                size="icon"
                 onClick={startRecording}
                 disabled={loading || !!attachedMedia}
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-[#0B1120] text-slate-300 transition-colors hover:bg-slate-700 hover:text-white disabled:opacity-50"
                 title="Grabar nota de voz"
               >
                 <Mic size={18} />
-              </button>
+              </NeoButton>
             )}
 
-            <input
+            <NeoInput
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Escribe un mensaje de prueba..."
-              className="flex-1 rounded-xl border border-slate-600 bg-[#0B1120] px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+              className="flex-1"
             />
-            <button
+            <NeoButton
               type="submit"
+              variant="default"
+              size="icon"
               disabled={loading || (!input.trim() && !attachedMedia)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Send size={18} />
-            </button>
+            </NeoButton>
           </div>
         </form>
       </div>
