@@ -10,7 +10,7 @@ const NeoSelect = React.forwardRef<HTMLSelectElement, NeoSelectProps>(
       <select
         ref={ref}
         className={cn(
-          "flex h-10 w-full rounded-base border-2 border-border bg-secondary-background px-3 py-2 text-sm font-base text-foreground",
+          "flex h-12 w-full rounded-base border-2 border-border bg-secondary-background px-4 py-2 text-base font-base text-foreground",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           className

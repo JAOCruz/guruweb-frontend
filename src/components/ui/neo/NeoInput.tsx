@@ -10,7 +10,7 @@ const NeoInput = React.forwardRef<HTMLInputElement, NeoInputProps>(
       <input
         type={type}
         className={cn(
-          "flex h-10 w-full rounded-base border-2 border-border bg-secondary-background px-3 py-2 text-sm font-base text-foreground",
+          "flex h-12 w-full rounded-base border-2 border-border bg-secondary-background px-4 py-2 text-base font-base text-foreground",
           "selection:bg-main selection:text-main-foreground",
           "placeholder:text-foreground/50",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border focus-visible:ring-offset-2",

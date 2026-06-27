@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "../../../lib/utils";
 
 interface NeoCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "main" | "outline";
+  variant?: "default" | "main" | "neutral" | "outline";
 }
 
 const NeoCard = React.forwardRef<HTMLDivElement, NeoCardProps>(
@@ -11,7 +11,7 @@ const NeoCard = React.forwardRef<HTMLDivElement, NeoCardProps>(
       <div
         ref={ref}
         className={cn(
-          "rounded-base flex flex-col border-2 gap-4 p-5 font-base",
+          "rounded-base flex flex-col border-2 gap-5 p-6 font-base",
           {
             "bg-background text-foreground border-border shadow-shadow":
               variant === "default",
@@ -19,6 +19,10 @@ const NeoCard = React.forwardRef<HTMLDivElement, NeoCardProps>(
           {
             "bg-main text-main-foreground border-border shadow-shadow":
               variant === "main",
+          },
+          {
+            "bg-secondary-background text-foreground border-border shadow-shadow":
+              variant === "neutral",
           },
           {
             "bg-transparent text-foreground border-border":
@@ -39,7 +43,7 @@ const NeoCardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col gap-1.5", className)}
+    className={cn("flex flex-col gap-2", className)}
     {...props}
   />
 ));
@@ -51,7 +55,7 @@ const NeoCardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("font-heading leading-none text-lg", className)}
+    className={cn("font-heading leading-none text-xl md:text-2xl", className)}
     {...props}
   />
 ));
@@ -63,7 +67,7 @@ const NeoCardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm font-base text-foreground/70", className)}
+    className={cn("text-base font-base text-foreground/70", className)}
     {...props}
   />
 ));
@@ -83,7 +87,7 @@ const NeoCardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center gap-2 pt-2", className)}
+    className={cn("flex items-center gap-3 pt-2", className)}
     {...props}
   />
 ));
