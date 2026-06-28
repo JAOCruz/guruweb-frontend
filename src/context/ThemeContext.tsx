@@ -4,10 +4,10 @@ type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
-  headingFont: "space" | "barlow";
+  headingFont: "space" | "oswald";
   darkBg: "solid" | "dots";
   toggleTheme: () => void;
-  setHeadingFont: (font: "space" | "barlow") => void;
+  setHeadingFont: (font: "space" | "oswald") => void;
   setDarkBg: (bg: "solid" | "dots") => void;
 }
 
@@ -15,19 +15,19 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const FONT_MAP = {
   space: '"Space Grotesk", sans-serif',
-  barlow: '"Barlow Condensed", sans-serif',
+  oswald: '"Oswald", sans-serif',
 };
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [theme, setTheme] = useState<Theme>("light");
-  const [headingFont, setHeadingFontState] = useState<"space" | "barlow">("space");
+  const [headingFont, setHeadingFontState] = useState<"space" | "oswald">("space");
   const [darkBg, setDarkBgState] = useState<"solid" | "dots">("solid");
 
   const applyThemeClasses = (
     currentTheme: Theme,
-    currentFont: "space" | "barlow",
+    currentFont: "space" | "oswald",
     currentBg: "solid" | "dots"
   ) => {
     const root = document.documentElement;
@@ -53,7 +53,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("guru-theme") as Theme | null;
-    const savedFont = localStorage.getItem("guru-heading-font") as "space" | "barlow" | null;
+    const savedFont = localStorage.getItem("guru-heading-font") as "space" | "oswald" | null;
     const savedBg = localStorage.getItem("guru-dark-bg") as "solid" | "dots" | null;
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -77,7 +77,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
-  const setHeadingFont = (font: "space" | "barlow") => {
+  const setHeadingFont = (font: "space" | "oswald") => {
     setHeadingFontState(font);
     localStorage.setItem("guru-heading-font", font);
     applyThemeClasses(theme, font, darkBg);

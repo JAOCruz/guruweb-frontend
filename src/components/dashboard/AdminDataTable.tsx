@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ExcelRow, USER_COLUMNS, WorkerKey } from "../../services/excelService";
 import { servicesAPI } from "../../services/api";
 import { NeoButton } from "../ui/neo/NeoButton";
@@ -50,6 +50,29 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<string>("");
+
+  // Pagination state
+  const ITEMS_PER_PAGE = 10;
+  const [pageByUser, setPageByUser] = useState<Record<WorkerKey, number>>({
+    HENGI: 1,
+    MARLENI: 1,
+    ISRAEL: 1,
+    THAICAR: 1,
+    AUXILIAR_I: 1,
+    AUXILIAR_II: 1,
+  });
+
+  const getCurrentPage = (user: WorkerKey) => pageByUser[user] || 1;
+
+  const getTotalPages = (user: WorkerKey) =>
+    Math.max(1, Math.ceil(groupedData[user].length / ITEMS_PER_PAGE));
+
+  const getPaginatedData = (user: WorkerKey) => {
+    const all = groupedData[user];
+    const page = Math.min(getCurrentPage(user), getTotalPages(user));
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return all.slice(start, start + ITEMS_PER_PAGE);
+  };
 
   // Estados IA
   const [aiLoading, setAiLoading] = useState(false);
@@ -125,6 +148,18 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
   };
 
   const groupedData = useMemo(() => groupDataByUser(), [data]);
+
+  // Clamp pages when data changes to avoid empty pages after deletions
+  useEffect(() => {
+    setPageByUser((prev) => {
+      const next: Record<WorkerKey, number> = { ...prev };
+      USER_COLUMNS.forEach((user) => {
+        const total = Math.max(1, Math.ceil(groupedData[user].length / ITEMS_PER_PAGE));
+        next[user] = Math.min(prev[user] || 1, total);
+      });
+      return next;
+    });
+  }, [groupedData]);
 
   const calculateUserTotals = () => {
     const totals: any = {};
@@ -337,7 +372,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
               </thead>
               <tbody className="divide-y divide-border">
                 {groupedData[user].length > 0 ? (
-                  groupedData[user].map((item, idx) => {
+                  getPaginatedData(user).map((item, idx) => {
                     const isEditing = editingCommentId === `${user}-${idx}`;
                     return (
                       <tr
@@ -471,7 +506,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           {/* VISTA MÓVIL (Tarjetas) */}
           <div className="divide-y divide-border md:hidden">
             {groupedData[user].length > 0 ? (
-              groupedData[user].map((item, idx) => (
+              getPaginatedData(user).map((item, idx) => (
                 <div key={`${user}-m-${idx}`} className="bg-background p-5">
                   <div className="mb-2 flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -520,6 +555,35 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
               </div>
             )}
           </div>
+
+          {/* Pagination */}
+          {groupedData[user].length > ITEMS_PER_PAGE && (
+            <div className="flex items-center justify-between border-t-2 border-border bg-secondary-background p-4">
+              <span className="text-sm font-bold text-foreground/70">
+                Página {getCurrentPage(user)} de {getTotalPages(user)}
+              </span>
+              <div className="flex gap-2">
+                <NeoButton
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPageByUser((prev) => ({ ...prev, [user]: Math.max(1, getCurrentPage(user) - 1) }))}
+                  disabled={getCurrentPage(user) <= 1}
+                >
+                  Anterior
+                </NeoButton>
+                <NeoButton
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPageByUser((prev) => ({ ...prev, [user]: Math.min(getTotalPages(user), getCurrentPage(user) + 1) }))}
+                  disabled={getCurrentPage(user) >= getTotalPages(user)}
+                >
+                  Siguiente
+                </NeoButton>
+              </div>
+            </div>
+          )}
         </div>
       ))}
 

@@ -61,6 +61,34 @@ const CATEGORY_EMOJIS: Record<string, string> = {
 const getCategoryEmoji = (name: string | null) =>
   name ? CATEGORY_EMOJIS[name] || "⭐" : "📋";
 
+const STORAGE_KEY = "guru-services-catalog";
+
+const LOCAL_CATEGORIES: Category[] = Array.from(
+  new Set(Object.values(GROUP_MAP).flat())
+).map((name, i) => ({ id: i + 1, name }));
+
+const sampleServices: Service[] = [
+  { id: 1, name: "Acto de Venta - Bien Inmueble", description: "Redacción de contrato de compraventa de inmueble.", category_id: 2, category_name: "Redactar o digitar un documento", digitacion_price: 3500, notarizacion_price: 0, price_tiers: [{ min: 0, max: 5000000, label: "Hasta 5M", price: 3500 }, { min: 5000001, max: 15000000, label: "5M - 15M", price: 5500 }, { min: 15000001, max: null, label: "Más de 15M", price: 8500 }], unit_type: "por acto", active: true },
+  { id: 2, name: "Poder General", description: "Poder amplio para actos de administración y disposición.", category_id: 2, category_name: "Redactar o digitar un documento", digitacion_price: 2500, notarizacion_price: 1200, price_tiers: [], unit_type: "por documento", active: true },
+  { id: 3, name: "Traducción Jurada", description: "Traducción certificada de documentos.", category_id: 8, category_name: "Redactar y Certificar una Traducción", digitacion_price: 1500, notarizacion_price: 0, price_tiers: [], unit_type: "por página", active: true },
+  { id: 4, name: "Impresión Certificada", description: "Impresión en papel certificado.", category_id: 13, category_name: "Impresión", digitacion_price: 25, notarizacion_price: 0, price_tiers: [], unit_type: "por hoja", active: true },
+  { id: 5, name: "Mensajería Local", description: "Entrega de documentos en zona metropolitana.", category_id: 27, category_name: "Mensajería", digitacion_price: 300, notarizacion_price: 0, price_tiers: [], unit_type: "por envío", active: true },
+];
+
+const loadLocalServices = (): Service[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return sampleServices;
+};
+
+const saveLocalServices = (list: Service[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  } catch { /* ignore */ }
+};
+
 const fmtMoney = (v: string | number | null) => {
   const n = Number(v) || 0;
   return `RD$ ${n.toLocaleString("es-DO")}`;
@@ -99,10 +127,20 @@ export default function ServicesCatalog() {
       const [svcRes, catRes] = await Promise.all([
         serviceCatalogAPI.getAll(), serviceCatalogAPI.getCategories(),
       ]);
-      setServices(svcRes.data.services || []);
-      setCategories(catRes.data.categories || []);
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+      const apiServices = svcRes.data.services || [];
+      const apiCategories = catRes.data.categories || [];
+      if (apiServices.length > 0) {
+        setServices(apiServices);
+        setCategories(apiCategories.length > 0 ? apiCategories : LOCAL_CATEGORIES);
+        saveLocalServices(apiServices);
+      } else {
+        throw new Error("Empty API response");
+      }
+    } catch (err) {
+      console.error("[ServicesCatalog] API failed, using local fallback:", err);
+      setServices(loadLocalServices());
+      setCategories(LOCAL_CATEGORIES);
+    } finally { setLoading(false); }
   };
 
   const servicesByGroup = useMemo(() => {
@@ -169,13 +207,58 @@ export default function ServicesCatalog() {
     if (!form.name || form.digitacion_price === undefined) { alert("Nombre y precio son requeridos."); return; }
     try {
       setSaving(true);
-      const payload = { ...form, digitacion_price: Number(form.digitacion_price), notarizacion_price: Number(form.notarizacion_price) || 0, price_tiers: form.price_tiers.map((t) => ({ min: Number(t.min), max: t.max === null || t.max === undefined ? null : Number(t.max), label: t.label, price: Number(t.price) })) };
-      if (editingService) await serviceCatalogAPI.update(editingService.id, payload); else await serviceCatalogAPI.create(payload);
-      await fetchData(); setShowModal(false);
-    } catch (err: any) { alert(err.response?.data?.error || "Error guardando."); }
+      const category = categories.find((c) => c.id === Number(form.category_id));
+      const payload: Service = {
+        id: editingService ? editingService.id : Date.now(),
+        name: form.name || "",
+        description: form.description || null,
+        category_id: form.category_id || null,
+        category_name: category?.name || null,
+        digitacion_price: Number(form.digitacion_price),
+        notarizacion_price: Number(form.notarizacion_price) || 0,
+        price_tiers: form.price_tiers.map((t) => ({ min: Number(t.min), max: t.max === null || t.max === undefined ? null : Number(t.max), label: t.label, price: Number(t.price) })),
+        unit_type: form.unit_type || "por documento",
+        active: true,
+      };
+
+      // Try API first, fallback to local state
+      try {
+        if (editingService) await serviceCatalogAPI.update(editingService.id, payload); else await serviceCatalogAPI.create(payload);
+      } catch {
+        // Local fallback
+        setServices((prev) => {
+          let next;
+          if (editingService) {
+            next = prev.map((s) => (s.id === editingService.id ? payload : s));
+          } else {
+            next = [...prev, payload];
+          }
+          saveLocalServices(next);
+          return next;
+        });
+      }
+
+      await fetchData();
+      setShowModal(false);
+    } catch (err) { alert((err as any)?.response?.data?.error || "Error guardando."); }
     finally { setSaving(false); }
   };
-  const handleDelete = async (id: number) => { if (!confirm("¿Eliminar?")) return; try { await serviceCatalogAPI.delete(id); await fetchData(); } catch { alert("Error eliminando."); } };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("¿Eliminar?")) return;
+    try {
+      try {
+        await serviceCatalogAPI.delete(id);
+      } catch {
+        setServices((prev) => {
+          const next = prev.filter((s) => s.id !== id);
+          saveLocalServices(next);
+          return next;
+        });
+      }
+      await fetchData();
+    } catch { alert("Error eliminando."); }
+  };
   const addTier = () => setForm((p) => ({ ...p, price_tiers: [...(p.price_tiers || []), { ...DEFAULT_TIER }] }));
   const removeTier = (idx: number) => setForm((p) => ({ ...p, price_tiers: (p.price_tiers || []).filter((_, i) => i !== idx) }));
   const updateTier = (idx: number, field: keyof PriceTier, value: any) => setForm((p) => { const tiers = [...(p.price_tiers || [])]; tiers[idx] = { ...tiers[idx], [field]: value }; return { ...p, price_tiers: tiers }; });
@@ -281,7 +364,7 @@ export default function ServicesCatalog() {
         <NeoCard variant="main" className="inline-flex flex-row items-center gap-3 px-6 py-3">
           <Sparkles className="h-8 w-8 text-main-foreground" />
           <div className="text-left">
-            <h1 className="font-heading text-xl md:text-2xl font-black uppercase tracking-wider text-main-foreground">Catálogo de Precios</h1>
+            <h1 className="font-heading text-4xl md:text-5xl font-black uppercase tracking-wider text-main-foreground">Catálogo de Precios</h1>
             <p className="text-base font-black text-main-foreground/70">Servicios y tarifas</p>
           </div>
         </NeoCard>

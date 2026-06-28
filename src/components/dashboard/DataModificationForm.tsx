@@ -4,13 +4,12 @@ import { NeoCard, NeoCardHeader, NeoCardTitle, NeoCardContent, NeoCardFooter } f
 import { NeoInput } from "../ui/neo/NeoInput";
 import { NeoSelect } from "../ui/neo/NeoSelect";
 import { NeoButton } from "../ui/neo/NeoButton";
+import { USER_COLUMNS } from "../../services/excelService";
 import { Plus, X, Loader2 } from "lucide-react";
 
 interface DataModificationFormProps {
   onServiceAdded: () => void;
 }
-
-const USER_COLUMNS = ["HENGI", "MARLENI", "ISRAEL", "THAICAR"];
 
 const SERVICE_LIST = [
   "Redaccion documento",

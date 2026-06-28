@@ -323,7 +323,7 @@ export default function DocumentManagement() {
       {/* Header */}
       <div className="bg-secondary-background border-b-2 border-border p-4">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="font-heading text-xl md:text-2xl font-bold">Gestión de Documentos</h1>
+          <h1 className="font-heading text-4xl md:text-5xl font-black">Gestión de Documentos</h1>
 
           {/* View Mode Toggle */}
           <div className="flex gap-2">

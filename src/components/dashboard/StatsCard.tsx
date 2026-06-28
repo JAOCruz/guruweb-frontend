@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 
-type StatsVariant = "default" | "main" | "success" | "warning" | "danger";
+type StatsVariant =
+  | "default"
+  | "main"
+  | "success"
+  | "warning"
+  | "danger"
+  | "purple"
+  | "orange";
 
 interface StatsCardProps {
   label: string;
@@ -20,6 +27,8 @@ const variantStyles: Record<StatsVariant, string> = {
   success: "bg-green-500 text-white",
   warning: "bg-yellow-400 text-black",
   danger: "bg-red-500 text-white",
+  purple: "bg-purple-600 text-white",
+  orange: "bg-orange-500 text-white",
 };
 
 const variantSubtle: Record<StatsVariant, string> = {
@@ -28,6 +37,8 @@ const variantSubtle: Record<StatsVariant, string> = {
   success: "text-white/80",
   warning: "text-black/70",
   danger: "text-white/80",
+  purple: "text-white/80",
+  orange: "text-white/80",
 };
 
 const variantButton: Record<StatsVariant, string> = {
@@ -39,6 +50,10 @@ const variantButton: Record<StatsVariant, string> = {
   warning:
     "border-black/20 bg-black/10 text-black hover:bg-black hover:text-yellow-400",
   danger: "border-white/30 bg-white/10 text-white hover:bg-white hover:text-red-600",
+  purple:
+    "border-white/30 bg-white/10 text-white hover:bg-white hover:text-purple-600",
+  orange:
+    "border-white/30 bg-white/10 text-white hover:bg-white hover:text-orange-600",
 };
 
 const variantBadge: Record<StatsVariant, string> = {
@@ -47,6 +62,8 @@ const variantBadge: Record<StatsVariant, string> = {
   success: "border-white/30 bg-white/10 text-white/90",
   warning: "border-black/20 bg-black/10 text-black/80",
   danger: "border-white/30 bg-white/10 text-white/90",
+  purple: "border-white/30 bg-white/10 text-white/90",
+  orange: "border-white/30 bg-white/10 text-white/90",
 };
 
 const variantWatermark: Record<StatsVariant, string> = {
@@ -55,6 +72,8 @@ const variantWatermark: Record<StatsVariant, string> = {
   success: "text-white/10",
   warning: "text-black/10",
   danger: "text-white/10",
+  purple: "text-white/10",
+  orange: "text-white/10",
 };
 
 const StatsCard: React.FC<StatsCardProps> = ({

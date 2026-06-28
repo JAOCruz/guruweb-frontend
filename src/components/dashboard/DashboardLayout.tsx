@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { NeoBadge } from "../ui/neo/NeoBadge";
+import GuruAdvisor from "../GuruAdvisor";
 import { cn } from "../../lib/utils";
 import {
   Menu,
@@ -10,7 +11,7 @@ import {
   LayoutDashboard,
   Database,
   BarChart3,
-  BookOpen,
+  Sparkles,
   LogOut,
   Settings,
   MessageCircle,
@@ -100,7 +101,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <div className="flex h-16 items-center justify-between border-b-2 border-border bg-[#0000CC] p-4">
           {sidebarOpen || isMobile ? (
             <h1 className="font-heading truncate text-3xl md:text-4xl font-black tracking-tight text-white">
-              Gurú<span className="text-yellow-300">Dash</span>
+              Gurú<span className="text-white">Dash</span>
             </h1>
           ) : (
             <div className="mx-auto font-heading text-4xl md:text-5xl font-black text-white">
@@ -140,9 +141,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             isMobile={isMobile}
           />
           <NavItem
-            to="/dashboard/flipbooks"
-            icon={<BookOpen size={18} />}
-            label="Guías"
+            to="/dashboard/ai-guru"
+            icon={<Sparkles size={18} />}
+            label="Gurú AI"
             sidebarOpen={sidebarOpen}
             isMobile={isMobile}
           />
@@ -284,10 +285,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                       Space
                     </button>
                     <button
-                      onClick={() => { setHeadingFont("barlow"); setShowThemeMenu(false); }}
-                      className={`flex-1 rounded-base border-2 px-2 py-1.5 text-xs font-black transition-all ${headingFont === "barlow" ? "border-border bg-main text-main-foreground" : "border-border bg-secondary-background text-foreground"}`}
+                      onClick={() => { setHeadingFont("oswald"); setShowThemeMenu(false); }}
+                      className={`flex-1 rounded-base border-2 px-2 py-1.5 text-xs font-black transition-all ${headingFont === "oswald" ? "border-border bg-main text-main-foreground" : "border-border bg-secondary-background text-foreground"}`}
                     >
-                      Barlow
+                      Oswald
                     </button>
                   </div>
                   {theme === "dark" && (
@@ -324,6 +325,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <div className="mx-auto min-w-0 max-w-7xl">{children}</div>
         </main>
       </div>
+
+      <GuruAdvisor />
     </div>
   );
 };

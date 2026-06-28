@@ -107,7 +107,7 @@ const SimulatorReview: React.FC = () => {
       {/* List */}
       <div className="hidden w-80 flex-col border-r-2 border-border bg-secondary-background md:flex">
         <div className="border-b-2 border-border p-4">
-          <h2 className="mb-3 font-heading text-xl font-bold md:text-2xl">
+          <h2 className="mb-3 font-heading text-4xl font-black md:text-5xl">
             Revisiones del Simulador
           </h2>
           <NeoSelect

@@ -122,7 +122,7 @@ export default function Cotizaciones() {
             <div className="flex h-10 w-10 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-button">
               <FileText size={20} />
             </div>
-            <h2 className="font-heading text-xl md:text-2xl font-bold">Cotizaciones</h2>
+            <h2 className="font-heading text-4xl md:text-5xl font-black">Cotizaciones</h2>
           </div>
           <p className="mt-2 text-base text-foreground/70">
             {quotations.length} total

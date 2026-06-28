@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { authAPI } from "../services/api";
 import LoadingScreen from "../components/LoadingScreen";
 
+type UserRole = "admin" | "employee" | "auxiliar_i" | "auxiliar_ii";
+
 interface User {
   id: number;
   username: string;
-  role: "admin" | "employee";
+  role: UserRole;
   dataColumn: string | null;
 }
 

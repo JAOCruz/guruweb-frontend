@@ -1,7 +1,13 @@
 import * as XLSX from "xlsx";
 
 // Define types for our Excel data
-export type WorkerKey = "HENGI" | "MARLENI" | "ISRAEL" | "THAICAR";
+export type WorkerKey =
+  | "HENGI"
+  | "MARLENI"
+  | "ISRAEL"
+  | "THAICAR"
+  | "AUXILIAR_I"
+  | "AUXILIAR_II";
 
 export interface ExcelRow {
   DETALLE?: string;
@@ -14,6 +20,8 @@ export interface ExcelRow {
   MARLENI?: string | number;
   ISRAEL?: string | number;
   THAICAR?: string | number;
+  AUXILIAR_I?: string | number;
+  AUXILIAR_II?: string | number;
   [key: string]: string | number | undefined;
 }
 
@@ -22,6 +30,8 @@ export const USER_COLUMNS: WorkerKey[] = [
   "MARLENI",
   "ISRAEL",
   "THAICAR",
+  "AUXILIAR_I",
+  "AUXILIAR_II",
 ];
 
 // Cache mechanism

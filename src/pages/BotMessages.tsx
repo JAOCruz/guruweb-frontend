@@ -645,7 +645,7 @@ const BotMessages: React.FC = () => {
             <div className="flex h-9 w-9 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-button">
               <MessageSquare size={16} />
             </div>
-            <h2 className="font-heading text-xl font-bold text-foreground md:text-2xl">
+            <h2 className="font-heading text-4xl font-black text-foreground md:text-5xl">
               Conversaciones
             </h2>
             <NeoBadge variant="neutral" className="ml-auto">

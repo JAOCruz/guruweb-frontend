@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -218,7 +218,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Outfit", sans-serif;
-  font-size: 20px;
+  font-size: 22px;
   color: var(--foreground);
 }
 
@@ -520,11 +520,11 @@ body {
 /* Font options */
 .font-space {
   --font-heading: var(--font-heading-space);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
-.font-barlow {
-  --font-heading: var(--font-heading-barlow);
-  letter-spacing: 0.04em;
+.font-oswald {
+  --font-heading: var(--font-heading-oswald);
+  letter-spacing: 0.08em;
 }
 
 /* Dark mode background options */
@@ -538,7 +538,7 @@ body {
 :root {
   --font-heading: "Space Grotesk", sans-serif;
   --font-heading-space: "Space Grotesk", sans-serif;
-  --font-heading-barlow: "Barlow Condensed", sans-serif;
+  --font-heading-oswald: "Oswald", sans-serif;
 }
 
 .font-heading {

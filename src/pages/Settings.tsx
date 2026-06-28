@@ -136,7 +136,7 @@ const Settings: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
-        <h2 className="font-heading text-3xl font-black md:text-4xl">Configuración</h2>
+        <h2 className="font-heading text-4xl font-black md:text-5xl">Configuración</h2>
         <p className="text-base text-foreground/70">
           Administra la configuración general del sistema
         </p>

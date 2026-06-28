@@ -329,7 +329,7 @@ export default function MotherBrain() {
       <div className="text-center">
         <NeoCard variant="main" className="inline-flex w-auto flex-row items-center gap-3 px-6 py-3">
           <Brain className="h-8 w-8" />
-          <h1 className="font-heading text-xl uppercase tracking-wider md:text-2xl">
+          <h1 className="font-heading text-4xl uppercase tracking-wider md:text-5xl">
             Mother Brain
           </h1>
           <Sparkles className="h-6 w-6" />

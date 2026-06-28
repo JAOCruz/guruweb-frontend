@@ -180,7 +180,7 @@ const WhatsAppBot: React.FC = () => {
             <MessageCircle size={22} />
           </div>
           <div>
-            <h2 className="font-heading text-xl font-bold text-foreground md:text-2xl">
+            <h2 className="font-heading text-4xl font-black text-foreground md:text-5xl">
               WhatsApp Bot
             </h2>
             <p className="font-base text-base text-foreground/70">

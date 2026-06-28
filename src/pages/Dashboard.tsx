@@ -6,7 +6,7 @@ import AdminDataTable from "../components/dashboard/AdminDataTable";
 import EmployeeDataTable from "../components/dashboard/EmployeeDataTable";
 import DataModificationForm from "../components/dashboard/DataModificationForm";
 import DataCharts from "../components/dashboard/DataCharts";
-import ManualOperativo from "./ManualOperativo";
+import AIGuru from "./AIGuru";
 import StatsCard from "../components/dashboard/StatsCard";
 import Settings from "./Settings";
 import WhatsAppBot from "./WhatsAppBot";
@@ -26,8 +26,17 @@ import { DatePicker } from "../components/retroui/DatePicker";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap, Eye, EyeOff } from "lucide-react";
-import { USER_COLUMNS } from "../services/excelService";
+import { USER_COLUMNS, WorkerKey } from "../services/excelService";
 import { formatCurrency } from "../utils";
+
+const WORKER_VARIANTS: Record<WorkerKey, "success" | "warning" | "danger" | "purple" | "orange"> = {
+  HENGI: "success",
+  MARLENI: "warning",
+  ISRAEL: "danger",
+  THAICAR: "purple",
+  AUXILIAR_I: "orange",
+  AUXILIAR_II: "purple",
+};
 
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
@@ -47,7 +56,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     // Check if on a bot-related route (skip service fetching for these)
-    const isBotRoute = /\/(whatsapp|bot-|cases|cotizaciones|ai-insights|documents|flipbooks|laws)/.test(location.pathname);
+    const isBotRoute = /\/(whatsapp|bot-|cases|cotizaciones|ai-insights|ai-guru|documents|laws)/.test(location.pathname);
     const isAnalyticsRoute = /\/(charts|data)/.test(location.pathname);
 
     if (isBotRoute) {
@@ -170,7 +179,7 @@ const Dashboard: React.FC = () => {
               {/* Header / Top Bar for Page */}
               <div className="mb-10 flex flex-col items-start justify-between gap-6 xl:flex-row xl:items-center">
                 <div>
-                  <h2 className="font-heading mb-2 text-2xl font-black tracking-tight text-foreground md:text-4xl">
+                  <h2 className="font-heading mb-2 text-4xl font-black tracking-tight text-foreground md:text-5xl">
                     Resumen Operativo
                   </h2>
                   <p className="text-sm font-medium text-foreground/70">
@@ -265,14 +274,14 @@ const Dashboard: React.FC = () => {
                     visible={showEarnings}
                   />
 
-                  {/* Total Users (Sum of their earnings/shares) - 50% split */}
+                  {/* Total Users (Sum of their earnings/shares) */}
                   <StatsCard
                     label="Total Users"
                     value={formatCurrency(
                       services
                         .filter((s: any) =>
-                          ["HENGI", "MARLENI", "ISRAEL", "THAICAR"].includes(
-                            (s.data_column || "").toUpperCase(),
+                          USER_COLUMNS.includes(
+                            (s.data_column || "").toUpperCase() as WorkerKey,
                           ),
                         )
                         .reduce(
@@ -282,8 +291,8 @@ const Dashboard: React.FC = () => {
                     )}
                     subValue={`${
                       services.filter((s: any) =>
-                        ["HENGI", "MARLENI", "ISRAEL", "THAICAR"].includes(
-                          (s.data_column || "").toUpperCase(),
+                        USER_COLUMNS.includes(
+                          (s.data_column || "").toUpperCase() as WorkerKey,
                         ),
                       ).length
                     } serv.`}
@@ -293,83 +302,31 @@ const Dashboard: React.FC = () => {
                     visible={showEarnings}
                   />
 
-                  {/* Dynamic stats for workers - showing their 50% share */}
-                  <StatsCard
-                    label="Hengi"
-                    value={formatCurrency(
-                      services
-                        .filter(
-                          (s: any) =>
-                            (s.data_column || "").toUpperCase() === "HENGI",
-                        )
-                        .reduce(
-                          (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
-                          0,
-                        ),
-                    )}
-                    subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "HENGI").length} serv.`}
-                    variant="main"
-                    delay={0.2}
-                    sensitive
-                    visible={showEarnings}
-                  />
-                  <StatsCard
-                    label="Marleni"
-                    value={formatCurrency(
-                      services
-                        .filter(
-                          (s: any) =>
-                            (s.data_column || "").toUpperCase() === "MARLENI",
-                        )
-                        .reduce(
-                          (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
-                          0,
-                        ),
-                    )}
-                    subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "MARLENI").length} serv.`}
-                    variant="main"
-                    delay={0.3}
-                    sensitive
-                    visible={showEarnings}
-                  />
-                  <StatsCard
-                    label="Israel"
-                    value={formatCurrency(
-                      services
-                        .filter(
-                          (s: any) =>
-                            (s.data_column || "").toUpperCase() === "ISRAEL",
-                        )
-                        .reduce(
-                          (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
-                          0,
-                        ),
-                    )}
-                    subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "ISRAEL").length} serv.`}
-                    variant="main"
-                    delay={0.4}
-                    sensitive
-                    visible={showEarnings}
-                  />
-                  <StatsCard
-                    label="Thaicar"
-                    value={formatCurrency(
-                      services
-                        .filter(
-                          (s: any) =>
-                            (s.data_column || "").toUpperCase() === "THAICAR",
-                        )
-                        .reduce(
-                          (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
-                          0,
-                        ),
-                    )}
-                    subValue={`${services.filter((s: any) => (s.data_column || "").toUpperCase() === "THAICAR").length} serv.`}
-                    variant="main"
-                    delay={0.5}
-                    sensitive
-                    visible={showEarnings}
-                  />
+                  {/* Dynamic stats for workers - showing their share */}
+                  {USER_COLUMNS.map((worker, idx) => {
+                    const workerServices = services.filter(
+                      (s: any) =>
+                        (s.data_column || "").toUpperCase() === worker,
+                    );
+                    return (
+                      <StatsCard
+                        key={worker}
+                        label={worker.replace("_", " ")}
+                        variant={WORKER_VARIANTS[worker]}
+                        value={formatCurrency(
+                          workerServices.reduce(
+                            (acc, s: any) =>
+                              acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
+                            0,
+                          ),
+                        )}
+                        subValue={`${workerServices.length} serv.`}
+                        delay={0.2 + idx * 0.1}
+                        sensitive
+                        visible={showEarnings}
+                      />
+                    );
+                  })}
                 </div>
               )}
 
@@ -390,7 +347,7 @@ const Dashboard: React.FC = () => {
               ) : (
                 <div className="space-y-8">
                   <EmployeeDataTable services={getEmployeeServices()} />
-                  <ManualOperativo />
+                  <AIGuru />
                 </div>
               )}
             </div>
@@ -410,7 +367,7 @@ const Dashboard: React.FC = () => {
               ) : (
                 <EmployeeDataTable services={getEmployeeServices()} />
               )}
-              {!isAdmin && <ManualOperativo />}
+              {!isAdmin && <AIGuru />}
             </div>
           }
         />
@@ -422,7 +379,7 @@ const Dashboard: React.FC = () => {
             <DataCharts services={services} isAdmin={isAdmin} user={user} />
           }
         />
-        <Route path="/flipbooks" element={<ManualOperativo />} />
+        <Route path="/ai-guru" element={<AIGuru />} />
         <Route
           path="/settings"
           element={isAdmin ? <Settings /> : <div className="text-center text-slate-400 py-8">No tienes acceso a esta página</div>}
@@ -432,7 +389,10 @@ const Dashboard: React.FC = () => {
         <Route path="/bot-clients" element={<BotClients />} />
         <Route path="/cotizaciones" element={<Cotizaciones />} />
         <Route path="/cases" element={<Cases />} />
-        <Route path="/ai-insights" element={<AIInsights />} />
+        <Route
+          path="/ai-insights"
+          element={isAdmin ? <AIInsights /> : <AIGuru />}
+        />
         <Route path="/documents" element={<DocumentManagement />} />
         <Route path="/laws" element={<Laws />} />
         <Route path="/motherbrain" element={<MotherBrain />} />
