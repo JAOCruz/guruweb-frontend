@@ -12,6 +12,7 @@ import {
 import { NeoButton } from "../components/ui/neo/NeoButton";
 import { NeoInput } from "../components/ui/neo/NeoInput";
 import { Dialog } from "../components/retroui/Dialog";
+import { DatePicker } from "../components/retroui/DatePicker";
 
 const Settings: React.FC = () => {
   const [employeePercentage, setEmployeePercentage] = useState<number>(50);
@@ -204,12 +205,11 @@ const Settings: React.FC = () => {
                   >
                     Fecha de Inicio
                   </label>
-                  <NeoInput
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    required
+                  <DatePicker
+                    date={startDate ? new Date(startDate + "T00:00:00") : undefined}
+                    onSelect={(d) => setStartDate(d ? d.toISOString().split("T")[0] : "")}
+                    placeholder="Seleccionar fecha"
+                    className="h-12"
                   />
                 </div>
               </div>

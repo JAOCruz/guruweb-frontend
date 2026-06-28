@@ -22,6 +22,7 @@ import MotherBrain from "./MotherBrain";
 import BotSimulator from "./BotSimulator";
 import SimulatorReview from "./SimulatorReview";
 import { NeoButton } from "../components/ui/neo/NeoButton";
+import { DatePicker } from "../components/retroui/DatePicker";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap, Eye, EyeOff } from "lucide-react";
@@ -202,22 +203,22 @@ const Dashboard: React.FC = () => {
                       <span className="text-[10px] font-black tracking-widest uppercase text-foreground/60">
                         Desde
                       </span>
-                      <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-sm text-foreground focus:outline-none"
+                      <DatePicker
+                        date={startDate ? new Date(startDate + "T00:00:00") : undefined}
+                        onSelect={(d) => setStartDate(d ? d.toISOString().split("T")[0] : "")}
+                        placeholder="Desde"
+                        className="h-10 flex-1 rounded-base border-2 border-border bg-transparent text-sm text-foreground shadow-none"
                       />
                     </div>
                     <div className="flex min-w-0 flex-1 items-center gap-2 rounded-base border-2 border-border bg-background px-3 py-2">
                       <span className="text-[10px] font-black tracking-widest uppercase text-foreground/60">
                         Hasta
                       </span>
-                      <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="min-w-0 flex-1 cursor-pointer border-none bg-transparent p-0 text-sm text-foreground focus:outline-none"
+                      <DatePicker
+                        date={endDate ? new Date(endDate + "T00:00:00") : undefined}
+                        onSelect={(d) => setEndDate(d ? d.toISOString().split("T")[0] : "")}
+                        placeholder="Hasta"
+                        className="h-10 flex-1 rounded-base border-2 border-border bg-transparent text-sm text-foreground shadow-none"
                       />
                     </div>
                     <div className="flex gap-2">
