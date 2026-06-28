@@ -6,7 +6,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
@@ -26,13 +25,18 @@ import {
 import StatsCard from "../components/dashboard/StatsCard";
 import { botAPI, DashboardStats, AnalyticsData, IntentData } from "../services/botApi";
 import {
-  NeoCard,
-  NeoCardHeader,
-  NeoCardTitle,
-  NeoCardContent,
-} from "../components/ui/neo/NeoCard";
-import { NeoButton } from "../components/ui/neo/NeoButton";
-import { NeoBadge } from "../components/ui/neo/NeoBadge";
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -111,24 +115,15 @@ function useThemeColors() {
   }, []);
 }
 
-// ─── Custom tooltip for charts ────────────────────────────────────────────────
-const NeoTooltip: React.FC<{
-  active?: boolean;
-  payload?: { name: string; value: number; color: string }[];
-  label?: string;
-}> = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <NeoCard className="gap-1 border-border bg-background p-3 text-foreground shadow-shadow">
-      {label && <p className="font-heading text-sm">{label}</p>}
-      {payload.map((p, i) => (
-        <p key={i} className="text-sm font-base" style={{ color: p.color }}>
-          {p.name}: <span className="font-bold">{p.value}</span>
-        </p>
-      ))}
-    </NeoCard>
-  );
-};
+const dailyConfig = {
+  ai: { label: "IA", color: "var(--main)" },
+  human: { label: "Humano", color: "var(--chart-2)" },
+} satisfies Record<string, { label: string; color: string }>;
+
+const pieConfig = {
+  ia: { label: "IA", color: "var(--main)" },
+  humano: { label: "Humano", color: "var(--chart-2)" },
+} satisfies Record<string, { label: string; color: string }>;
 
 // ─── IntentRow ────────────────────────────────────────────────────────────────
 const IntentRow: React.FC<{ intent: IntentData; rank: number; delay: number }> = ({
@@ -141,7 +136,7 @@ const IntentRow: React.FC<{ intent: IntentData; rank: number; delay: number }> =
     animate={{ opacity: 1, x: 0 }}
     transition={{ delay }}
   >
-    <NeoCard className="flex-row items-center gap-3 px-4 py-3 hover:shadow-none">
+    <Card className="flex flex-row items-center gap-3 px-4 py-3 shadow-shadow hover:shadow-none">
       <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-main text-xs font-black text-main-foreground">
         {rank}
       </span>
@@ -155,12 +150,12 @@ const IntentRow: React.FC<{ intent: IntentData; rank: number; delay: number }> =
             />
           </div>
         </div>
-        <NeoBadge variant="neutral">{intent.count}</NeoBadge>
+        <Badge variant="neutral" className="uppercase tracking-wider font-black">{intent.count}</Badge>
         <span className="w-10 text-right text-sm font-bold text-foreground/70">
           {intent.percentage}%
         </span>
       </div>
-    </NeoCard>
+    </Card>
   </motion.div>
 );
 
@@ -212,9 +207,9 @@ const AIInsights: React.FC = () => {
       <div className="flex flex-col items-center justify-center gap-4 py-24">
         <AlertCircle size={32} className="text-main" />
         <p className="text-base text-foreground/70">{error}</p>
-        <NeoButton onClick={fetchData}>
+        <Button onClick={fetchData}>
           <RefreshCw size={16} /> Reintentar
-        </NeoButton>
+        </Button>
       </div>
     );
   }
@@ -224,8 +219,8 @@ const AIInsights: React.FC = () => {
 
   // Pie data for AI vs Human
   const pieData = [
-    { name: "IA", value: s.aiHandled },
-    { name: "Humano", value: s.humanHandled },
+    { name: "ia", value: s.aiHandled, fill: colors.main },
+    { name: "humano", value: s.humanHandled, fill: colors.chart2 },
   ];
 
   return (
@@ -240,10 +235,10 @@ const AIInsights: React.FC = () => {
             Rendimiento del bot y métricas de conversaciones
           </p>
         </div>
-        <NeoButton onClick={fetchData} variant="neutral">
+        <Button onClick={fetchData} variant="neutral">
           <RefreshCw size={16} />
           Actualizar
-        </NeoButton>
+        </Button>
       </div>
 
       {/* ── KPI Stats ───────────────────────────────────────────────────── */}
@@ -285,7 +280,7 @@ const AIInsights: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
         >
-          <NeoCard>
+          <Card className="gap-2 py-6">
             <div className="mb-3 flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-base border-2 border-border bg-secondary-background">
                 <Zap size={16} className="text-main" />
@@ -298,7 +293,7 @@ const AIInsights: React.FC = () => {
               {formatSeconds(s.avgResponseTimeAI)}
             </p>
             <p className="mt-1 text-sm text-foreground/60">promedio por mensaje</p>
-          </NeoCard>
+          </Card>
         </motion.div>
 
         <motion.div
@@ -306,7 +301,7 @@ const AIInsights: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <NeoCard>
+          <Card className="gap-2 py-6">
             <div className="mb-3 flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-base border-2 border-border bg-secondary-background">
                 <Clock size={16} className="text-main" />
@@ -319,7 +314,7 @@ const AIInsights: React.FC = () => {
               {formatSeconds(s.avgResponseTimeHuman)}
             </p>
             <p className="mt-1 text-sm text-foreground/60">promedio por mensaje</p>
-          </NeoCard>
+          </Card>
         </motion.div>
 
         <motion.div
@@ -328,7 +323,7 @@ const AIInsights: React.FC = () => {
           transition={{ delay: 0.35 }}
           className="sm:col-span-2 lg:col-span-1"
         >
-          <NeoCard>
+          <Card className="gap-2 py-6">
             <div className="mb-3 flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-base border-2 border-border bg-secondary-background">
                 <MessageSquare size={16} className="text-main" />
@@ -341,7 +336,7 @@ const AIInsights: React.FC = () => {
               {s.totalMessages.toLocaleString()}
             </p>
             <p className="mt-1 text-sm text-foreground/60">mensajes procesados</p>
-          </NeoCard>
+          </Card>
         </motion.div>
       </div>
 
@@ -355,20 +350,20 @@ const AIInsights: React.FC = () => {
           transition={{ delay: 0.4 }}
           className="lg:col-span-3"
         >
-          <NeoCard>
-            <NeoCardHeader>
-              <NeoCardTitle className="flex items-center gap-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-heading text-2xl">
                 <TrendingUp size={20} className="text-main" />
                 Actividad diaria — IA vs Humano
-              </NeoCardTitle>
-            </NeoCardHeader>
-            <NeoCardContent>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               {a.dailyStats.length === 0 ? (
                 <div className="flex items-center justify-center py-16 text-foreground/60">
                   <span className="text-base">Sin datos disponibles</span>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={220}>
+                <ChartContainer config={dailyConfig} className="h-56 w-full">
                   <BarChart
                     data={a.dailyStats}
                     margin={{ top: 5, right: 5, left: -20, bottom: 5 }}
@@ -384,26 +379,24 @@ const AIInsights: React.FC = () => {
                       axisLine={false}
                       tickLine={false}
                     />
-                    <Tooltip content={<NeoTooltip />} cursor={{ fill: colors.main, opacity: 0.08 }} />
+                    <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: colors.main, opacity: 0.08 }} />
                     <Bar
                       dataKey="ai"
-                      name="IA"
-                      fill={colors.main}
+                      fill="var(--color-ai)"
                       radius={[4, 4, 0, 0]}
                       maxBarSize={28}
                     />
                     <Bar
                       dataKey="human"
-                      name="Humano"
-                      fill={colors.chart2}
+                      fill="var(--color-human)"
                       radius={[4, 4, 0, 0]}
                       maxBarSize={28}
                     />
                   </BarChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               )}
-            </NeoCardContent>
-          </NeoCard>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Pie chart — takes 2 cols */}
@@ -413,20 +406,20 @@ const AIInsights: React.FC = () => {
           transition={{ delay: 0.45 }}
           className="lg:col-span-2"
         >
-          <NeoCard>
-            <NeoCardHeader>
-              <NeoCardTitle className="flex items-center gap-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-heading text-2xl">
                 <ArrowLeftRight size={20} className="text-main" />
                 IA vs Humano
-              </NeoCardTitle>
-            </NeoCardHeader>
-            <NeoCardContent>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               {s.totalConversations === 0 ? (
                 <div className="flex items-center justify-center py-16 text-foreground/60">
                   <span className="text-base">Sin datos</span>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={220}>
+                <ChartContainer config={pieConfig} className="h-56 w-full">
                   <PieChart>
                     <Pie
                       data={pieData}
@@ -436,11 +429,12 @@ const AIInsights: React.FC = () => {
                       outerRadius={85}
                       paddingAngle={3}
                       dataKey="value"
+                      nameKey="name"
                     >
-                      {pieData.map((_, i) => (
+                      {pieData.map((entry, i) => (
                         <Cell
                           key={i}
-                          fill={i === 0 ? colors.main : colors.chart2}
+                          fill={entry.fill}
                           stroke={colors.border}
                           strokeWidth={2}
                         />
@@ -450,12 +444,12 @@ const AIInsights: React.FC = () => {
                       iconType="circle"
                       iconSize={8}
                       formatter={(value) => (
-                        <span style={{ color: colors.foreground, fontSize: 12 }}>{value}</span>
+                        <span style={{ color: colors.foreground, fontSize: 12 }}>{value === "ia" ? "IA" : "Humano"}</span>
                       )}
                     />
-                    <Tooltip content={<NeoTooltip />} />
+                    <Tooltip content={<PieTooltip />} />
                   </PieChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               )}
               {/* Center pct label */}
               <div className="mt-2 flex justify-center gap-6">
@@ -476,8 +470,8 @@ const AIInsights: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </NeoCardContent>
-          </NeoCard>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
 
@@ -488,14 +482,14 @@ const AIInsights: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <NeoCard>
-            <NeoCardHeader>
-              <NeoCardTitle className="flex items-center gap-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-heading text-2xl">
                 <Bot size={20} className="text-main" />
                 Intenciones más comunes
-              </NeoCardTitle>
-            </NeoCardHeader>
-            <NeoCardContent className="space-y-2">
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
               {a.topIntents.map((intent, i) => (
                 <IntentRow
                   key={intent.intent}
@@ -504,8 +498,8 @@ const AIInsights: React.FC = () => {
                   delay={0.55 + i * 0.04}
                 />
               ))}
-            </NeoCardContent>
-          </NeoCard>
+            </CardContent>
+          </Card>
         </motion.div>
       )}
 
@@ -515,7 +509,7 @@ const AIInsights: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.65 }}
       >
-        <NeoCard variant="main" className="flex-row items-start gap-4">
+        <Card className="flex flex-row items-start gap-4 bg-main py-6 text-main-foreground">
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-base border-2 border-border bg-main">
             <AlertCircle size={18} className="text-main-foreground" />
           </div>
@@ -528,9 +522,24 @@ const AIInsights: React.FC = () => {
               escaladas a un agente humano. Revisar estos casos ayuda a mejorar el entrenamiento de la IA.
             </p>
           </div>
-        </NeoCard>
+        </Card>
       </motion.div>
     </div>
+  );
+};
+
+const PieTooltip: React.FC<{
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+}> = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const p = payload[0];
+  return (
+    <Card className="gap-1 border-border bg-background p-3 text-foreground shadow-shadow">
+      <p className="text-sm font-base" style={{ color: p.color }}>
+        {p.name === "ia" ? "IA" : "Humano"}: <span className="font-bold">{p.value}</span>
+      </p>
+    </Card>
   );
 };
 

@@ -1,5 +1,13 @@
 import * as React from "react";
-import { cn } from "../../../lib/utils";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export interface NeoCardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "main" | "neutral" | "outline";
@@ -8,25 +16,21 @@ export interface NeoCardProps extends React.HTMLAttributes<HTMLDivElement> {
 const NeoCard = React.forwardRef<HTMLDivElement, NeoCardProps>(
   ({ className, variant = "default", ...props }, ref) => {
     return (
-      <div
+      <Card
         ref={ref}
         className={cn(
-          "rounded-base flex flex-col border-2 gap-5 p-6 font-base",
+          "gap-5 p-6",
           {
-            "bg-background text-foreground border-border shadow-shadow":
-              variant === "default",
+            "bg-background text-foreground": variant === "default",
           },
           {
-            "bg-main text-main-foreground border-border shadow-shadow":
-              variant === "main",
+            "bg-main text-main-foreground": variant === "main",
           },
           {
-            "bg-secondary-background text-foreground border-border shadow-shadow":
-              variant === "neutral",
+            "bg-secondary-background text-foreground": variant === "neutral",
           },
           {
-            "bg-transparent text-foreground border-border":
-              variant === "outline",
+            "bg-transparent text-foreground shadow-none": variant === "outline",
           },
           className
         )}
@@ -41,11 +45,7 @@ const NeoCardHeader = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-col gap-2", className)}
-    {...props}
-  />
+  <CardHeader ref={ref} className={cn("flex flex-col gap-2 p-0", className)} {...props} />
 ));
 NeoCardHeader.displayName = "NeoCardHeader";
 
@@ -53,7 +53,7 @@ const NeoCardTitle = React.forwardRef<
   HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
-  <h3
+  <CardTitle
     ref={ref}
     className={cn("font-heading leading-none text-2xl md:text-3xl", className)}
     {...props}
@@ -65,7 +65,7 @@ const NeoCardDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <p
+  <CardDescription
     ref={ref}
     className={cn("text-base font-base text-foreground/70", className)}
     {...props}
@@ -77,7 +77,7 @@ const NeoCardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("", className)} {...props} />
+  <CardContent ref={ref} className={cn("p-0", className)} {...props} />
 ));
 NeoCardContent.displayName = "NeoCardContent";
 
@@ -85,9 +85,9 @@ const NeoCardFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div
+  <CardFooter
     ref={ref}
-    className={cn("flex items-center gap-3 pt-2", className)}
+    className={cn("flex items-center gap-3 p-0 pt-2", className)}
     {...props}
   />
 ));

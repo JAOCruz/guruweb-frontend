@@ -1,64 +1,29 @@
 import * as React from "react";
-import { cn } from "../../../lib/utils";
+import { Button, type ButtonProps } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export interface NeoButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "neutral" | "reverse" | "outline" | "ghost";
-  size?: "default" | "sm" | "lg" | "icon";
-  asChild?: boolean;
+export interface NeoButtonProps extends Omit<ButtonProps, "variant"> {
+  variant?: "default" | "neutral" | "reverse" | "outline" | "ghost" | "noShadow";
 }
 
-const Slot = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement> & { children?: React.ReactNode }
->(({ children, ...props }, ref) => {
-  if (!React.isValidElement(children)) return null;
-  return React.cloneElement(children as React.ReactElement<any>, {
-    ...props,
-    ...(children as React.ReactElement<any>).props,
-    className: cn(
-      props.className,
-      (children as React.ReactElement<any>).props.className
-    ),
-    ref,
-  });
-});
-Slot.displayName = "Slot";
-
 const NeoButton = React.forwardRef<HTMLButtonElement, NeoButtonProps>(
-  ({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+  ({ className, variant = "default", ...props }, ref) => {
     return (
-      <Comp
-        ref={ref as any}
+      <Button
+        ref={ref}
+        variant={variant === "default" || variant === "outline" || variant === "ghost" ? "default" : variant}
         className={cn(
-          "inline-flex items-center justify-center whitespace-nowrap rounded-base text-base font-base ring-offset-white transition-all gap-2",
-          "disabled:pointer-events-none disabled:opacity-50",
           {
-            "text-main-foreground bg-main border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none active:translate-x-boxShadowX active:translate-y-boxShadowY active:shadow-none":
-              variant === "default",
-          },
-          {
-            "bg-secondary-background text-foreground border-2 border-border shadow-shadow hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none active:translate-x-boxShadowX active:translate-y-boxShadowY active:shadow-none":
-              variant === "neutral",
-          },
-          {
-            "text-main-foreground bg-main border-2 border-border hover:translate-x-reverseBoxShadowX hover:translate-y-reverseBoxShadowY hover:shadow-shadow active:shadow-shadow":
-              variant === "reverse",
-          },
-          {
-            "bg-transparent text-foreground border-2 border-border hover:bg-secondary-background hover:shadow-[2px_2px_0px_#000]":
+            "bg-transparent text-foreground border-2 border-border hover:bg-secondary-background hover:shadow-[2px_2px_0px_#000] hover:translate-x-0 hover:translate-y-0":
               variant === "outline",
           },
           {
-            "bg-transparent text-foreground hover:bg-secondary-background":
+            "bg-transparent text-foreground hover:bg-secondary-background hover:shadow-none hover:translate-x-0 hover:translate-y-0":
               variant === "ghost",
           },
           {
-            "h-12 px-5 py-2.5": size === "default",
-            "h-10 px-3 text-sm": size === "sm",
-            "h-14 px-7 text-lg": size === "lg",
-            "h-12 w-12": size === "icon",
+            "h-12 px-5 py-2.5 text-base": props.size === undefined || props.size === "default",
+            "h-14 px-7 text-lg": props.size === "lg",
           },
           className
         )}
@@ -69,4 +34,5 @@ const NeoButton = React.forwardRef<HTMLButtonElement, NeoButtonProps>(
 );
 NeoButton.displayName = "NeoButton";
 
-export { NeoButton, Slot };
+export { NeoButton };
+export type { ButtonProps as NeoButtonBaseProps };

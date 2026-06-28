@@ -1,8 +1,8 @@
 import * as React from "react";
-import { cn } from "../../../lib/utils";
+import { Input, type InputProps } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
-export interface NeoInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface NeoInputProps extends InputProps {
   asChild?: boolean;
 }
 
@@ -24,18 +24,32 @@ const Slot = React.forwardRef<
 Slot.displayName = "Slot";
 
 const NeoInput = React.forwardRef<HTMLInputElement, NeoInputProps>(
-  ({ className, type, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "input";
+  ({ className, asChild = false, ...props }, ref) => {
+    if (asChild) {
+      return (
+        <Slot
+          ref={ref as React.Ref<HTMLElement>}
+          className={cn(
+            "flex h-12 w-full rounded-base border-2 border-border bg-secondary-background px-4 py-2 text-base font-base text-foreground",
+            "selection:bg-main selection:text-main-foreground",
+            "placeholder:text-foreground/50",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border focus-visible:ring-offset-2",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            className
+          )}
+          {...props}
+        />
+      );
+    }
+
     return (
-      <Comp
-        ref={ref as any}
-        type={asChild ? undefined : type}
+      <Input
+        ref={ref}
         className={cn(
-          "flex h-12 w-full rounded-base border-2 border-border bg-secondary-background px-4 py-2 text-base font-base text-foreground",
-          "selection:bg-main selection:text-main-foreground",
+          "h-12 px-4 py-2 text-base",
+          "bg-secondary-background text-foreground",
           "placeholder:text-foreground/50",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border focus-visible:ring-offset-2",
-          "disabled:cursor-not-allowed disabled:opacity-50",
+          "focus-visible:ring-border",
           className
         )}
         {...props}

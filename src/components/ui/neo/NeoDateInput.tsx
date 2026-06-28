@@ -1,9 +1,9 @@
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
-import { cn } from "../../../lib/utils";
-import { NeoInput, type NeoInputProps } from "./NeoInput";
+import { Input, type InputProps } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
-export interface NeoDateInputProps extends NeoInputProps {
+export interface NeoDateInputProps extends InputProps {
   iconClassName?: string;
 }
 
@@ -11,11 +11,11 @@ const NeoDateInput = React.forwardRef<HTMLInputElement, NeoDateInputProps>(
   ({ className, iconClassName, ...props }, ref) => {
     return (
       <div className="relative w-full min-w-0">
-        <NeoInput
+        <Input
           ref={ref}
           type="date"
           className={cn(
-            "w-full min-w-0 pr-10 [color-scheme:light] dark:[color-scheme:dark]",
+            "h-12 w-full min-w-0 px-4 pr-10 text-base [color-scheme:light] dark:[color-scheme:dark]",
             "[&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0",
             "[&::-webkit-calendar-picker-indicator]:z-10 [&::-webkit-calendar-picker-indicator]:cursor-pointer",
             "[&::-webkit-calendar-picker-indicator]:bg-transparent [&::-webkit-calendar-picker-indicator]:text-transparent",
