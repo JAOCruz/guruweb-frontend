@@ -22,7 +22,7 @@ import MotherBrain from "./MotherBrain";
 import BotSimulator from "./BotSimulator";
 import SimulatorReview from "./SimulatorReview";
 import { NeoButton } from "../components/ui/neo/NeoButton";
-import { DatePicker } from "../components/retroui/DatePicker";
+import { NeoDateInput } from "../components/ui/neo/NeoDateInput";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Zap, Eye, EyeOff } from "lucide-react";
@@ -207,32 +207,33 @@ const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Date Filter */}
-                  <div className="flex w-full flex-col gap-2 rounded-base border-2 border-border bg-secondary-background p-3 shadow-shadow sm:flex-row sm:flex-wrap sm:items-center">
-                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-base border-2 border-border bg-background px-3 py-2">
-                      <span className="text-[10px] font-black tracking-widest uppercase text-foreground/60">
+                  <div className="flex w-full min-w-0 flex-col gap-2 rounded-base border-2 border-border bg-secondary-background p-3 shadow-shadow sm:flex-row sm:items-center">
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <span className="shrink-0 text-[10px] font-black tracking-widest uppercase text-foreground/60">
                         Desde
                       </span>
-                      <DatePicker
-                        date={startDate ? new Date(startDate + "T00:00:00") : undefined}
-                        onSelect={(d) => setStartDate(d ? d.toISOString().split("T")[0] : "")}
+                      <NeoDateInput
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
                         placeholder="Desde"
-                        className="h-10 flex-1 rounded-base border-2 border-border bg-transparent text-sm text-foreground shadow-none"
+                        className="h-10 flex-1 rounded-base border-2 border-border bg-background text-sm text-foreground shadow-none"
                       />
                     </div>
-                    <div className="flex min-w-0 flex-1 items-center gap-2 rounded-base border-2 border-border bg-background px-3 py-2">
-                      <span className="text-[10px] font-black tracking-widest uppercase text-foreground/60">
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <span className="shrink-0 text-[10px] font-black tracking-widest uppercase text-foreground/60">
                         Hasta
                       </span>
-                      <DatePicker
-                        date={endDate ? new Date(endDate + "T00:00:00") : undefined}
-                        onSelect={(d) => setEndDate(d ? d.toISOString().split("T")[0] : "")}
+                      <NeoDateInput
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
                         placeholder="Hasta"
-                        className="h-10 flex-1 rounded-base border-2 border-border bg-transparent text-sm text-foreground shadow-none"
+                        className="h-10 flex-1 rounded-base border-2 border-border bg-background text-sm text-foreground shadow-none"
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex shrink-0 gap-2">
                       <NeoButton
                         variant="outline"
+                        size="sm"
                         onClick={() => {
                           setStartDate(getTodayString());
                           setEndDate(getTodayString());
@@ -243,6 +244,7 @@ const Dashboard: React.FC = () => {
                       </NeoButton>
                       <NeoButton
                         variant="ghost"
+                        size="sm"
                         onClick={() => {
                           setStartDate("");
                           setEndDate("");
