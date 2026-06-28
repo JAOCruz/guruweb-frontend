@@ -11,6 +11,7 @@ import {
 } from "../components/ui/neo/NeoCard";
 import { NeoButton } from "../components/ui/neo/NeoButton";
 import { NeoInput } from "../components/ui/neo/NeoInput";
+import { Dialog } from "../components/retroui/Dialog";
 
 const Settings: React.FC = () => {
   const [employeePercentage, setEmployeePercentage] = useState<number>(50);
@@ -20,6 +21,7 @@ const Settings: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Migrations state
   const [migrating, setMigrating] = useState(false);
@@ -50,21 +52,27 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSaveRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
-    setSaving(true);
 
     const percentageValue = parseFloat(newPercentage);
 
     if (isNaN(percentageValue) || percentageValue < 0 || percentageValue > 100) {
       setError("El porcentaje debe estar entre 0 y 100");
-      setSaving(false);
       return;
     }
 
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    setConfirmOpen(false);
+    setSaving(true);
+
     try {
+      const percentageValue = parseFloat(newPercentage);
       await settingsAPI.updateEmployeePercentage(percentageValue, startDate);
       setEmployeePercentage(percentageValue);
       setSuccessMessage("Porcentaje actualizado exitosamente desde " + new Date(startDate).toLocaleDateString('es-ES'));
@@ -102,279 +110,258 @@ const Settings: React.FC = () => {
     }
   };
 
+  const handleFixTimestamps = async () => {
+    if (!window.confirm("¿Corregir timestamps en servicios sin fecha?")) return;
+    setMigrating(true);
+    setMigrationResult(null);
+    try {
+      const response = await api.post("/admin/fix-timestamps");
+      setMigrationResult({
+        ok: true,
+        message: response.data.message,
+        ran: response.data.ran || [],
+        skipped: [],
+      });
+    } catch (err: any) {
+      setMigrationResult({
+        ok: false,
+        error: err.response?.data?.error || err.message || "Error al corregir timestamps",
+      });
+    } finally {
+      setMigrating(false);
+    }
+  };
+
   return (
-    <NeoCard className="mx-auto max-w-4xl">
-      <NeoCardHeader>
-        <NeoCardTitle>Configuración del Sistema</NeoCardTitle>
-        <NeoCardDescription>
-          Administra la distribución de ganancias y herramientas del sistema.
-        </NeoCardDescription>
-      </NeoCardHeader>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <h2 className="font-heading text-3xl font-black md:text-4xl">Configuración</h2>
+        <p className="text-base text-foreground/70">
+          Administra la configuración general del sistema
+        </p>
+      </div>
 
-      <NeoCardContent>
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 size={40} className="animate-spin text-main" />
+      {error && (
+        <div className="rounded-base border-2 border-red-600 bg-red-50 p-4 text-base font-bold text-red-600">
+          {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="rounded-base border-2 border-green-600 bg-green-50 p-4 text-base font-bold text-green-600">
+          {successMessage}
+        </div>
+      )}
+
+      <NeoCard>
+        <NeoCardHeader>
+          <div className="flex items-center gap-3">
+            <div className="rounded-base border-2 border-border bg-main p-2 text-main-foreground shadow-button">
+              <Database size={24} />
+            </div>
+            <div>
+              <NeoCardTitle>Porcentaje de Participación</NeoCardTitle>
+              <NeoCardDescription>
+                Configura el porcentaje que recibe cada empleado por servicio
+              </NeoCardDescription>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Current Settings Display */}
-            <NeoCard variant="main">
-              <NeoCardHeader>
-                <NeoCardTitle className="text-main-foreground">
-                  Distribución Actual de Ganancias
-                </NeoCardTitle>
-              </NeoCardHeader>
-              <NeoCardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <NeoCard className="items-center text-center">
-                    <p className="text-sm font-bold text-foreground/70">Empleados</p>
-                    <p className="font-heading text-3xl font-black text-main">
-                      {employeePercentage}%
-                    </p>
-                  </NeoCard>
-                  <NeoCard className="items-center text-center">
-                    <p className="text-sm font-bold text-foreground/70">Administración</p>
-                    <p className="font-heading text-3xl font-black text-chart-2">
-                      {100 - employeePercentage}%
-                    </p>
-                  </NeoCard>
-                </div>
-              </NeoCardContent>
-            </NeoCard>
+        </NeoCardHeader>
 
-            {/* Update Form */}
-            <form onSubmit={handleSave} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="percentage"
-                  className="mb-2 block text-base font-bold text-foreground"
-                >
-                  Nuevo Porcentaje para Empleados (0-100)
-                </label>
-                <NeoInput
-                  type="number"
-                  id="percentage"
-                  value={newPercentage}
-                  onChange={(e) => setNewPercentage(e.target.value)}
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  disabled={saving}
-                  required
-                />
-                <p className="mt-2 text-base text-foreground/70">
-                  Administración recibirá: <span className="font-bold text-chart-2">{adminPercentage.toFixed(2)}%</span>
-                </p>
-              </div>
-
-              {/* Start Date Picker */}
-              <div>
-                <label
-                  htmlFor="startDate"
-                  className="mb-2 block text-base font-bold text-foreground"
-                >
-                  Fecha de Inicio (Aplicar desde)
-                </label>
-                <div className="flex flex-col gap-2 sm:flex-row">
+        <NeoCardContent>
+          {loading ? (
+            <div className="flex items-center gap-2 text-foreground/60">
+              <Loader2 className="animate-spin" size={20} />
+              <span>Cargando configuración...</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSaveRequest} className="space-y-6">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="percentage"
+                    className="block text-sm font-black uppercase tracking-wider text-foreground/80"
+                  >
+                    Nuevo Porcentaje para Empleados (0-100)
+                  </label>
                   <NeoInput
-                    type="date"
+                    id="percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={newPercentage}
+                    onChange={(e) => setNewPercentage(e.target.value)}
+                    placeholder="Ej: 50"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="startDate"
+                    className="block text-sm font-black uppercase tracking-wider text-foreground/80"
+                  >
+                    Fecha de Inicio
+                  </label>
+                  <NeoInput
                     id="startDate"
+                    type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    disabled={saving}
                     required
-                    className="sm:w-auto"
                   />
-                  <div className="flex gap-2">
-                    <NeoButton
-                      type="button"
-                      variant="neutral"
-                      onClick={() => {
-                        const today = new Date();
-                        const dayOfWeek = today.getDay();
-                        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Sunday = 0
-                        const monday = new Date(today);
-                        monday.setDate(today.getDate() + diff);
-                        setStartDate(monday.toISOString().split('T')[0]);
-                      }}
-                      className="flex-1 sm:flex-none"
-                    >
-                      Este Lunes
-                    </NeoButton>
-                    <NeoButton
-                      type="button"
-                      variant="neutral"
-                      onClick={() => setStartDate(new Date().toISOString().split('T')[0])}
-                      className="flex-1 sm:flex-none"
-                    >
-                      Hoy
-                    </NeoButton>
-                  </div>
                 </div>
-                <p className="mt-2 text-base text-chart-4">
-                  ⚠️ Todos los servicios desde esta fecha usarán el nuevo porcentaje
-                </p>
               </div>
 
-              {/* Visual Preview */}
-              <NeoCard variant="neutral">
-                <p className="mb-3 text-base font-bold text-foreground">
-                  Vista Previa de la Nueva Distribución:
-                </p>
-                <div className="flex h-12 overflow-hidden rounded-base border-2 border-border shadow-button">
-                  <div
-                    className="flex items-center justify-center bg-main text-base font-black text-main-foreground"
-                    style={{ width: `${newPercentage}%` }}
-                  >
-                    {parseFloat(newPercentage) > 10 && `${newPercentage}%`}
-                  </div>
-                  <div
-                    className="flex items-center justify-center bg-chart-2 text-base font-black text-white"
-                    style={{ width: `${adminPercentage}%` }}
-                  >
-                    {adminPercentage > 10 && `${adminPercentage.toFixed(2)}%`}
+              <div className="rounded-base border-2 border-border bg-secondary-background p-4 shadow-button">
+                <div className="flex items-start gap-2 text-foreground/80">
+                  <Info size={20} className="mt-0.5 flex-shrink-0 text-main" />
+                  <div className="space-y-1 text-sm">
+                    <p>
+                      <strong>Empleado:</strong> {parseFloat(newPercentage || "0").toFixed(2)}% del total
+                    </p>
+                    <p>
+                      <strong>Admin:</strong> {adminPercentage.toFixed(2)}% del total
+                    </p>
+                    <p className="text-foreground/60">
+                      Actual: {employeePercentage}% para empleados
+                    </p>
                   </div>
                 </div>
-                <div className="mt-2 flex justify-between text-sm font-bold text-foreground/70">
-                  <span>Empleados</span>
-                  <span>Administración</span>
-                </div>
-              </NeoCard>
-
-              {/* Error Message */}
-              {error && (
-                <NeoCard className="border-chart-4 bg-chart-4/10 text-chart-4">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle size={18} />
-                    <p className="text-base font-bold">{error}</p>
-                  </div>
-                </NeoCard>
-              )}
-
-              {/* Success Message */}
-              {successMessage && (
-                <NeoCard className="border-chart-5 bg-chart-5/10 text-chart-5">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle size={18} />
-                    <p className="text-base font-bold">{successMessage}</p>
-                  </div>
-                </NeoCard>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <NeoButton
-                  type="submit"
-                  disabled={
-                    saving ||
-                    parseFloat(newPercentage) === employeePercentage
-                  }
-                  className="flex-1"
-                >
-                  {saving ? "Guardando..." : "Guardar Cambios"}
-                </NeoButton>
-                <NeoButton
-                  type="button"
-                  variant="neutral"
-                  onClick={() => setNewPercentage(employeePercentage.toString())}
-                  disabled={saving}
-                >
-                  Resetear
-                </NeoButton>
               </div>
-            </form>
 
-            {/* Admin Tools: Database Migrations */}
-            <NeoCard variant="outline" className="border-chart-2">
-              <NeoCardHeader>
-                <NeoCardTitle className="flex items-center gap-2 text-chart-2">
-                  <Database size={24} />
-                  Herramientas de Administrador
-                </NeoCardTitle>
-              </NeoCardHeader>
-              <NeoCardContent className="space-y-4">
-                <p className="text-base text-foreground/80">
-                  Ejecuta las migraciones pendientes de la base de datos. Esto crea las tablas necesarias para el bot de WhatsApp y el simulador.
-                </p>
-                <NeoButton
-                  type="button"
-                  onClick={handleRunMigrations}
-                  disabled={migrating}
-                  variant="neutral"
-                >
-                  {migrating ? (
+              <div className="flex justify-end">
+                <NeoButton type="submit" variant="default" disabled={saving}>
+                  {saving ? (
                     <>
-                      <Loader2 size={18} className="animate-spin" />
-                      Ejecutando migraciones...
+                      <Loader2 className="animate-spin" size={18} />
+                      Guardando...
                     </>
                   ) : (
                     <>
-                      <Play size={18} />
-                      Ejecutar Migraciones
+                      <CheckCircle size={18} />
+                      Actualizar Porcentaje
                     </>
                   )}
                 </NeoButton>
+              </div>
+            </form>
+          )}
+        </NeoCardContent>
+      </NeoCard>
 
-                {migrationResult && (
-                  <NeoCard
-                    className={
-                      migrationResult.ok
-                        ? "border-chart-5 bg-chart-5/10 text-chart-5"
-                        : "border-chart-4 bg-chart-4/10 text-chart-4"
-                    }
-                  >
-                    <div className="flex items-start gap-2">
-                      {migrationResult.ok ? (
-                        <CheckCircle size={18} className="mt-0.5 flex-shrink-0" />
-                      ) : (
-                        <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
-                      )}
-                      <div className="text-base">
-                        <p className="font-bold">
-                          {migrationResult.ok ? migrationResult.message : "Error"}
-                        </p>
-                        {migrationResult.ok && migrationResult.ran && migrationResult.ran.length > 0 && (
-                          <ul className="mt-1 list-disc pl-4">
-                            {migrationResult.ran.map((file) => (
-                              <li key={file}>{file}</li>
-                            ))}
-                          </ul>
-                        )}
-                        {migrationResult.ok && migrationResult.skipped && migrationResult.skipped.length > 0 && (
-                          <p className="mt-2 text-sm opacity-80">
-                            Omitidas (ya aplicadas): {migrationResult.skipped.join(", ")}
-                          </p>
-                        )}
-                        {migrationResult.error && <p>{migrationResult.error}</p>}
-                      </div>
-                    </div>
-                  </NeoCard>
-                )}
-              </NeoCardContent>
-            </NeoCard>
-
-            {/* Info Section */}
-            <NeoCard variant="outline" className="border-chart-3">
-              <NeoCardHeader>
-                <NeoCardTitle className="flex items-center gap-2 text-chart-3">
-                  <Info size={22} />
-                  Información Importante
-                </NeoCardTitle>
-              </NeoCardHeader>
-              <NeoCardContent>
-                <ul className="ml-6 list-disc space-y-1 text-base text-foreground/80">
-                  <li>Este cambio es <strong>retroactivo</strong> - afectará todos los servicios desde la fecha seleccionada</li>
-                  <li>Puedes volver a cambiar el porcentaje más tarde y los servicios se recalcularán automáticamente</li>
-                  <li>Ejemplo: Cambiar a 55% desde "Este Lunes" aplicará 55/45 a todos los servicios de esta semana</li>
-                  <li>Solo el administrador puede modificar este porcentaje</li>
-                </ul>
-              </NeoCardContent>
-            </NeoCard>
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <Dialog.Content size="md" className="border-4 border-border">
+          <Dialog.Header className="font-heading text-xl font-black">
+            ¿Confirmar cambio?
+          </Dialog.Header>
+          <div className="p-6">
+            <p className="mb-4 text-base text-foreground/80">
+              Estás a punto de cambiar el porcentaje de participación de empleados de{" "}
+              <strong>{employeePercentage}%</strong> a <strong>{parseFloat(newPercentage || "0").toFixed(2)}%</strong>.
+            </p>
+            <p className="text-base text-foreground/80">
+              Esta acción afectará los cálculos de ganancias desde el{" "}
+              <strong>{new Date(startDate).toLocaleDateString("es-ES")}</strong>.
+            </p>
           </div>
-        )}
-      </NeoCardContent>
-    </NeoCard>
+          <Dialog.Footer className="border-t-4 border-border bg-secondary-background">
+            <NeoButton
+              type="button"
+              variant="neutral"
+              onClick={() => setConfirmOpen(false)}
+            >
+              Cancelar
+            </NeoButton>
+            <NeoButton type="button" variant="default" onClick={handleConfirmSave}>
+              Confirmar Cambio
+            </NeoButton>
+          </Dialog.Footer>
+        </Dialog.Content>
+      </Dialog>
+
+      {/* Migrations Card */}
+      <NeoCard>
+        <NeoCardHeader>
+          <div className="flex items-center gap-3">
+            <div className="rounded-base border-2 border-border bg-main p-2 text-main-foreground shadow-button">
+              <Play size={24} />
+            </div>
+            <div>
+              <NeoCardTitle>Migraciones y Mantenimiento</NeoCardTitle>
+              <NeoCardDescription>
+                Ejecuta migraciones y correcciones de datos
+              </NeoCardDescription>
+            </div>
+          </div>
+        </NeoCardHeader>
+
+        <NeoCardContent>
+          <div className="flex flex-wrap gap-3">
+            <NeoButton
+              type="button"
+              variant="default"
+              onClick={handleRunMigrations}
+              disabled={migrating}
+            >
+              {migrating ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                <Database size={18} />
+              )}
+              Ejecutar Migraciones
+            </NeoButton>
+            <NeoButton
+              type="button"
+              variant="neutral"
+              onClick={handleFixTimestamps}
+              disabled={migrating}
+            >
+              {migrating ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                <AlertCircle size={18} />
+              )}
+              Corregir Timestamps
+            </NeoButton>
+          </div>
+
+          {migrationResult && (
+            <div
+              className={`mt-6 rounded-base border-2 p-4 ${
+                migrationResult.ok
+                  ? "border-green-600 bg-green-50 text-green-600"
+                  : "border-red-600 bg-red-50 text-red-600"
+              }`}
+            >
+              <p className="font-bold">{migrationResult.message || migrationResult.error}</p>
+              {migrationResult.ran && migrationResult.ran.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm font-bold">Ejecutadas:</p>
+                  <ul className="ml-4 list-disc text-sm">
+                    {migrationResult.ran.map((m) => (
+                      <li key={m}>{m}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {migrationResult.skipped && migrationResult.skipped.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm font-bold">Omitidas:</p>
+                  <ul className="ml-4 list-disc text-sm">
+                    {migrationResult.skipped.map((m) => (
+                      <li key={m}>{m}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </NeoCardContent>
+      </NeoCard>
+    </div>
   );
 };
 
