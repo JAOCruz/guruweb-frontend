@@ -9,6 +9,9 @@ import {
   User,
   Loader2,
   Sparkles,
+  AlertCircle,
+  RotateCcw,
+  Terminal,
 } from "lucide-react";
 import api from "../services/api";
 import {
@@ -24,7 +27,7 @@ import {
   NeoBadge,
 } from "@guru/ui";
 
-type ClientStatus = "idle" | "typing" | "waiting" | "paused" | "error";
+type ClientStatus = "idle" | "connecting" | "typing" | "waiting" | "paused" | "error";
 
 interface ChatMessage {
   id: string;
@@ -93,6 +96,10 @@ const SCENARIOS: Record<ScenarioKey, ScenarioConfig> = {
 const MAX_CLIENTS = 10;
 const MIN_CLIENTS = 1;
 const MESSAGES_PER_CLIENT = 6;
+const MAX_LOGS = 50;
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 500;
+const START_STAGGER_MS = 500;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -106,15 +113,30 @@ const formatHistory = (messages: ChatMessage[]) => {
     .join("\n");
 };
 
+const getErrorMessage = (err: any): string => {
+  if (err?.response?.data?.error) return String(err.response.data.error);
+  if (err?.response?.data?.message) return String(err.response.data.message);
+  if (err?.message) return String(err.message);
+  return "Error desconocido";
+};
+
+const isCancellationError = (err: any): boolean => {
+  return err?.name === "AbortError" || err?.code === "ERR_CANCELED";
+};
+
 const ClientSimulator: React.FC = () => {
   const [clientCount, setClientCount] = useState<number>(3);
   const [scenario, setScenario] = useState<ScenarioKey>("new");
   const [clients, setClients] = useState<AIClient[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [simulationLog, setSimulationLog] = useState<string[]>([]);
+
   const abortControllerRef = useRef<AbortController | null>(null);
   const isPausedRef = useRef(false);
   const isRunningRef = useRef(false);
+  const activeSimulationsRef = useRef(0);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -124,6 +146,18 @@ const ClientSimulator: React.FC = () => {
     isRunningRef.current = isRunning;
   }, [isRunning]);
 
+  const addLog = useCallback((message: string) => {
+    const time = new Date().toLocaleTimeString("es-DO", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    setSimulationLog((prev) => {
+      const next = [`[${time}] ${message}`, ...prev];
+      return next.slice(0, MAX_LOGS);
+    });
+  }, []);
+
   const updateClient = useCallback(
     (clientId: string, updater: (client: AIClient) => AIClient) => {
       setClients((prev) =>
@@ -131,6 +165,13 @@ const ClientSimulator: React.FC = () => {
       );
     },
     []
+  );
+
+  const setClientStatus = useCallback(
+    (clientId: string, status: ClientStatus, error?: string) => {
+      updateClient(clientId, (c) => ({ ...c, status, error }));
+    },
+    [updateClient]
   );
 
   const addMessage = useCallback(
@@ -150,162 +191,357 @@ const ClientSimulator: React.FC = () => {
     [updateClient]
   );
 
-  const setClientStatus = useCallback(
-    (clientId: string, status: ClientStatus, error?: string) => {
-      updateClient(clientId, (c) => ({ ...c, status, error }));
+  const withRetry = useCallback(
+    async <T,>(
+      operation: () => Promise<T>,
+      operationName: string,
+      clientName?: string
+    ): Promise<T> => {
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          return await operation();
+        } catch (err: any) {
+          if (isCancellationError(err)) throw err;
+
+          const errorMsg = getErrorMessage(err);
+          if (attempt === MAX_RETRIES) {
+            addLog(
+              `${operationName} falló para ${clientName || "endpoint"} tras ${MAX_RETRIES} intentos: ${errorMsg}`
+            );
+            throw err;
+          }
+
+          const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+          addLog(
+            `${operationName} falló para ${clientName || "endpoint"} (intento ${attempt}/${MAX_RETRIES}): ${errorMsg}. Reintentando en ${delay}ms...`
+          );
+          await sleep(delay);
+        }
+      }
+      throw new Error("withRetry: unreachable");
     },
-    [updateClient]
+    [addLog]
   );
 
-  const generateClientMessage = async (
-    client: AIClient,
-    isFirst: boolean
-  ): Promise<string> => {
-    const scenarioConfig = SCENARIOS[client.scenario];
-    const history = formatHistory(client.messages);
-
-    let userPrompt: string;
-    if (isFirst) {
-      userPrompt = `Eres un ${scenarioConfig.profile.toLowerCase()}. Escribe un primer mensaje corto y natural a Gurú Soluciones por WhatsApp pidiendo ayuda o información. Solo el mensaje del cliente, sin explicaciones.`;
-    } else {
-      userPrompt = `Historial de la conversación:\n${history}\n\nEres un ${scenarioConfig.profile.toLowerCase()}. Responde al último mensaje del bot de forma breve y natural. Si el bot ya resolvió tu duda, puedes agradecer o hacer una última pregunta. Solo el mensaje del cliente, sin explicaciones.`;
-    }
-
-    const response = await api.post(
-      "/ai/generate",
-      {
-        prompt: userPrompt,
-        systemPrompt: scenarioConfig.systemPrompt,
-      },
-      { signal: abortControllerRef.current?.signal }
+  const testAIEndpoint = useCallback(async (): Promise<void> => {
+    await withRetry(
+      () =>
+        api.post(
+          "/ai/generate",
+          {
+            prompt: "Hola",
+            systemPrompt: "Responde brevemente.",
+          },
+          { signal: abortControllerRef.current?.signal }
+        ),
+      "Prueba de endpoint AI",
+      "/ai/generate"
     );
+  }, [withRetry]);
 
-    return (response.data.text || "").trim();
-  };
-
-  const sendToBot = async (client: AIClient, message: string) => {
-    const response = await api.post(
-      "/bot/simulate",
-      {
-        message,
-        sessionId: client.sessionId,
-      },
-      { signal: abortControllerRef.current?.signal }
-    );
-    return response.data.response || "No se recibió respuesta.";
-  };
-
-  const waitWhilePaused = async () => {
+  const waitWhilePaused = useCallback(async () => {
     while (isPausedRef.current && isRunningRef.current) {
       await sleep(300);
     }
-  };
+  }, []);
 
-  const runClientSimulation = async (client: AIClient) => {
-    try {
-      for (let turn = 0; turn < MESSAGES_PER_CLIENT; turn++) {
-        if (!isRunningRef.current) break;
-        await waitWhilePaused();
-        if (!isRunningRef.current) break;
+  const generateClientMessage = useCallback(
+    async (client: AIClient, isFirst: boolean): Promise<string> => {
+      const scenarioConfig = SCENARIOS[client.scenario];
 
-        setClientStatus(client.id, "typing");
-        await sleep(800 + Math.random() * 1200);
-        await waitWhilePaused();
-        if (!isRunningRef.current) break;
+      let userPrompt: string;
+      if (isFirst) {
+        userPrompt = `Eres un ${scenarioConfig.profile.toLowerCase()}. Escribe un primer mensaje corto y natural a Gurú Soluciones por WhatsApp pidiendo ayuda o información. Solo el mensaje del cliente, sin explicaciones.`;
+      } else {
+        userPrompt = `Historial de la conversación:\n${formatHistory(client.messages)}\n\nEres un ${scenarioConfig.profile.toLowerCase()}. Responde al último mensaje del bot de forma breve y natural. Si el bot ya resolvió tu duda, puedes agradecer o hacer una última pregunta. Solo el mensaje del cliente, sin explicaciones.`;
+      }
 
-        const isFirst = client.messages.length === 0;
-        const clientText = await generateClientMessage(client, isFirst);
-        if (!clientText) {
-          setClientStatus(client.id, "error", "No se generó mensaje del cliente");
-          break;
+      const response = await withRetry(
+        () =>
+          api.post(
+            "/ai/generate",
+            {
+              prompt: userPrompt,
+              systemPrompt: scenarioConfig.systemPrompt,
+            },
+            { signal: abortControllerRef.current?.signal }
+          ),
+        "Generación de mensaje",
+        client.name
+      );
+
+      return (response.data.text || "").trim();
+    },
+    [withRetry]
+  );
+
+  const sendToBot = useCallback(
+    async (client: AIClient, message: string) => {
+      const response = await withRetry(
+        () =>
+          api.post(
+            "/bot/simulate",
+            {
+              message,
+              sessionId: client.sessionId,
+            },
+            { signal: abortControllerRef.current?.signal }
+          ),
+        "Envío al bot",
+        client.name
+      );
+      return response.data.response || "No se recibió respuesta.";
+    },
+    [withRetry]
+  );
+
+  const runClientSimulation = useCallback(
+    async (client: AIClient) => {
+      // Local mutable copy keeps conversation history in sync even if React
+      // batches state updates.
+      let localMessages = [...client.messages];
+
+      const pushMessage = (role: ChatMessage["role"], text: string) => {
+        const message: ChatMessage = {
+          id: generateId(),
+          role,
+          text,
+          timestamp: new Date(),
+        };
+        localMessages = [...localMessages, message];
+        addMessage(client.id, role, text);
+      };
+
+      try {
+        addLog(`${client.name} iniciado`);
+
+        for (let turn = 0; turn < MESSAGES_PER_CLIENT; turn++) {
+          if (!isRunningRef.current) break;
+          await waitWhilePaused();
+          if (!isRunningRef.current) break;
+
+          setClientStatus(client.id, "typing");
+          await sleep(800 + Math.random() * 1200);
+          await waitWhilePaused();
+          if (!isRunningRef.current) break;
+
+          const isFirst = localMessages.length === 0;
+          const clientMessage = { ...client, messages: localMessages };
+
+          let clientText: string;
+          try {
+            clientText = await generateClientMessage(clientMessage, isFirst);
+          } catch (err: any) {
+            if (isCancellationError(err)) throw err;
+            const msg = getErrorMessage(err);
+            setClientStatus(client.id, "error", msg);
+            setGlobalError(`${client.name}: ${msg}`);
+            addLog(`Error en ${client.name}: ${msg}`);
+            continue;
+          }
+
+          if (!clientText) {
+            setClientStatus(
+              client.id,
+              "error",
+              "No se generó mensaje del cliente"
+            );
+            addLog(`Error en ${client.name}: no se generó mensaje`);
+            continue;
+          }
+
+          pushMessage("client", clientText);
+          setClientStatus(client.id, "waiting");
+
+          await sleep(1000 + Math.random() * 2000);
+          await waitWhilePaused();
+          if (!isRunningRef.current) break;
+
+          let botText: string;
+          try {
+            botText = await sendToBot({ ...client, messages: localMessages }, clientText);
+          } catch (err: any) {
+            if (isCancellationError(err)) throw err;
+            const msg = getErrorMessage(err);
+            setClientStatus(client.id, "error", msg);
+            setGlobalError(`${client.name}: ${msg}`);
+            addLog(`Error en ${client.name}: ${msg}`);
+            continue;
+          }
+
+          pushMessage("bot", botText);
+
+          await sleep(1000 + Math.random() * 2000);
         }
 
-        addMessage(client.id, "client", clientText);
-        setClientStatus(client.id, "waiting");
-
-        await sleep(1000 + Math.random() * 2000);
-        await waitWhilePaused();
-        if (!isRunningRef.current) break;
-
-        const botText = await sendToBot(client, clientText);
-        addMessage(client.id, "bot", botText);
-
-        await sleep(1000 + Math.random() * 2000);
+        if (isRunningRef.current) {
+          setClientStatus(client.id, "idle");
+          addLog(`${client.name} finalizó`);
+        }
+      } catch (err: any) {
+        if (isCancellationError(err)) {
+          setClientStatus(client.id, "idle");
+          return;
+        }
+        const msg = getErrorMessage(err);
+        console.error(`Error en cliente ${client.name}:`, err);
+        setClientStatus(client.id, "error", msg);
+        setGlobalError(`${client.name}: ${msg}`);
+        addLog(`Error crítico en ${client.name}: ${msg}`);
       }
+    },
+    [
+      addLog,
+      addMessage,
+      generateClientMessage,
+      sendToBot,
+      setClientStatus,
+      waitWhilePaused,
+    ]
+  );
 
-      if (isRunningRef.current) {
-        setClientStatus(client.id, "idle");
-      }
-    } catch (err: any) {
-      if (err.name === "AbortError" || err.code === "ERR_CANCELED") {
-        setClientStatus(client.id, "idle");
-        return;
-      }
-      console.error(`Error en cliente ${client.name}:`, err);
-      setClientStatus(
-        client.id,
-        "error",
-        err.response?.data?.error || err.message || "Error en simulación"
+  const startSimulation = useCallback(
+    (client: AIClient) => {
+      activeSimulationsRef.current += 1;
+      setClientStatus(client.id, "connecting");
+      runClientSimulation(client).finally(() => {
+        activeSimulationsRef.current = Math.max(
+          0,
+          activeSimulationsRef.current - 1
+        );
+        if (
+          activeSimulationsRef.current === 0 &&
+          isRunningRef.current &&
+          !isPausedRef.current
+        ) {
+          setIsRunning(false);
+          setIsPaused(false);
+          abortControllerRef.current = null;
+          addLog("Simulación finalizada");
+        }
+      });
+    },
+    [addLog, runClientSimulation, setClientStatus]
+  );
+
+  const restartClient = useCallback(
+    (clientId: string) => {
+      if (!isRunningRef.current) return;
+      const client = clients.find((c) => c.id === clientId);
+      if (!client) return;
+
+      setClients((prev) =>
+        prev.map((c) =>
+          c.id === clientId
+            ? { ...c, messages: [], status: "connecting", error: undefined }
+            : c
+        )
       );
-    }
-  };
+      addLog(`${client.name} reiniciado`);
+      startSimulation({ ...client, messages: [], status: "connecting", error: undefined });
+    },
+    [clients, addLog, startSimulation]
+  );
 
-  const handleStart = async () => {
+  const handleStart = useCallback(async () => {
     if (isRunning) return;
+
+    setGlobalError(null);
+    setSimulationLog([]);
 
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
 
-    const count = Math.max(MIN_CLIENTS, Math.min(MAX_CLIENTS, clientCount));
-    setClientCount(count);
+    try {
+      addLog("Verificando endpoint de AI...");
+      await testAIEndpoint();
+      addLog("Endpoint de AI respondió correctamente");
+    } catch (err: any) {
+      const msg = getErrorMessage(err);
+      setGlobalError(
+        `No se pudo verificar el backend (${msg}). La simulación no se inició.`
+      );
+      addLog(`Fallo en verificación de backend: ${msg}`);
+      abortControllerRef.current = null;
+      return;
+    }
 
-    const newClients: AIClient[] = Array.from({ length: count }).map((_, i) => ({
-      id: generateId(),
-      name: generateClientName(i),
-      profile: SCENARIOS[scenario].profile,
-      scenario,
-      messages: [],
-      status: "idle",
-      sessionId: `sim_client_${Date.now()}_${generateId()}`,
-    }));
+    try {
+      const count = Math.max(MIN_CLIENTS, Math.min(MAX_CLIENTS, clientCount));
+      setClientCount(count);
 
-    setClients(newClients);
-    setIsRunning(true);
-    setIsPaused(false);
+      const newClients: AIClient[] = Array.from({ length: count }).map((_, i) => ({
+        id: generateId(),
+        name: generateClientName(i),
+        profile: SCENARIOS[scenario].profile,
+        scenario,
+        messages: [],
+        status: "connecting",
+        sessionId: `sim_client_${Date.now()}_${generateId()}`,
+      }));
 
-    await Promise.all(newClients.map((client) => runClientSimulation(client)));
+      setClients(newClients);
+      setIsRunning(true);
+      setIsPaused(false);
+      activeSimulationsRef.current = 0;
+      addLog(`Iniciando ${count} clientes...`);
 
-    setIsRunning(false);
-    setIsPaused(false);
-    abortControllerRef.current = null;
-  };
+      // Staggered start to avoid backend saturation.
+      for (const client of newClients) {
+        if (!isRunningRef.current) break;
+        startSimulation(client);
+        await sleep(START_STAGGER_MS);
+      }
+    } catch (err: any) {
+      const msg = getErrorMessage(err);
+      setGlobalError(`Error al iniciar la simulación: ${msg}`);
+      addLog(`Error al iniciar la simulación: ${msg}`);
+      setIsRunning(false);
+      abortControllerRef.current = null;
+    }
+  }, [
+    isRunning,
+    clientCount,
+    scenario,
+    addLog,
+    testAIEndpoint,
+    startSimulation,
+  ]);
 
-  const handlePauseResume = () => {
+  const handlePauseResume = useCallback(() => {
     if (!isRunning) return;
     setIsPaused((prev) => !prev);
-  };
+  }, [isRunning]);
 
-  const handleStop = () => {
+  const handleStop = useCallback(() => {
     abortControllerRef.current?.abort();
     setIsRunning(false);
     setIsPaused(false);
     setClients((prev) =>
       prev.map((c) =>
-        c.status === "typing" || c.status === "waiting" || c.status === "paused"
+        c.status === "connecting" ||
+        c.status === "typing" ||
+        c.status === "waiting" ||
+        c.status === "paused"
           ? { ...c, status: "idle" }
           : c
       )
     );
-  };
+    activeSimulationsRef.current = 0;
+    addLog("Simulación detenida");
+  }, [addLog]);
 
-  const handleClientCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (Number.isNaN(value)) {
-      setClientCount(1);
-      return;
-    }
-    setClientCount(Math.max(MIN_CLIENTS, Math.min(MAX_CLIENTS, value)));
-  };
+  const handleClientCountChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = parseInt(e.target.value, 10);
+      if (Number.isNaN(value)) {
+        setClientCount(1);
+        return;
+      }
+      setClientCount(Math.max(MIN_CLIENTS, Math.min(MAX_CLIENTS, value)));
+    },
+    []
+  );
 
   useEffect(() => {
     return () => {
@@ -416,6 +652,51 @@ const ClientSimulator: React.FC = () => {
         )}
       </NeoCard>
 
+      {/* Global error banner */}
+      {globalError && (
+        <NeoCard variant="outline" className="border-red-400 bg-red-50">
+          <NeoCardContent className="flex items-start gap-3 py-4">
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" />
+            <div className="flex-1">
+              <p className="font-bold text-red-700">Error</p>
+              <p className="text-sm text-red-700">{globalError}</p>
+            </div>
+            <NeoButton
+              variant="outline"
+              size="sm"
+              onClick={() => setGlobalError(null)}
+            >
+              Cerrar
+            </NeoButton>
+          </NeoCardContent>
+        </NeoCard>
+      )}
+
+      {/* Global simulation log */}
+      <NeoCard>
+        <NeoCardHeader>
+          <div className="flex items-center gap-2">
+            <Terminal size={18} />
+            <NeoCardTitle className="text-base">Log de simulación</NeoCardTitle>
+          </div>
+        </NeoCardHeader>
+        <NeoCardContent>
+          <div className="max-h-48 overflow-y-auto rounded-base border-2 border-border bg-secondary-background p-3 font-mono text-xs">
+            {simulationLog.length === 0 ? (
+              <p className="text-foreground/50">Aún no hay eventos.</p>
+            ) : (
+              <ul className="space-y-1">
+                {simulationLog.map((entry, idx) => (
+                  <li key={idx} className="break-words">
+                    {entry}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </NeoCardContent>
+      </NeoCard>
+
       {/* Clients grid */}
       {clients.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -438,7 +719,20 @@ const ClientSimulator: React.FC = () => {
                     {client.profile}
                   </p>
                 </div>
-                <StatusBadge status={client.status} />
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={client.status} />
+                  {client.status === "error" && (
+                    <NeoButton
+                      variant="outline"
+                      size="sm"
+                      onClick={() => restartClient(client.id)}
+                      disabled={!isRunning}
+                      title="Reiniciar cliente"
+                    >
+                      <RotateCcw size={14} />
+                    </NeoButton>
+                  )}
+                </div>
               </div>
 
               {/* Chat history */}
@@ -446,7 +740,16 @@ const ClientSimulator: React.FC = () => {
                 {client.messages.length === 0 ? (
                   <div className="flex h-full flex-col items-center justify-center text-center text-sm text-foreground/50">
                     <MessageCircle size={24} className="mb-2 opacity-50" />
-                    <p>Esperando para iniciar...</p>
+                    {client.status === "connecting" ? (
+                      <>
+                        <Loader2 size={16} className="mb-1 animate-spin" />
+                        <p>Conectando...</p>
+                      </>
+                    ) : client.status === "error" ? (
+                      <p className="text-red-600">{client.error || "Error"}</p>
+                    ) : (
+                      <p>Esperando para iniciar...</p>
+                    )}
                   </div>
                 ) : (
                   client.messages.map((msg) => (
@@ -492,6 +795,14 @@ const ClientSimulator: React.FC = () => {
                     </div>
                   </div>
                 )}
+                {client.status === "connecting" && client.messages.length > 0 && (
+                  <div className="flex justify-start">
+                    <div className="flex items-center gap-2 rounded-base border-2 border-border bg-secondary-background px-3 py-2 text-sm text-foreground/70 shadow-shadow">
+                      <Loader2 size={12} className="animate-spin" />
+                      Conectando...
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Footer */}
@@ -519,6 +830,7 @@ const StatusBadge: React.FC<{ status: ClientStatus }> = ({ status }) => {
     { label: string; variant: "main" | "neutral" | "outline" }
   > = {
     idle: { label: "Listo", variant: "neutral" },
+    connecting: { label: "Conectando", variant: "outline" },
     typing: { label: "Escribiendo", variant: "main" },
     waiting: { label: "Esperando", variant: "main" },
     paused: { label: "Pausado", variant: "outline" },
