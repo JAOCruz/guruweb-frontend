@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import * as Sentry from "@sentry/react";
 import Login from "./pages/Login.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
@@ -25,14 +25,13 @@ const DashboardRoutes = () => (
   <Routes>
     <Route path="/login" element={<Login />} />
     <Route
-      path="/dashboard/*"
+      path="/*"
       element={
         <ProtectedRoute>
           <Dashboard />
         </ProtectedRoute>
       }
     />
-    <Route path="*" element={<Navigate to="/login" />} />
   </Routes>
 );
 
