@@ -1,9 +1,0 @@
-[build]
-  command = "npm install && npm run netlify-build"
-  publish = "dist"
-
-[build.environment]
-  NODE_VERSION = "20.11.1"
-  SKIP_TYPESCRIPT = "true"
-  NPM_FLAGS = "--no-package-lock"
-  CI = "false"
