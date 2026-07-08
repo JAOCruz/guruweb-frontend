@@ -20,6 +20,7 @@ import Laws from "./Laws";
 import ServicesCatalog from "./ServicesCatalog";
 import MotherBrain from "./MotherBrain";
 import BotSimulator from "./BotSimulator";
+import ClientSimulator from "./ClientSimulator";
 import SimulatorReview from "./SimulatorReview";
 import { NeoButton } from "@guru/ui";
 import { NeoDateInput } from "@guru/ui";
@@ -398,6 +399,18 @@ const Dashboard: React.FC = () => {
         <Route path="/documents" element={<DocumentManagement />} />
         <Route path="/laws" element={<Laws />} />
         <Route path="/motherbrain" element={<MotherBrain />} />
+        <Route
+          path="/client-simulator"
+          element={
+            isAdmin ? (
+              <ClientSimulator />
+            ) : (
+              <div className="py-8 text-center text-slate-400">
+                No tienes acceso a esta página
+              </div>
+            )
+          }
+        />
         <Route
           path="/bot-simulator"
           element={

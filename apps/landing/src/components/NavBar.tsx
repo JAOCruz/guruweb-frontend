@@ -7,7 +7,7 @@ const navLinks = [
   { name: "Inicio", href: "#" },
   { name: "Servicios", href: "#servicios" },
   { name: "Sobre el Gurú", href: "#sobre-guru" },
-  { name: "¿Trabajas con Nosotros?", href: "/login" },
+  { name: "¿Trabajas con Nosotros?", href: "https://guruweb-dashboard-prod.netlify.app/login" },
 ];
 
 const NavBar: React.FC = () => {
