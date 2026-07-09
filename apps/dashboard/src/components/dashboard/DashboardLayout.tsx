@@ -54,7 +54,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     "/cases",
     "/documents",
     "/bot-simulator",
-    "/client-simulator",
     "/simulator-review",
     "/motherbrain",
     "/services-catalog",
@@ -189,7 +188,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <div className="mt-2 ml-4 space-y-1 border-l-2 border-white/30 pl-3">
                 <SubNavLink to="/whatsapp" icon={<Wifi size={14} />} label="Conexión" />
                 <SubNavLink to="/bot-simulator" icon={<Bot size={14} />} label="Simulador Bot" />
-                <SubNavLink to="/client-simulator" icon={<Users size={14} />} label="Simulador Clientes AI" />
                 <SubNavLink to="/simulator-review" icon={<MessageSquare size={14} />} label="Revisión Simulador" />
                 <SubNavLink to="/bot-messages" icon={<MessageSquare size={14} />} label="Mensajes" />
                 <SubNavLink to="/bot-clients" icon={<Users size={14} />} label="Clientes" />
