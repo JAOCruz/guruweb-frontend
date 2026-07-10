@@ -66,7 +66,7 @@ export default function AIGuru() {
     setClausulaOutput("");
 
     const sysPrompt =
-      "Eres un Abogado Corporativo y Notario experto de República Dominicana. Tu objetivo es convertir hechos simples o viñetas en una cláusula jurídica o párrafo legal formal, impecable y profesional. Utiliza la terminología legal correcta del Código Civil y Ley 140-15. Redacta de forma clara, seria y sin espacios en blanco. Si faltan datos clave (ej. montos en letras, números de cédula), incluye marcadores [ESPECIFICAR CÉDULA] de forma profesional.";
+      "Eres un Abogado Corporativo y Notario experto de República Dominicana. Tu objetivo es convertir hechos simples o viñetas en una cláusula jurídica o párrafo legal formal, impecable y profesional. Utiliza la terminología legal correcta del Código Civil y Ley 140-15. Redacta de forma clara, seria y sin espacios en blanco. Si faltan datos clave (ej. montos en letras, números de cédula), incluye marcadores [ESPECIFICAR CÉDULA] de forma profesional. No cites ni uses leyes derogadas o normativa anterior a 2025. Usa exclusivamente el marco jurídico vigente de República Dominicana en 2026. Si una norma ha sido modificada o existe duda sobre su vigencia, indícalo claramente y sugiere verificar la versión actualizada. No inventes referencias legales específicas si no se conocen con certeza.";
     const userPrompt = `Transfórmame estos hechos en un texto legal formal:\n${hechosInput}`;
 
     try {
@@ -86,7 +86,7 @@ export default function AIGuru() {
     setAnalisisOutput("");
 
     const sysPrompt =
-      "Eres un Auditor Legal Experto y Paralegal Senior en República Dominicana. Tu trabajo es revisar textos jurídicos y contratos para encontrar vulnerabilidades antes de notarizarlos. Identifica: 1. Espacios en blanco peligrosos. 2. Ausencia de montos escritos en letras. 3. Ambigüedades en nombres o documentos de identidad (cédulas/pasaportes). 4. Falta de coherencia. Responde con un reporte ejecutivo usando viñetas (⚠️ Riesgo detectado, ✅ Sugerencia de corrección). Mantén un tono sumamente profesional y corporativo.";
+      "Eres un Auditor Legal Experto y Paralegal Senior en República Dominicana. Tu trabajo es revisar textos jurídicos y contratos para encontrar vulnerabilidades antes de notarizarlos. Identifica: 1. Espacios en blanco peligrosos. 2. Ausencia de montos escritos en letras. 3. Ambigüedades en nombres o documentos de identidad (cédulas/pasaportes). 4. Falta de coherencia. Responde con un reporte ejecutivo usando viñetas (⚠️ Riesgo detectado, ✅ Sugerencia de corrección). Mantén un tono sumamente profesional y corporativo. No bases recomendaciones en criterios, leyes o jurisprudencia anteriores a 2025. Usa estándares y riesgos vigentes en 2026. Señala cuando una cláusula pueda estar desactualizada respecto a la normativa actual. Sugiere verificar la legislación vigente antes de notarizar.";
     const userPrompt = `Audita el siguiente fragmento legal y detecta sus riesgos:\n${docInput}`;
 
     try {
