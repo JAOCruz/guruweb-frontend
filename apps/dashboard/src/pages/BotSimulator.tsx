@@ -99,11 +99,11 @@ const BotSimulator: React.FC = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState(() => `sim_${Date.now().toString(36).slice(-8)}`);
-  const [conversationId, setConversationId] = useState<number | null>(null);
   const [title, setTitle] = useState("Chat de prueba");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<string>("open");
   const [savingMeta, setSavingMeta] = useState(false);
+  const [metaSaved, setMetaSaved] = useState(false);
   const [attachedMedia, setAttachedMedia] = useState<UploadedMedia | null>(null);
   const [recording, setRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -124,12 +124,10 @@ const BotSimulator: React.FC = () => {
       const { conversation, messages: storedMessages } = res.data;
 
       if (conversation) {
-        setConversationId(conversation.id);
         setTitle(conversation.title || "Chat de prueba");
         setNotes(conversation.notes || "");
         setStatus(conversation.status || "open");
       } else {
-        setConversationId(null);
         setTitle("Chat de prueba");
         setNotes("");
         setStatus("open");
@@ -269,7 +267,6 @@ const BotSimulator: React.FC = () => {
   };
 
   const saveMeta = async () => {
-    if (!conversationId) return;
     setSavingMeta(true);
     try {
       await api.put(`/bot/simulate/conversation/${sessionId}`, {
@@ -278,8 +275,11 @@ const BotSimulator: React.FC = () => {
         status,
       });
       await loadConversations();
+      setMetaSaved(true);
+      setTimeout(() => setMetaSaved(false), 2000);
     } catch (err) {
       console.error("Failed to save meta", err);
+      alert("No se pudieron guardar las notas");
     } finally {
       setSavingMeta(false);
     }
@@ -311,7 +311,6 @@ const BotSimulator: React.FC = () => {
     setTitle("Chat de prueba");
     setNotes("");
     setStatus("open");
-    setConversationId(null);
   };
 
   const sendMessage = async (e?: React.FormEvent) => {
@@ -502,10 +501,10 @@ const BotSimulator: React.FC = () => {
                 variant="default"
                 size="sm"
                 onClick={saveMeta}
-                disabled={savingMeta || !conversationId}
+                disabled={savingMeta}
               >
                 <Save size={12} />
-                {savingMeta ? "Guardando..." : "Guardar notas"}
+                {savingMeta ? "Guardando..." : metaSaved ? "Guardado ✓" : "Guardar notas"}
               </NeoButton>
             </div>
           </div>
