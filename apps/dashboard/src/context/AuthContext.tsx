@@ -14,7 +14,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
 }
@@ -40,12 +40,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(response.data.user || response.data);
     } catch (error: any) {
       const status = error.response?.status;
-      console.log("[AuthContext] loadUser failed — status:", status, "message:", error.message, "retries left:", retries);
+      const isRememberMe = localStorage.getItem("rememberMe") === "true";
+      console.log("[AuthContext] loadUser failed — status:", status, "message:", error.message, "retries left:", retries, "rememberMe:", isRememberMe);
       // Only clear token on 401 (unauthorized). Other errors (500, timeout,
       // network blip) should NOT wipe the session — the user might just be
       // offline or Railway is restarting.
       if (status === 401) {
+        if (isRememberMe && retries > 0) {
+          // Remember me users get a retry: the first 401 may come from a
+          // stale cookie while the localStorage token is still valid.
+          console.log("[AuthContext] Remember me: retrying loadUser in 1.5s...");
+          setTimeout(() => loadUser(retries - 1), 1500);
+          return; // Keep loading=true while retrying
+        }
         localStorage.removeItem("token");
+        localStorage.removeItem("rememberMe");
         setUser(null);
       } else if (retries > 0 && !error.response) {
         // Network error: retry after 1.5s (Railway cold-start, etc.)
@@ -61,14 +70,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string, rememberMe = false) => {
     try {
-      const response = await authAPI.login(username, password);
+      const response = await authAPI.login(username, password, rememberMe);
       const { token, user } = response.data;
 
-      // Backend sets HttpOnly cookie automatically.
-      // We keep localStorage as a temporary fallback for backward-compat.
-      if (token) localStorage.setItem("token", token);
+      if (token) {
+        if (rememberMe) {
+          localStorage.setItem("token", token);
+          localStorage.setItem("rememberMe", "true");
+        } else {
+          sessionStorage.setItem("token", token);
+          localStorage.removeItem("rememberMe");
+        }
+      }
       setUser(user);
       navigate("/dashboard");
     } catch (error: any) {
@@ -83,6 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Ignore — always clear local state
     }
     localStorage.removeItem("token");
+    localStorage.removeItem("rememberMe");
+    sessionStorage.removeItem("token");
     setUser(null);
     navigate("/login");
   };

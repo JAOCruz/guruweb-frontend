@@ -12,6 +12,7 @@ import { Button } from "@guru/ui";
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -22,7 +23,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -62,6 +63,7 @@ const Login: React.FC = () => {
               </label>
               <Input
                 type="text"
+                autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Ingresa tu usuario"
@@ -76,6 +78,7 @@ const Login: React.FC = () => {
               </label>
               <Input
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -83,6 +86,16 @@ const Login: React.FC = () => {
                 className="h-14 border-2 border-border bg-white px-4 text-lg text-foreground placeholder:text-foreground/50 focus-visible:ring-foreground"
               />
             </div>
+
+            <label className="flex items-center gap-3 text-sm font-bold text-white/90">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-5 w-5 accent-foreground cursor-pointer"
+              />
+              Recuérdame
+            </label>
 
             <Button
               type="submit"
