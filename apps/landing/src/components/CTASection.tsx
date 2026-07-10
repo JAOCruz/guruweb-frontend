@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { MessageSquare, ArrowRight } from "lucide-react";
-import { NeoCard, NeoCardContent, NeoBadge, NeoButton } from "@guru/ui";
+import { NeoCard, NeoCardContent, NeoBadge, NeoButton } from "./ui/neo";
 
 const CTASection: React.FC = () => {
   return (

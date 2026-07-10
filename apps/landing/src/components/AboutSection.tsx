@@ -2,7 +2,7 @@ import React, { Suspense, useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
-import { NeoCard, NeoCardContent } from "@guru/ui";
+import { NeoCard, NeoCardContent } from "./ui/neo";
 
 /* ── 3D Lady Justice Model ── */
 function LadyJusticeModel() {

@@ -14,7 +14,7 @@ import {
   Camera,
   Landmark,
 } from "lucide-react";
-import { NeoButton, NeoBadge } from "@guru/ui";
+import { NeoButton, NeoBadge } from "./ui/neo";
 
 /* ── 3D Scales of Justice Hero Model ── */
 function ScalesHeroModel() {

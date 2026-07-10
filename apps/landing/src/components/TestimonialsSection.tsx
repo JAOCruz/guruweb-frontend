@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Star, Quote } from "lucide-react";
-import { NeoCard, NeoCardContent, NeoBadge } from "@guru/ui";
+import { NeoCard, NeoCardContent, NeoBadge } from "./ui/neo";
 
 const TestimonialsSection: React.FC = () => {
   const containerVariants = {

@@ -1,7 +1,7 @@
 import { FC, PropsWithChildren } from "react";
 import { motion, MotionNodeTapHandlers } from "framer-motion";
 
-import { cn } from "@guru/ui";
+import { cn } from "@/utils";
 
 const Button: FC<
   PropsWithChildren<{ onTap?: MotionNodeTapHandlers["onTap"] }>

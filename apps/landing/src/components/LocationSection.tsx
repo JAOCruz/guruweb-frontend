@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
-import { NeoCard, NeoCardContent, NeoBadge } from "@guru/ui";
+import { NeoCard, NeoCardContent, NeoBadge } from "./ui/neo";
 
 const LocationSection: React.FC = () => {
   return (

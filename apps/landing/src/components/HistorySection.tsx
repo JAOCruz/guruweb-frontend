@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Type, Scroll, Users, Sparkles, Crown } from "lucide-react";
-import { NeoCard, NeoCardContent, NeoBadge } from "@guru/ui";
+import { NeoCard, NeoCardContent, NeoBadge } from "./ui/neo";
 
 const slides = [
   {

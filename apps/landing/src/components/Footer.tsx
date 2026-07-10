@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Instagram, Mail, Phone, MapPin, ExternalLink } from "lucide-react";
-import { NeoCard } from "@guru/ui";
+import { NeoCard } from "./ui/neo";
 
 const Footer: React.FC = () => {
   return (

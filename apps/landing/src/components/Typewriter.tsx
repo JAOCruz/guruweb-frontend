@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { motion, stagger, useAnimate } from "framer-motion";
 
-import { cn } from "@guru/ui";
+import { cn } from "@/utils";
 
 const Typewriter = ({
   words,

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { NeoButton } from "@guru/ui";
+import { NeoButton } from "./ui/neo";
 
 const navLinks = [
   { name: "Inicio", href: "#" },

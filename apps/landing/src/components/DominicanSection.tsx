@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { NeoBadge, NeoCard, NeoCardContent } from "@guru/ui";
+import { NeoBadge, NeoCard, NeoCardContent } from "./ui/neo";
 
 const DominicanSection: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);

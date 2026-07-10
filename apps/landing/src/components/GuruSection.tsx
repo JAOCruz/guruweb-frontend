@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { NeoBadge, NeoCard, NeoCardContent } from "@guru/ui";
+import { NeoBadge, NeoCard, NeoCardContent } from "./ui/neo";
 
 const GuruSection: React.FC = () => {
   const containerVariants = {

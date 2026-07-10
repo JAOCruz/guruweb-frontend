@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { motion } from "framer-motion";
 import { Play } from "lucide-react";
-import { NeoButton } from "@guru/ui";
+import { NeoButton } from "./ui/neo";
 
 const VideoSection: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);

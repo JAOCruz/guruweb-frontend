@@ -12,7 +12,7 @@ import {
   Send,
   ArrowRight,
 } from "lucide-react";
-import { NeoCard, NeoCardContent, NeoBadge, NeoButton } from "@guru/ui";
+import { NeoCard, NeoCardContent, NeoBadge, NeoButton } from "./ui/neo";
 
 const ServicesSection: React.FC = () => {
   const containerVariants = {
