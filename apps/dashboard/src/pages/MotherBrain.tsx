@@ -343,7 +343,7 @@ export default function MotherBrain() {
       </div>
 
       {/* 3 Category Cards */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-3">
         {parentCategories.map((cat) => {
           const style = CAT_STYLES[cat.slug] || CAT_STYLES["notificaciones"];
           const descendants = getDescendants(cat.id, categories);
@@ -361,23 +361,25 @@ export default function MotherBrain() {
             <NeoCard
               key={cat.id}
               variant="main"
-              className="group cursor-pointer items-center gap-4 p-8 text-center transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none active:translate-x-boxShadowX active:translate-y-boxShadowY active:shadow-none"
+              className="group flex h-full cursor-pointer flex-col items-center gap-4 p-6 text-center transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none active:translate-x-boxShadowX active:translate-y-boxShadowY active:shadow-none"
               onClick={() => selectCategory(cat.slug)}
             >
-              <span className="text-6xl transition-transform group-hover:scale-110">
+              <span className="flex h-20 items-center justify-center text-5xl transition-transform group-hover:scale-110">
                 {style.emoji}
               </span>
-              <h2 className="font-heading text-xl uppercase tracking-wide md:text-2xl">
+              <h2 className="line-clamp-2 min-h-[3.5rem] font-heading text-xl uppercase tracking-wide md:text-2xl">
                 {cat.name}
               </h2>
-              <p className="text-base font-base opacity-80">{style.tagline}</p>
-              <div className="mt-2 flex flex-wrap justify-center gap-2">
+              <p className="line-clamp-2 min-h-[3rem] text-base font-base opacity-80">
+                {style.tagline}
+              </p>
+              <div className="mt-auto flex flex-wrap items-center justify-center gap-2">
                 <NeoBadge variant="main" className="px-4 py-2">{tmplCount} docs</NeoBadge>
                 {leafCount > 0 && (
                   <NeoBadge variant="outline" className="px-4 py-2">{leafCount} subcat</NeoBadge>
                 )}
               </div>
-              <ChevronRight className="mt-2 h-6 w-6 opacity-60 transition-opacity group-hover:opacity-100" />
+              <ChevronRight className="mt-1 h-6 w-6 opacity-60 transition-opacity group-hover:opacity-100" />
             </NeoCard>
           );
         })}
