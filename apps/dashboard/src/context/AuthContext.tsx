@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       }
       setUser(user);
-      navigate("/dashboard");
+      navigate("/");
     } catch (error: any) {
       throw new Error(error.response?.data?.error || "Login failed");
     }

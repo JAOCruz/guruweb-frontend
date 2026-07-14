@@ -57,13 +57,11 @@ export default function Cotizaciones() {
   const fetchQuotations = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${getAPIUrl()}/api/invoices/quotations`);
-      if (!response.ok) throw new Error("Failed to fetch quotations");
-      const data = await response.json();
+      const { data } = await api.get("/invoices/quotations");
       setQuotations(data.quotations || []);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error loading quotations");
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err.message || "Error loading quotations");
       console.error(err);
     } finally {
       setLoading(false);

@@ -56,7 +56,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     // Check if on a bot-related route (skip service fetching for these)
-    const isBotRoute = /\/(whatsapp|bot-|cases|cotizaciones|ai-insights|ai-guru|documents|laws)/.test(location.pathname);
+    const isBotRoute = /\/(whatsapp|bot-|cases|cotizaciones|ai-insights|ai-guru|documents|laws|services-catalog|motherbrain|simulator-review)/.test(location.pathname);
     const isAnalyticsRoute = /\/(charts|data)/.test(location.pathname);
 
     if (isBotRoute) {

@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import * as Sentry from "@sentry/react";
 import Login from "./pages/Login.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
@@ -24,6 +24,7 @@ const isDashboardBuild = import.meta.env.VITE_BUILD_TARGET === "dashboard";
 const DashboardRoutes = () => (
   <Routes>
     <Route path="/login" element={<Login />} />
+    <Route path="/dashboard" element={<Navigate to="/" replace />} />
     <Route
       path="/*"
       element={
@@ -38,6 +39,7 @@ const DashboardRoutes = () => (
 const DefaultRoutes = () => (
   <Routes>
     <Route path="/login" element={<Login />} />
+    <Route path="/dashboard" element={<Navigate to="/" replace />} />
     <Route
       path="/*"
       element={

@@ -35,15 +35,17 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user, logout, isAdmin } = useAuth();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [whatsappOpen, setWhatsappOpen] = useState(false);
+  const [whatsappOpen, setWhatsappOpen] = useState(() =>
+    whatsappPaths.some((p) => location.pathname.startsWith(p))
+  );
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showAdvisor, setShowAdvisor] = useState(() => {
     const saved = localStorage.getItem("guru-advisor-visible");
     return saved === null ? true : saved === "true";
   });
-  const location = useLocation();
   const { headingFont, setHeadingFont } = useTheme();
 
   const whatsappPaths = [

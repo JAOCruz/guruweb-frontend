@@ -91,13 +91,13 @@ export const servicesAPI = {
 };
 
 export const serviceCatalogAPI = {
-  getAll: () => api.get("/services"),
-  getCategories: () => api.get("/services/categories/list"),
-  create: (data: any) => api.post("/services", data),
-  update: (id: number, data: any) => api.put(`/services/${id}`, data),
-  delete: (id: number) => api.delete(`/services/${id}`),
+  getAll: () => api.get("/service-catalog"),
+  getCategories: () => api.get("/service-catalog/categories/list"),
+  create: (data: any) => api.post("/service-catalog", data),
+  update: (id: number, data: any) => api.put(`/service-catalog/${id}`, data),
+  delete: (id: number) => api.delete(`/service-catalog/${id}`),
   calculate: (data: { serviceId: number; assetValue?: number; quantity?: number }) =>
-    api.post("/services/calculate", data),
+    api.post("/service-catalog/calculate", data),
 };
 
 export const settingsAPI = {
