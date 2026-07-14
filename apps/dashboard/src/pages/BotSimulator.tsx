@@ -490,7 +490,7 @@ const BotSimulator: React.FC = () => {
               <NeoSelect
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="h-10 text-sm"
+                className="h-11 px-5 py-2.5 text-sm"
               >
                 <option value="open">Abierto</option>
                 <option value="needs_fix">Necesita ajuste</option>

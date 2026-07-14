@@ -21,14 +21,16 @@ const StatusBadge: React.FC<{ status: BotStatus["status"]; paused?: boolean }> =
   status,
   paused,
 }) => {
+  const badgeClass = "gap-2.5 normal-case text-base px-4 py-2";
+
   if (status === "connected") {
     return paused ? (
-      <NeoBadge variant="outline" className="gap-2 normal-case text-base">
+      <NeoBadge variant="outline" className={badgeClass}>
         <span className="h-2.5 w-2.5 rounded-full bg-foreground" />
         Bot Pausado
       </NeoBadge>
     ) : (
-      <NeoBadge variant="main" className="gap-2 normal-case text-base">
+      <NeoBadge variant="main" className={badgeClass}>
         <span className="h-2.5 w-2.5 rounded-full bg-main-foreground" />
         Bot Activo
       </NeoBadge>
@@ -37,7 +39,7 @@ const StatusBadge: React.FC<{ status: BotStatus["status"]; paused?: boolean }> =
 
   if (status === "connecting") {
     return (
-      <NeoBadge variant="main" className="gap-2 normal-case text-base">
+      <NeoBadge variant="main" className={badgeClass}>
         <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-main-foreground" />
         Conectando…
       </NeoBadge>
@@ -45,7 +47,7 @@ const StatusBadge: React.FC<{ status: BotStatus["status"]; paused?: boolean }> =
   }
 
   return (
-    <NeoBadge variant="neutral" className="gap-2 normal-case text-base">
+    <NeoBadge variant="neutral" className={badgeClass}>
       <span className="h-2.5 w-2.5 rounded-full bg-foreground/50" />
       Desconectado
     </NeoBadge>
