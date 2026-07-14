@@ -33,13 +33,26 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+const WHATSAPP_PATHS = [
+  "/whatsapp",
+  "/bot-messages",
+  "/bot-clients",
+  "/cotizaciones",
+  "/cases",
+  "/documents",
+  "/bot-simulator",
+  "/simulator-review",
+  "/motherbrain",
+  "/services-catalog",
+];
+
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user, logout, isAdmin } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [whatsappOpen, setWhatsappOpen] = useState(() =>
-    whatsappPaths.some((p) => location.pathname.startsWith(p))
+    WHATSAPP_PATHS.some((p) => location.pathname.startsWith(p))
   );
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showAdvisor, setShowAdvisor] = useState(() => {
@@ -47,20 +60,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     return saved === null ? true : saved === "true";
   });
   const { headingFont, setHeadingFont } = useTheme();
-
-  const whatsappPaths = [
-    "/whatsapp",
-    "/bot-messages",
-    "/bot-clients",
-    "/cotizaciones",
-    "/cases",
-    "/documents",
-    "/bot-simulator",
-    "/simulator-review",
-    "/motherbrain",
-    "/services-catalog",
-  ];
-  const isWhatsappActive = whatsappPaths.some((p) =>
+  const isWhatsappActive = WHATSAPP_PATHS.some((p) =>
     location.pathname.startsWith(p)
   );
 
