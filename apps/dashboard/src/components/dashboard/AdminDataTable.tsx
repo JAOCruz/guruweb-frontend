@@ -13,6 +13,45 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../../utils";
 
+const workerButtonStyles: Record<
+  WorkerKey,
+  { active: string; inactive: string }
+> = {
+  HENGI: {
+    active: "bg-green-500 text-white border-green-600 hover:bg-green-600",
+    inactive: "bg-white text-green-600 border-green-600 hover:bg-green-50",
+  },
+  MARLENI: {
+    active: "bg-yellow-400 text-black border-yellow-500 hover:bg-yellow-500",
+    inactive: "bg-white text-yellow-600 border-yellow-500 hover:bg-yellow-50",
+  },
+  ISRAEL: {
+    active: "bg-red-500 text-white border-red-600 hover:bg-red-600",
+    inactive: "bg-white text-red-600 border-red-600 hover:bg-red-50",
+  },
+  THAICAR: {
+    active: "bg-purple-600 text-white border-purple-700 hover:bg-purple-700",
+    inactive: "bg-white text-purple-600 border-purple-700 hover:bg-purple-50",
+  },
+  AUXILIAR_I: {
+    active: "bg-orange-500 text-white border-orange-600 hover:bg-orange-600",
+    inactive: "bg-white text-orange-600 border-orange-600 hover:bg-orange-50",
+  },
+  AUXILIAR_II: {
+    active: "bg-pink-500 text-white border-pink-600 hover:bg-pink-600",
+    inactive: "bg-white text-pink-600 border-pink-600 hover:bg-pink-50",
+  },
+};
+
+const workerHeaderStyles: Record<WorkerKey, { bg: string; text: string; muted: string }> = {
+  HENGI: { bg: "bg-green-500", text: "text-white", muted: "text-white/90" },
+  MARLENI: { bg: "bg-yellow-400", text: "text-black", muted: "text-black/90" },
+  ISRAEL: { bg: "bg-red-500", text: "text-white", muted: "text-white/90" },
+  THAICAR: { bg: "bg-purple-600", text: "text-white", muted: "text-white/90" },
+  AUXILIAR_I: { bg: "bg-orange-500", text: "text-white", muted: "text-white/90" },
+  AUXILIAR_II: { bg: "bg-pink-500", text: "text-white", muted: "text-white/90" },
+};
+
 // --- TIPOS ---
 interface AdminDataTableProps {
   data: ExcelRow[];
@@ -288,23 +327,34 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           <div className="flex w-full flex-wrap gap-2 md:w-auto">
             <NeoButton
               type="button"
-              variant={activeUser === "all" ? "neutral" : "outline"}
+              variant="outline"
               size="sm"
               onClick={() => setActiveUser("all")}
+              className={
+                activeUser === "all"
+                  ? "bg-main text-main-foreground border-border hover:bg-main"
+                  : "bg-white text-foreground border-border hover:bg-secondary-background"
+              }
             >
               Todos
             </NeoButton>
-            {USER_COLUMNS.map((user) => (
-              <NeoButton
-                key={user}
-                type="button"
-                variant={activeUser === user ? "neutral" : "outline"}
-                size="sm"
-                onClick={() => setActiveUser(user)}
-              >
-                {user}
-              </NeoButton>
-            ))}
+            {USER_COLUMNS.map((user) => {
+              const style = workerButtonStyles[user];
+              return (
+                <NeoButton
+                  key={user}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveUser(user)}
+                  className={
+                    activeUser === user ? style.active : style.inactive
+                  }
+                >
+                  {user.replace("_", " ")}
+                </NeoButton>
+              );
+            })}
           </div>
         )}
 
@@ -325,20 +375,20 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           className="overflow-hidden rounded-base border-2 border-border bg-background shadow-shadow"
         >
           {/* Header de la Tabla */}
-          <div className="flex flex-col gap-3 border-b-2 border-border bg-main p-5 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="font-heading text-lg font-black uppercase tracking-wider text-white md:text-xl">
-              {user}
+          <div className={`flex flex-col gap-3 border-b-2 border-border p-5 sm:flex-row sm:items-center sm:justify-between ${workerHeaderStyles[user].bg}`}>
+            <h3 className={`font-heading text-lg font-black uppercase tracking-wider md:text-xl ${workerHeaderStyles[user].text}`}>
+              {user.replace("_", " ")}
             </h3>
             <div className="flex flex-wrap gap-4 font-mono text-sm">
-              <span className="font-bold tracking-widest text-white/90 uppercase">
+              <span className={`font-bold tracking-widest uppercase ${workerHeaderStyles[user].muted}`}>
                 Total:{" "}
-                <span className="text-white">
+                <span className={workerHeaderStyles[user].text}>
                   {formatCurrency(userTotals[user].total)}
                 </span>
               </span>
-              <span className="font-bold tracking-widest text-white/90 uppercase">
+              <span className={`font-bold tracking-widest uppercase ${workerHeaderStyles[user].muted}`}>
                 Admin:{" "}
-                <span className="text-white">
+                <span className={workerHeaderStyles[user].text}>
                   {formatCurrency(userTotals[user].adminShare)}
                 </span>
               </span>
