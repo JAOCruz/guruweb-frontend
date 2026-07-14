@@ -386,7 +386,18 @@ const Dashboard: React.FC = () => {
           path="/settings"
           element={isAdmin ? <Settings /> : <div className="text-center text-slate-400 py-8">No tienes acceso a esta página</div>}
         />
-        <Route path="/whatsapp" element={<WhatsAppBot />} />
+        <Route
+          path="/whatsapp"
+          element={
+            isAdmin ? (
+              <WhatsAppBot />
+            ) : (
+              <div className="py-8 text-center text-slate-400">
+                No tienes acceso a esta página
+              </div>
+            )
+          }
+        />
         <Route path="/bot-messages" element={<BotMessages />} />
         <Route path="/bot-clients" element={<BotClients />} />
         <Route path="/cotizaciones" element={<Cotizaciones />} />
@@ -397,7 +408,18 @@ const Dashboard: React.FC = () => {
         />
         <Route path="/documents" element={<DocumentManagement />} />
         <Route path="/laws" element={<Laws />} />
-        <Route path="/motherbrain" element={<MotherBrain />} />
+        <Route
+          path="/motherbrain"
+          element={
+            isAdmin ? (
+              <MotherBrain />
+            ) : (
+              <div className="py-8 text-center text-slate-400">
+                No tienes acceso a esta página
+              </div>
+            )
+          }
+        />
         <Route
           path="/bot-simulator"
           element={
