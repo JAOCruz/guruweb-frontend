@@ -285,11 +285,11 @@ export default function ServicesCatalog() {
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ delay: idx * 0.03 }}
       >
-        <NeoCard variant="main" className="p-5">
+        <NeoCard variant="main" className="p-6">
           <div className="mb-2 flex items-start justify-between gap-2">
             <h3 className="text-base md:text-lg font-heading font-black leading-tight text-main-foreground">{svc.name}</h3>
             {svc.category_name && selectedSubcat === "all" && (
-              <NeoBadge variant="neutral" className="shrink-0 whitespace-nowrap text-xs">
+              <NeoBadge variant="neutral" className="shrink-0 whitespace-nowrap px-3 py-1.5 text-xs">
                 {getCategoryEmoji(svc.category_name)} {svc.category_name}
               </NeoBadge>
             )}
@@ -298,17 +298,17 @@ export default function ServicesCatalog() {
 
           {showNota ? (
             <div className="grid grid-cols-2 gap-2">
-              <NeoCard className="p-3 text-center">
+              <NeoCard className="p-5 text-center">
                 <p className="text-xs font-black uppercase tracking-wider text-foreground/60">Digitación</p>
                 <p className="mt-1 text-lg font-black text-foreground">{fmtMoney(svc.digitacion_price)}</p>
               </NeoCard>
-              <NeoCard className="p-3 text-center">
+              <NeoCard className="p-5 text-center">
                 <p className="text-xs font-black uppercase tracking-wider text-foreground/60">Notarización</p>
                 <p className="mt-1 text-lg font-black text-foreground">{fmtMoney(svc.notarizacion_price)}</p>
               </NeoCard>
             </div>
           ) : (
-            <NeoCard className="p-3 text-center">
+            <NeoCard className="p-5 text-center">
               <p className="text-xs font-black uppercase tracking-wider text-foreground/60">Precio</p>
               <p className="mt-1 text-xl font-black text-foreground">{fmtMoney(svc.digitacion_price)}</p>
             </NeoCard>
@@ -328,9 +328,9 @@ export default function ServicesCatalog() {
           <AnimatePresence>
             {tiersOpen && showTiers && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
-                <NeoCard className="mt-3 p-3 space-y-2">
+                <NeoCard className="mt-3 p-4 space-y-3">
                   {svc.price_tiers!.map((t, i) => (
-                    <NeoCard key={i} variant="main" className="px-3 py-2">
+                    <NeoCard key={i} variant="main" className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex flex-col">
                           <span className="text-base font-black text-main-foreground">{t.label || `Rango ${i + 1}`}</span>
@@ -383,15 +383,15 @@ export default function ServicesCatalog() {
               <h2 className="text-center text-xl md:text-2xl font-black uppercase tracking-wide">{group}</h2>
               <div className="flex flex-wrap justify-center gap-1">
                 {stats?.subcats.slice(0, 4).map((sub) => (
-                  <NeoBadge key={sub} variant="neutral" className="text-xs">
+                  <NeoBadge key={sub} variant="neutral" className="px-3 py-1.5 text-xs">
                     {getCategoryEmoji(sub)} {sub}
                   </NeoBadge>
                 ))}
-                {(stats?.subcats.length || 0) > 4 && <NeoBadge variant="outline" className="text-xs">+{(stats?.subcats.length || 0) - 4}</NeoBadge>}
+                {(stats?.subcats.length || 0) > 4 && <NeoBadge variant="outline" className="px-3 py-1.5 text-xs">+{(stats?.subcats.length || 0) - 4}</NeoBadge>}
               </div>
               <div className="flex gap-2">
-                <NeoBadge variant="neutral" className="text-xs">{stats?.count || 0} servicios</NeoBadge>
-                {stats?.hasNota && <NeoBadge variant="neutral" className="text-xs">✍️ Nota</NeoBadge>}
+                <NeoBadge variant="neutral" className="px-4 py-2 text-xs">{stats?.count || 0} servicios</NeoBadge>
+                {stats?.hasNota && <NeoBadge variant="neutral" className="px-4 py-2 text-xs">✍️ Nota</NeoBadge>}
               </div>
               {stats && stats.count > 0 && <p className="text-base font-bold text-main-foreground/60">{fmtMoney(stats.min)} — {fmtMoney(stats.max)}</p>}
             </button>
@@ -487,7 +487,7 @@ export default function ServicesCatalog() {
                     onClick={() => setSelectedSubcat(subcat)}
                   >
                     <span className="text-lg">{getCategoryEmoji(subcat)}</span> {subcat}
-                    <NeoBadge variant="neutral" className="ml-1 text-xs">{servicesBySubcat[subcat].length}</NeoBadge>
+                    <NeoBadge variant="neutral" className="ml-1 px-3 py-1.5 text-xs">{servicesBySubcat[subcat].length}</NeoBadge>
                   </NeoButton>
                   <div className="h-1 flex-1 bg-main" />
                 </div>
@@ -556,7 +556,7 @@ export default function ServicesCatalog() {
                 </div>
               </div>
             </div>
-            <NeoCard variant="outline" className="p-4">
+            <NeoCard variant="outline" className="p-5">
               <div className="mb-3 flex items-center justify-between">
                 <label className="text-base font-black uppercase tracking-wider text-foreground/60">Rangos de precio (por valor del bien)</label>
                 <NeoButton size="sm" onClick={addTier}><Plus size={14} /> Agregar rango</NeoButton>
@@ -564,7 +564,7 @@ export default function ServicesCatalog() {
               {(form.price_tiers || []).length === 0 ? <p className="text-base text-foreground/50">Sin rangos. El precio será fijo.</p> : (
                 <div className="space-y-3">
                   {(form.price_tiers || []).map((tier, idx) => (
-                    <div key={idx} className="grid grid-cols-1 gap-2 rounded-base border-2 border-border bg-secondary-background p-3 sm:grid-cols-5">
+                    <div key={idx} className="grid grid-cols-1 gap-2 rounded-base border-2 border-border bg-secondary-background p-4 sm:grid-cols-5">
                       <NeoInput type="text" placeholder="Etiqueta" value={tier.label} onChange={(e) => updateTier(idx, "label", e.target.value)} className="sm:col-span-2" />
                       <NeoInput type="number" placeholder="Mín" value={tier.min} onChange={(e) => updateTier(idx, "min", Number(e.target.value))} />
                       <NeoInput type="number" placeholder="Máx (vacío = ∞)" value={tier.max === null || tier.max === undefined ? "" : tier.max} onChange={(e) => { const val = e.target.value; updateTier(idx, "max", val === "" ? null : Number(val)); }} />

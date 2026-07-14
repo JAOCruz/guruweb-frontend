@@ -15,6 +15,8 @@ import {
   FileIcon,
 } from "lucide-react";
 import { botAPI, BotClient, ClientDetailFull, ClientMedia } from "../services/botApi";
+import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import { NeoCard, NeoButton, NeoInput, NeoBadge } from "@guru/ui";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -79,9 +81,26 @@ const ClientItem: React.FC<{
 
 // ─── Tab Content Components ────────────────────────────────────────────────────
 
-const InfoTab: React.FC<{ detail: ClientDetailFull; onChat: () => void }> = ({
+interface DashboardUser {
+  id: number;
+  name: string;
+  role: string;
+}
+
+const InfoTab: React.FC<{
+  detail: ClientDetailFull;
+  onChat: () => void;
+  users: DashboardUser[];
+  isAdmin: boolean;
+  onAssign: (userId: number | null) => void;
+  assigning: boolean;
+}> = ({
   detail,
   onChat,
+  users,
+  isAdmin,
+  onAssign,
+  assigning,
 }) => (
   <div className="space-y-6">
     {/* Avatar + Name */}
@@ -102,6 +121,32 @@ const InfoTab: React.FC<{ detail: ClientDetailFull; onChat: () => void }> = ({
       <MessageCircle size={18} />
       Abrir Chat
     </NeoButton>
+
+    {/* Assignment (admin only) */}
+    {isAdmin && (
+      <NeoCard variant="neutral" className="space-y-3 p-4">
+        <p className="font-base text-sm text-foreground/60">Asignar cliente a</p>
+        <select
+          disabled={assigning}
+          value={detail.client.assigned_to || ""}
+          onChange={(e) => onAssign(e.target.value ? Number(e.target.value) : null)}
+          className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-base text-foreground focus:outline-none focus:ring-2 focus:ring-main"
+        >
+          <option value="">Sin asignar</option>
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name} ({u.role})
+            </option>
+          ))}
+        </select>
+        {assigning && (
+          <p className="text-center text-sm text-foreground/50">
+            <RefreshCw size={14} className="mr-1 inline animate-spin" />
+            Guardando...
+          </p>
+        )}
+      </NeoCard>
+    )}
 
     {/* Details Grid */}
     <NeoCard variant="neutral" className="space-y-4 p-4">
@@ -338,6 +383,7 @@ const MessagesTab: React.FC<{ detail: ClientDetailFull; onViewAll: () => void }>
 
 const BotClients: React.FC = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [clients, setClients] = useState<BotClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -348,6 +394,8 @@ const BotClients: React.FC = () => {
   const [detail, setDetail] = useState<ClientDetailFull | null>(null);
   const [media, setMedia] = useState<ClientMedia[]>([]);
   const [activeTab, setActiveTab] = useState<"info" | "services" | "cases" | "media" | "messages">("info");
+  const [users, setUsers] = useState<DashboardUser[]>([]);
+  const [assigning, setAssigning] = useState(false);
 
   const fetchClients = useCallback(async () => {
     setLoading(true);
@@ -383,6 +431,36 @@ const BotClients: React.FC = () => {
   useEffect(() => {
     fetchClients();
   }, [fetchClients]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchUsers = async () => {
+      try {
+        const { data } = await api.get("/admin/users");
+        setUsers(data.users || []);
+      } catch (err) {
+        console.error("Failed to load users:", err);
+      }
+    };
+    fetchUsers();
+  }, [isAdmin]);
+
+  const handleAssignClient = async (userId: number | null) => {
+    if (!selectedClient || !detail) return;
+    setAssigning(true);
+    try {
+      await api.put(`/clients/${selectedClient.id}/assign`, { user_id: userId });
+      setDetail((prev) =>
+        prev ? { ...prev, client: { ...prev.client, assigned_to: userId } } : prev
+      );
+      await fetchClients();
+    } catch (err: any) {
+      console.error("Assign client error:", err);
+      alert(err?.response?.data?.error || "Error asignando cliente");
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   const handleSelectClient = async (client: BotClient) => {
     setSelectedClient(client);
@@ -533,7 +611,14 @@ const BotClients: React.FC = () => {
               ) : !detail ? (
                 <p className="py-8 text-center font-base text-base text-foreground/50">Error cargando detalles</p>
               ) : activeTab === "info" ? (
-                <InfoTab detail={detail} onChat={handleChat} />
+                <InfoTab
+                  detail={detail}
+                  onChat={handleChat}
+                  users={users}
+                  isAdmin={isAdmin}
+                  onAssign={handleAssignClient}
+                  assigning={assigning}
+                />
               ) : activeTab === "services" ? (
                 <ServicesTab detail={detail} />
               ) : activeTab === "cases" ? (

@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Briefcase, Search, RefreshCw, ChevronLeft, Filter, AlertCircle, Tag } from "lucide-react";
+import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import { NeoCard, NeoButton, NeoInput, NeoBadge } from "@guru/ui";
 
 const getAPIUrl = () => {
@@ -46,6 +48,7 @@ interface CaseRow {
   court?: string;
   next_hearing?: string;
   client_id: number;
+  user_id?: number | null;
   created_at: string;
   tags: Array<{ tag_type: string; tag_value: string }>;
   client_name?: string;
@@ -190,6 +193,7 @@ const SECTIONS: Section[] = [
 ];
 
 const Cases: React.FC = () => {
+  const { isAdmin } = useAuth();
   const [activeSection, setActiveSection] = useState<Section>(SECTIONS[0]);
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -200,6 +204,9 @@ const Cases: React.FC = () => {
   const [showRightPanel, setShowRightPanel] = useState(false);
   const [showResolved, setShowResolved] = useState(false);
   const [expandReclamaciones, setExpandReclamaciones] = useState(false);
+  const [users, setUsers] = useState<Array<{ id: number; name: string; role: string }>>([]);
+  const [assigning, setAssigning] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   // Separate sections into reclamaciones and normal cases
   const reclamacionesSections = SECTIONS.filter(s => s.id.startsWith('reclamaciones'));
@@ -235,6 +242,49 @@ const Cases: React.FC = () => {
   useEffect(() => {
     fetchCases();
   }, [fetchCases]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchUsers = async () => {
+      try {
+        const { data } = await api.get("/admin/users");
+        setUsers(data.users || []);
+      } catch (err) {
+        console.error("Failed to load users:", err);
+      }
+    };
+    fetchUsers();
+  }, [isAdmin]);
+
+  const handleAssignCase = async (userId: number) => {
+    if (!selectedCase) return;
+    setAssigning(true);
+    try {
+      await api.post(`/cases/${selectedCase.id}/assign`, { user_id: userId });
+      setSelectedCase((prev) => (prev ? { ...prev, status: "in_progress" } : prev));
+      await fetchCases();
+    } catch (err: any) {
+      console.error("Assign case error:", err);
+      alert(err?.response?.data?.error || "Error asignando caso");
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const handleCloseCase = async () => {
+    if (!selectedCase) return;
+    setClosing(true);
+    try {
+      await api.post(`/cases/${selectedCase.id}/close`, { reason: "paid" });
+      setSelectedCase((prev) => (prev ? { ...prev, status: "paid" } : prev));
+      await fetchCases();
+    } catch (err: any) {
+      console.error("Close case error:", err);
+      alert(err?.response?.data?.error || "Error cerrando caso");
+    } finally {
+      setClosing(false);
+    }
+  };
 
   const filtered = cases.filter((c) => {
     // Status filter
@@ -489,7 +539,7 @@ const Cases: React.FC = () => {
                 </p>
               </div>
 
-              {selectedCase.status !== 'resolved' && (
+              {selectedCase.status !== 'resolved' && selectedCase.status !== 'paid' && (
                 <NeoButton
                   onClick={async () => {
                     try {
@@ -551,6 +601,41 @@ const Cases: React.FC = () => {
                 <h2 className="font-heading text-xl md:text-2xl font-bold mb-3">{selectedCase.title}</h2>
                 <p className="text-base text-foreground/80 leading-relaxed">{selectedCase.description}</p>
               </div>
+
+              {/* Admin Actions */}
+              {isAdmin && (
+                <NeoCard variant="outline" className="space-y-3 p-4">
+                  <p className="font-base text-sm font-black uppercase tracking-wider text-foreground/60">Acciones de administrador</p>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="flex-1">
+                      <label className="mb-1 block text-sm text-foreground/60">Asignar caso a</label>
+                      <select
+                        disabled={assigning}
+                        value={selectedCase.user_id || ""}
+                        onChange={(e) => handleAssignCase(Number(e.target.value))}
+                        className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-base text-foreground focus:outline-none focus:ring-2 focus:ring-main"
+                      >
+                        <option value="">Sin asignar</option>
+                        {users.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name} ({u.role})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {selectedCase.status !== 'paid' && selectedCase.status !== 'resolved' && (
+                      <NeoButton
+                        onClick={handleCloseCase}
+                        disabled={closing}
+                        className="self-end"
+                      >
+                        {closing ? <RefreshCw size={14} className="mr-1 animate-spin" /> : "💰"}
+                        Cerrar caso (pagado)
+                      </NeoButton>
+                    )}
+                  </div>
+                </NeoCard>
+              )}
 
               {/* Message Source Reference */}
               {selectedCase.tags && selectedCase.tags.some(t => t.tag_type === 'source_phone') && (

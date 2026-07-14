@@ -5,6 +5,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { NeoBadge } from "@guru/ui";
 import GuruAdvisor from "../GuruAdvisor";
 import { cn } from "@guru/ui";
+import { getAPIUrl } from "../../services/api";
 import {
   Menu,
   X,
@@ -27,6 +28,7 @@ import {
   Bot,
   Palette,
   Bird,
+  Bell,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -63,6 +65,69 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const isWhatsappActive = WHATSAPP_PATHS.some((p) =>
     location.pathname.startsWith(p)
   );
+
+  // Notifications
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<Array<{ id: number; title: string; message: string; read: boolean; created_at: string; link?: string }>>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const res = await fetch(`${getAPIUrl()}/api/notifications/unread-count`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token") || ""}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadCount(data.count || 0);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const openNotifications = async () => {
+    setShowNotifications((v) => !v);
+    if (!showNotifications) {
+      try {
+        const res = await fetch(`${getAPIUrl()}/api/notifications?limit=10`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token") || ""}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setNotifications(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
+        }
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const markRead = async (id: number) => {
+    try {
+      await fetch(`${getAPIUrl()}/api/notifications/${id}/read`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token") || ""}`,
+        },
+      });
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      );
+      setUnreadCount((c) => Math.max(0, c - 1));
+    } catch {
+      // ignore
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -288,6 +353,49 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             >
               <Bird size={20} />
             </button>
+
+            <div className="relative">
+              <button
+                onClick={openNotifications}
+                className="relative rounded-base border-2 border-border bg-secondary-background p-2 text-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                title="Notificaciones"
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-border bg-red-500 px-1 text-[10px] font-black text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              {showNotifications && (
+                <div className="absolute right-0 top-full mt-2 w-80 rounded-base border-2 border-border bg-background p-3 shadow-shadow">
+                  <p className="mb-2 text-xs font-black uppercase tracking-wider text-foreground/60">Notificaciones</p>
+                  {notifications.length === 0 ? (
+                    <p className="py-4 text-center text-sm text-foreground/50">Sin notificaciones</p>
+                  ) : (
+                    <div className="max-h-72 space-y-2 overflow-y-auto custom-scroll">
+                      {notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          onClick={() => {
+                            markRead(n.id);
+                            if (n.link) {
+                              window.location.href = n.link.startsWith("/") ? n.link : `/dashboard${n.link}`;
+                            }
+                          }}
+                          className={`cursor-pointer rounded-base border-2 p-2 transition-all hover:bg-secondary-background ${
+                            n.read ? "border-transparent opacity-60" : "border-main bg-main/5"
+                          }`}
+                        >
+                          <p className="text-sm font-bold text-foreground">{n.title}</p>
+                          <p className="text-xs text-foreground/70 line-clamp-2">{n.message}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="relative">
               <button

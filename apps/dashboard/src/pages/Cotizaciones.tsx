@@ -11,8 +11,10 @@ import {
   User,
   Phone,
   Printer,
+  RefreshCw,
 } from "lucide-react";
 import api, { getAPIUrl } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import { NeoCard, NeoButton, NeoBadge } from "@guru/ui";
 
 interface QuotationItem {
@@ -35,7 +37,7 @@ interface Quotation {
   total: number;
   subtotal?: number;
   itbis?: number;
-  status: "draft" | "approved" | "sent";
+  status: "draft" | "approved" | "sent" | "paid";
   pdf_path: string;
   created_at: string;
   created_by_name?: string;
@@ -43,12 +45,14 @@ interface Quotation {
 }
 
 export default function Cotizaciones() {
+  const { isAdmin } = useAuth();
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [showRightPanel, setShowRightPanel] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
 
   useEffect(() => {
     fetchQuotations();
@@ -86,6 +90,25 @@ export default function Cotizaciones() {
     }
   };
 
+  const handleConfirmPayment = async () => {
+    if (!selectedQuotation) return;
+    setConfirmingPayment(true);
+    try {
+      await api.post(`/invoices/${selectedQuotation.id}/confirm-payment`, {
+        payment_method: "manual",
+      });
+      await fetchQuotations();
+      const refreshed = quotations.find((q) => q.id === selectedQuotation.id);
+      if (refreshed) setSelectedQuotation(refreshed);
+      else setSelectedQuotation((prev) => (prev ? { ...prev, status: "paid" } : prev));
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.response?.data?.error || "Error confirmando pago");
+    } finally {
+      setConfirmingPayment(false);
+    }
+  };
+
   const pdfUrl = useMemo(() => {
     if (!selectedQuotation?.pdf_path) return null;
     const filename = selectedQuotation.pdf_path.split("/").pop();
@@ -96,12 +119,14 @@ export default function Cotizaciones() {
     draft: "neutral" as const,
     approved: "main" as const,
     sent: "outline" as const,
+    paid: "main" as const,
   };
 
   const statusLabel: Record<string, string> = {
     draft: "Pendiente",
     approved: "Aprobada",
     sent: "Enviada",
+    paid: "Pagada",
   };
 
   return (
@@ -374,6 +399,23 @@ export default function Cotizaciones() {
                   <NeoButton variant="outline" className="flex-1">
                     <XCircle size={16} />
                     Rechazar
+                  </NeoButton>
+                </div>
+              )}
+
+              {isAdmin && selectedQuotation.status !== "paid" && (
+                <div className="mt-4 flex gap-2 pt-2 border-t-2 border-border">
+                  <NeoButton
+                    onClick={handleConfirmPayment}
+                    disabled={confirmingPayment}
+                    className="flex-1"
+                  >
+                    {confirmingPayment ? (
+                      <RefreshCw size={16} className="mr-1 animate-spin" />
+                    ) : (
+                      <CheckCircle size={16} />
+                    )}
+                    Confirmar pago
                   </NeoButton>
                 </div>
               )}

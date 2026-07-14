@@ -163,7 +163,7 @@ export default function DocumentManagement() {
           <>
             <button
               onClick={() => toggleFolder(node.path)}
-              className="w-full flex items-center gap-2 p-2 rounded-base border-2 border-border bg-secondary-background hover:bg-background transition-colors text-left shadow-button"
+              className="w-full flex items-center gap-3 p-3 rounded-base border-2 border-border bg-secondary-background hover:bg-background transition-colors text-left shadow-button"
               style={{ marginLeft: `${level * 16}px` }}
             >
               {isExpanded ? (
@@ -174,7 +174,7 @@ export default function DocumentManagement() {
               <Folder className="w-4 h-4 text-main flex-shrink-0" />
               <span className="font-medium text-base truncate">{node.name}</span>
               {totalItems > 0 && (
-                <NeoBadge variant="neutral" className="ml-auto text-xs">
+                <NeoBadge variant="neutral" className="ml-auto px-3 py-1.5 text-xs">
                   {totalItems}
                 </NeoBadge>
               )}
@@ -192,7 +192,7 @@ export default function DocumentManagement() {
                       <button
                         key={doc.id}
                         onClick={() => setSelectedDoc(doc)}
-                        className={`w-full flex items-center gap-2 p-2 rounded-base border-2 text-left transition-colors ${
+                        className={`w-full flex items-center gap-3 p-3 rounded-base border-2 text-left transition-colors ${
                           selectedDoc?.id === doc.id
                             ? 'border-border bg-secondary-background shadow-shadow'
                             : 'border-transparent hover:border-border hover:bg-secondary-background'
@@ -228,7 +228,7 @@ export default function DocumentManagement() {
       <div key={node.path} className="font-base text-base">
         <button
           onClick={() => toggleFolder(node.path)}
-          className="w-full text-left p-2 rounded-base border-2 border-border bg-secondary-background hover:bg-background transition-colors flex items-center gap-2 shadow-button"
+          className="w-full text-left p-3 rounded-base border-2 border-border bg-secondary-background hover:bg-background transition-colors flex items-center gap-3 shadow-button"
         >
           <span className="text-foreground/60 font-mono text-sm">{prefix}{connector}</span>
           {isExpanded ? (
@@ -259,7 +259,7 @@ export default function DocumentManagement() {
                   <button
                     key={doc.id}
                     onClick={() => setSelectedDoc(doc)}
-                    className={`w-full text-left p-2 rounded-base border-2 transition-colors flex items-center gap-2 ${
+                    className={`w-full text-left p-3 rounded-base border-2 transition-colors flex items-center gap-3 ${
                       selectedDoc?.id === doc.id ? 'border-border bg-secondary-background shadow-shadow' : 'border-transparent hover:border-border hover:bg-secondary-background'
                     }`}
                   >
@@ -281,7 +281,7 @@ export default function DocumentManagement() {
 
   // Outline View Component (compact)
   const OutlineView = () => (
-    <div className="space-y-1 p-2">
+    <div className="space-y-1 p-3">
       {folderStructure.map((folder, idx) => (
         <TreeDiagramNode
           key={folder.path}
@@ -384,10 +384,10 @@ export default function DocumentManagement() {
 
         {/* Stats */}
         <div className="flex gap-4 mt-4 text-base">
-          <NeoBadge variant="neutral" className="text-base">
+          <NeoBadge variant="neutral" className="px-4 py-2 text-base">
             Total: {documents.length}
           </NeoBadge>
-          <NeoBadge variant="neutral" className="text-base">
+          <NeoBadge variant="neutral" className="px-4 py-2 text-base">
             Mostrados: {filteredDocuments.length}
           </NeoBadge>
         </div>
@@ -490,7 +490,7 @@ export default function DocumentManagement() {
                     <p className="text-foreground/60 uppercase tracking-wide mb-1">Etiquetas</p>
                     <div className="flex flex-wrap gap-1">
                       {selectedDoc.tags.map((tag, idx) => (
-                        <NeoBadge key={idx} variant="outline" className="text-xs truncate">
+                        <NeoBadge key={idx} variant="outline" className="px-3 py-1 text-xs truncate">
                           <Tag className="w-2.5 h-2.5 flex-shrink-0" />
                           <span className="truncate">{tag}</span>
                         </NeoBadge>
@@ -507,7 +507,7 @@ export default function DocumentManagement() {
                 );
                 if (related.length === 0) return null;
                 return (
-                  <NeoCard variant="outline" className="mt-4 p-4 space-y-2">
+                  <NeoCard variant="outline" className="mt-4 p-5 space-y-3">
                     <div className="flex items-center gap-2 mb-2">
                       <Scale className="w-3.5 h-3.5 text-main flex-shrink-0" />
                       <h3 className="text-base font-black uppercase tracking-wide">
@@ -545,7 +545,7 @@ export default function DocumentManagement() {
                   <p className="text-base text-foreground/50 italic">Sin comentarios</p>
                 ) : (
                   selectedDoc.comments.map((cmt, idx) => (
-                    <NeoCard key={idx} className="p-2">
+                    <NeoCard key={idx} className="p-4">
                       <p className="text-base text-foreground/60 mb-1">{cmt.author || 'Anónimo'}</p>
                       <p className="text-base text-foreground line-clamp-3">{cmt.text}</p>
                       {cmt.created_at && (

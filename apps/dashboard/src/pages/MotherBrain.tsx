@@ -372,9 +372,9 @@ export default function MotherBrain() {
               </h2>
               <p className="text-base font-base opacity-80">{style.tagline}</p>
               <div className="mt-2 flex flex-wrap justify-center gap-2">
-                <NeoBadge variant="main">{tmplCount} docs</NeoBadge>
+                <NeoBadge variant="main" className="px-4 py-2">{tmplCount} docs</NeoBadge>
                 {leafCount > 0 && (
-                  <NeoBadge variant="outline">{leafCount} subcat</NeoBadge>
+                  <NeoBadge variant="outline" className="px-4 py-2">{leafCount} subcat</NeoBadge>
                 )}
               </div>
               <ChevronRight className="mt-2 h-6 w-6 opacity-60 transition-opacity group-hover:opacity-100" />
@@ -479,7 +479,7 @@ export default function MotherBrain() {
                 <NeoCard
                   key={t.id}
                   variant={isSelected ? "main" : "neutral"}
-                  className="cursor-pointer gap-2 p-4 text-left transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none active:translate-x-boxShadowX active:translate-y-boxShadowY active:shadow-none"
+                  className="cursor-pointer gap-3 p-5 text-left transition-all hover:translate-x-boxShadowX hover:translate-y-boxShadowY hover:shadow-none active:translate-x-boxShadowX active:translate-y-boxShadowY active:shadow-none"
                   onClick={() => selectTemplate(t)}
                 >
                   <div className="flex items-start gap-3">
@@ -490,12 +490,12 @@ export default function MotherBrain() {
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         {t.required_roles?.length > 0 && (
-                          <NeoBadge variant="main">
+                          <NeoBadge variant="main" className="px-3 py-1.5">
                             <Users size={10} className="mr-1" />
                             {t.required_roles.length} roles
                           </NeoBadge>
                         )}
-                        <NeoBadge variant="outline">{t.doc_type}</NeoBadge>
+                        <NeoBadge variant="outline" className="px-3 py-1.5">{t.doc_type}</NeoBadge>
                       </div>
                     </div>
                   </div>
@@ -542,7 +542,7 @@ export default function MotherBrain() {
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(templateDetail.requiredRoles).map(
                         ([role, fields]: [string, any]) => (
-                          <NeoBadge key={role} variant="main">
+                          <NeoBadge key={role} variant="main" className="px-3 py-1.5">
                             {role}
                             <span className="ml-1 opacity-70">({fields.length} campos)</span>
                           </NeoBadge>
@@ -564,7 +564,7 @@ export default function MotherBrain() {
                       <NeoCard
                         key={v.tag}
                         variant={v.is_rol_dynamic ? "main" : "neutral"}
-                        className="p-3"
+                        className="p-4"
                       >
                         <div className="font-mono text-sm font-bold">{v.tag}</div>
                         {v.description && (
@@ -698,7 +698,7 @@ export default function MotherBrain() {
 
               {/* Generated file */}
               {generatedFile && generatedSessionId && (
-                <NeoCard variant="neutral" className="mb-4 p-4">
+                <NeoCard variant="neutral" className="mb-4 p-5">
                   <div className="flex items-center gap-2 text-base font-base font-black">
                     <Download size={16} />
                     Documento generado: {generatedFile}

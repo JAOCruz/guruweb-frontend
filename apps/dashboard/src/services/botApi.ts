@@ -91,6 +91,7 @@ export interface ClientDetailFull {
     email?: string;
     address?: string;
     notes?: string;
+    assigned_to?: number | null;
     created_at: string;
   };
   services: Array<{

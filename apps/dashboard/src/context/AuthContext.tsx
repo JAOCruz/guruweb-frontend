@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { authAPI } from "../services/api";
 import LoadingScreen from "../components/LoadingScreen";
 
-type UserRole = "admin" | "employee" | "auxiliar_i" | "auxiliar_ii";
+type UserRole = "admin" | "digitador" | "auxiliar" | "employee";
 
 interface User {
   id: number;
@@ -17,6 +17,9 @@ interface AuthContextType {
   login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
+  isDigitador: boolean;
+  isAuxiliar: boolean;
+  hasRole: (...roles: UserRole[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -115,6 +118,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         logout,
         isAdmin: user?.role === "admin",
+        isDigitador: user?.role === "digitador" || user?.role === "employee",
+        isAuxiliar: user?.role === "auxiliar",
+        hasRole: (...roles) => !!user && roles.includes(user.role),
       }}
     >
       {children}
