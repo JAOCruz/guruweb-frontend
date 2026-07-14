@@ -121,7 +121,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
     >
       <div className="mb-3 flex items-start justify-between">
         <p
-          className={`text-[10px] font-black uppercase tracking-[0.2em] ${variantSubtle[variant]}`}
+          className={`text-lg font-black uppercase tracking-[0.2em] sm:text-xl ${variantSubtle[variant]}`}
         >
           {label}
         </p>
