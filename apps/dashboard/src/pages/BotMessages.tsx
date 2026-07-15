@@ -1,4 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { botAPI, getBotApiBaseURL } from "../services/botApi";
+import { getAuthToken } from "../utils";
+import { useAuth } from "../context/AuthContext";
+import { NeoCard, NeoButton, NeoInput, NeoBadge } from "@guru/ui";
 import {
   MessageSquare,
   Search,
@@ -10,15 +14,27 @@ import {
   Circle,
   Users,
   MessageCircle,
+  UserCheck,
+  Download,
+  Maximize2,
+  X,
+  Info,
+  FileText,
+  Briefcase,
+  Calendar,
+  Phone,
+  Mail,
+  MapPin,
+  Package,
 } from "lucide-react";
-import { botAPI } from "../services/botApi";
-import { NeoCard, NeoButton, NeoInput, NeoBadge } from "@guru/ui";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ConvRow {
   phone: string;
   client_name: string | null;
+  client_id?: number | null;
+  client_assigned_to?: number | null;
   last_message: string;
   last_message_at: string;
   message_count: string;
@@ -36,6 +52,60 @@ interface MsgRow {
   status?: string;
   created_at: string;
   ai_generated?: boolean;
+}
+
+interface ClientDetail {
+  client: {
+    id: number;
+    name?: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    notes?: string;
+    assigned_to?: number | null;
+    created_at: string;
+  };
+  services: Array<{
+    id: number;
+    name: string;
+    abbreviation: string;
+    color: string;
+    category_type: string;
+    status: 'active' | 'completed' | 'cancelled';
+    started_at: string;
+  }>;
+  cases: Array<{
+    id: number;
+    case_number: string;
+    title: string;
+    description?: string;
+    status: string;
+    case_type?: string;
+    court?: string;
+    next_hearing?: string;
+    created_at: string;
+    tags: Array<{ tag_type: string; tag_value: string }>;
+  }>;
+  documents: Array<{
+    id: number;
+    doc_type: string;
+    file_name?: string;
+    status: string;
+    created_at: string;
+  }>;
+  appointments: Array<{
+    id: number;
+    date: string;
+    time: string;
+    type: string;
+    status: string;
+  }>;
+  stats: {
+    totalServices: number;
+    totalCases: number;
+    totalMessages: number;
+    totalDocuments: number;
+  };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -126,14 +196,14 @@ const ConvItem: React.FC<ConvItemProps> = ({
   return (
     <div
       onClick={onSelect}
-      className={`flex cursor-pointer items-start gap-3 border-b-2 border-border px-4 py-3 transition-all ${
+      className={`flex cursor-pointer items-start gap-3 border-b-2 border-border px-4 py-4 transition-all md:py-3 ${
         isSelected
           ? "bg-main text-main-foreground"
           : "bg-background text-foreground hover:bg-secondary-background"
       }`}
     >
       {/* Avatar */}
-      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-black text-main-foreground shadow-button">
+      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-black text-main-foreground shadow-button md:h-10 md:w-10">
         {initials}
       </div>
 
@@ -145,7 +215,7 @@ const ConvItem: React.FC<ConvItemProps> = ({
             {time}
           </span>
         </div>
-        <p className={`mt-0.5 truncate font-base text-sm ${isSelected ? "text-main-foreground/80" : "text-foreground/60"}`}>
+        <p className={`mt-0.5 line-clamp-2 font-base text-xs leading-snug ${isSelected ? "text-main-foreground/80" : "text-foreground/60"}`}>
           {preview}
         </p>
       </div>
@@ -160,9 +230,9 @@ const ConvItem: React.FC<ConvItemProps> = ({
         }
         variant={conv.botActive ? "default" : "neutral"}
         size="icon"
-        className="mt-1 h-8 w-8 flex-shrink-0"
+        className="mt-1 h-10 w-10 flex-shrink-0 md:h-8 md:w-8"
       >
-        {conv.botActive ? <Bot size={14} /> : <User size={14} />}
+        {conv.botActive ? <Bot size={16} /> : <User size={16} />}
       </NeoButton>
     </div>
   );
@@ -177,8 +247,14 @@ function useMediaBlob(apiPath: string | null | undefined) {
   useEffect(() => {
     if (!apiPath) return;
     let revoked = false;
-    const token = localStorage.getItem("guru_bot_token") || localStorage.getItem("token") || "";
-    fetch(apiPath, { headers: { Authorization: `Bearer ${token}` } })
+    const token = getAuthToken();
+    const base = getBotApiBaseURL();
+    // media_url is stored as /api/media/... while baseURL already ends in /api
+    const cleanBase = apiPath.startsWith("/api/") && base.endsWith("/api")
+      ? base.slice(0, -4)
+      : base;
+    const url = apiPath.startsWith("http") ? apiPath : `${cleanBase}${apiPath}`;
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then(async (res) => {
         if (!res.ok) return;
         const ct = res.headers.get("content-type") ?? "";
@@ -198,6 +274,73 @@ function useMediaBlob(apiPath: string | null | undefined) {
   return { blobUrl, mimeType };
 }
 
+// ─── PDF preview with fullscreen modal ────────────────────────────────────────
+
+const PdfPreview: React.FC<{ blobUrl: string; apiPath: string }> = ({ blobUrl, apiPath }) => {
+  const [open, setOpen] = useState(false);
+
+  const fileName = apiPath.split("/").pop() || "documento.pdf";
+
+  return (
+    <div className="mb-1.5">
+      <div className="relative">
+        <iframe
+          src={blobUrl}
+          title="Vista previa PDF"
+          className="h-64 w-full rounded-base border-2 border-border bg-white shadow-button"
+        />
+        <button
+          onClick={() => setOpen(true)}
+          className="absolute right-2 top-2 rounded-base border-2 border-border bg-secondary-background p-1.5 text-foreground shadow-button hover:bg-main hover:text-main-foreground"
+          title="Ver en pantalla completa"
+        >
+          <Maximize2 size={14} />
+        </button>
+      </div>
+      <div className="mt-1 grid grid-cols-2 gap-2">
+        <a
+          href={blobUrl}
+          download={fileName}
+          className="flex items-center justify-center gap-1 rounded-base border-2 border-border bg-secondary-background px-2 py-1 font-base text-[10px] font-black uppercase tracking-wide text-foreground hover:bg-main hover:text-main-foreground"
+        >
+          <Download size={12} />
+          Descargar PDF
+        </a>
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center justify-center gap-1 rounded-base border-2 border-border bg-secondary-background px-2 py-1 font-base text-[10px] font-black uppercase tracking-wide text-foreground hover:bg-main hover:text-main-foreground"
+        >
+          <Maximize2 size={12} />
+          Ampliar
+        </button>
+      </div>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-black/90 p-4"
+          onClick={() => setOpen(false)}
+        >
+          <div className="flex items-center justify-between pb-2">
+            <span className="font-base text-sm font-semibold text-white">{fileName}</span>
+            <button
+              onClick={() => setOpen(false)}
+              className="rounded-base border-2 border-white/30 bg-white/10 p-2 text-white hover:bg-white/20"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <iframe
+            src={blobUrl}
+            title="Vista previa PDF pantalla completa"
+            className="flex-1 w-full rounded-base bg-white"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Media bubble component ───────────────────────────────────────────────────
 
 const MediaAttachment: React.FC<{ apiPath: string; isOut: boolean }> = ({ apiPath, isOut }) => {
@@ -211,43 +354,70 @@ const MediaAttachment: React.FC<{ apiPath: string; isOut: boolean }> = ({ apiPat
     );
   }
 
+  const DownloadLink = ({ label = "Descargar" }: { label?: string }) => (
+    <a
+      href={blobUrl}
+      download
+      className="mt-1 flex items-center justify-center gap-1 rounded-base border-2 border-border bg-secondary-background px-2 py-1 font-base text-[10px] font-black uppercase tracking-wide text-foreground hover:bg-main hover:text-main-foreground"
+    >
+      <Download size={12} />
+      {label}
+    </a>
+  );
+
   if (mimeType.startsWith("image/")) {
     return (
-      <img
-        src={blobUrl}
-        alt="imagen"
-        className="mb-1.5 w-full max-h-52 cursor-pointer rounded-base border-2 border-border object-cover shadow-button"
-        onClick={() => window.open(blobUrl, "_blank")}
-      />
+      <div className="mb-1.5">
+        <img
+          src={blobUrl}
+          alt="imagen"
+          className="w-full max-h-52 cursor-pointer rounded-base border-2 border-border object-cover shadow-button"
+          onClick={() => window.open(blobUrl, "_blank")}
+        />
+        <DownloadLink />
+      </div>
     );
   }
 
   if (mimeType.startsWith("audio/")) {
     return (
-      <audio controls preload="metadata" className="mb-1.5 w-full min-w-[250px]">
-        <source src={blobUrl} type={mimeType || "audio/ogg"} />
-        Tu navegador no soporta audio.
-      </audio>
+      <div className="mb-1.5">
+        <audio controls preload="metadata" className="w-full min-w-[250px]">
+          <source src={blobUrl} type={mimeType || "audio/ogg"} />
+          Tu navegador no soporta audio.
+        </audio>
+        <DownloadLink />
+      </div>
     );
   }
 
   if (mimeType.startsWith("video/")) {
     return (
-      <video controls src={blobUrl} className="mb-1.5 max-h-52 w-full rounded-base border-2 border-border object-cover shadow-button">
-        Tu navegador no soporta video.
-      </video>
+      <div className="mb-1.5">
+        <video controls src={blobUrl} className="max-h-52 w-full rounded-base border-2 border-border object-cover shadow-button">
+          Tu navegador no soporta video.
+        </video>
+        <DownloadLink />
+      </div>
     );
   }
 
-  // Generic download link
+  // PDFs: inline preview + fullscreen + download
+  if (mimeType === "application/pdf" || apiPath.toLowerCase().endsWith(".pdf")) {
+    return (
+      <PdfPreview blobUrl={blobUrl} apiPath={apiPath} />
+    );
+  }
+
+  // Generic document download
   return (
-    <a
-      href={blobUrl}
-      download
-      className={`mb-1.5 flex items-center gap-1.5 font-base text-sm underline underline-offset-2 ${isOut ? "text-main-foreground" : "text-main"}`}
-    >
-      📎 Descargar archivo
-    </a>
+    <div className="mb-1.5">
+      <div className="flex items-center gap-2 rounded-base border-2 border-border bg-secondary-background px-3 py-2 shadow-button">
+        <Download size={18} />
+        <span className="font-base text-sm font-semibold">Documento</span>
+      </div>
+      <DownloadLink />
+    </div>
   );
 };
 
@@ -314,7 +484,7 @@ const MessageBubble: React.FC<{ msg: MsgRow; isHighlighted?: boolean }> = ({ msg
 const DateSeparator: React.FC<{ label: string }> = ({ label }) => (
   <div className="my-4 flex items-center gap-3">
     <div className="flex-1 border-t-2 border-border" />
-    <span className="rounded-base border-2 border-border bg-secondary-background px-3 py-0.5 font-base text-xs font-black uppercase tracking-wider text-foreground/70">
+    <span className="rounded-base border-2 border-border bg-secondary-background px-3 py-1.5 font-base text-xs font-black uppercase tracking-wider text-foreground/70">
       {label}
     </span>
     <div className="flex-1 border-t-2 border-border" />
@@ -324,6 +494,7 @@ const DateSeparator: React.FC<{ label: string }> = ({ label }) => (
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const BotMessages: React.FC = () => {
+  const { isAdmin } = useAuth();
   // Conversation list
   const [conversations, setConversations] = useState<ConvRow[]>([]);
   const [convLoading, setConvLoading] = useState(true);
@@ -333,6 +504,9 @@ const BotMessages: React.FC = () => {
   // Selected conversation
   const [selectedPhone, setSelectedPhone] = useState<string | null>(null);
   const [showRightPanel, setShowRightPanel] = useState(false); // mobile toggle
+  const [assignableUsers, setAssignableUsers] = useState<Array<{ id: number; name: string; role: string; username: string }>>([]);
+  const [assigning, setAssigning] = useState(false);
+  const [assignMsg, setAssignMsg] = useState<string | null>(null);
 
   // Chat
   const [messages, setMessages] = useState<MsgRow[]>([]);
@@ -340,12 +514,18 @@ const BotMessages: React.FC = () => {
   const [inputText, setInputText] = useState("");
   const [sending, setSending] = useState(false);
   const [highlightMessageId, setHighlightMessageId] = useState<string | number | null>(null);
+  const [globalBotActive, setGlobalBotActive] = useState<boolean | null>(null);
 
   // Message search
   const [showMsgSearch, setShowMsgSearch] = useState(false);
   const [msgSearch, setMsgSearch] = useState("");
   const [messageSearchMatches, setMessageSearchMatches] = useState<(string | number)[]>([]);
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+
+  // Client detail panel
+  const [showClientPanel, setShowClientPanel] = useState(false);
+  const [clientDetail, setClientDetail] = useState<ClientDetail | null>(null);
+  const [clientDetailLoading, setClientDetailLoading] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -383,6 +563,15 @@ const BotMessages: React.FC = () => {
     }
   }, []);
 
+  const fetchGlobalStatus = useCallback(async () => {
+    try {
+      const res = await botAPI.getStatus();
+      setGlobalBotActive(!(res.data.paused ?? false));
+    } catch {
+      setGlobalBotActive(null);
+    }
+  }, []);
+
   // Auto-open chat from BotClients
   useEffect(() => {
     const phoneToOpen = localStorage.getItem('openChatPhone');
@@ -395,9 +584,27 @@ const BotMessages: React.FC = () => {
 
   useEffect(() => {
     fetchConversations();
-    const iv = setInterval(() => fetchConversations(true), 8000);
+    fetchGlobalStatus();
+    const iv = setInterval(() => {
+      fetchConversations(true);
+      fetchGlobalStatus();
+    }, 8000);
     return () => clearInterval(iv);
-  }, [fetchConversations]);
+  }, [fetchConversations, fetchGlobalStatus]);
+
+  // ── Fetch client detail for info panel ────────────────────────────────────
+
+  const fetchClientDetail = useCallback(async (clientId: number | string) => {
+    setClientDetailLoading(true);
+    try {
+      const res = await botAPI.getClientDetail(clientId);
+      setClientDetail(res.data as ClientDetail);
+    } catch {
+      setClientDetail(null);
+    } finally {
+      setClientDetailLoading(false);
+    }
+  }, []);
 
   // ── Fetch messages for selected phone ──────────────────────────────────────
 
@@ -527,6 +734,38 @@ const BotMessages: React.FC = () => {
     }
   };
 
+  // ── Assignment (admin only) ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!isAdmin) return;
+    (async () => {
+      try {
+        const res = await botAPI.getAdminUsers();
+        const data = res.data as { users?: Array<{ id: number; name: string; role: string; username: string }> } | undefined;
+        setAssignableUsers((data?.users || [])
+          .filter((u) => u.role === "digitador" && u.username !== "administracion")
+          .map((u) => ({ id: u.id, name: u.name || u.username, role: u.role, username: u.username })));
+      } catch {
+        setAssignableUsers([]);
+      }
+    })();
+  }, [isAdmin]);
+
+  const handleAssign = async (userId: string) => {
+    if (!selectedConv?.client_id || userId === "") return;
+    setAssigning(true);
+    setAssignMsg(null);
+    try {
+      await botAPI.assignClient(selectedConv.client_id, userId);
+      setAssignMsg("Asignado correctamente");
+      fetchConversations(true);
+    } catch (err: any) {
+      setAssignMsg(err?.response?.data?.error || "Error al asignar");
+    } finally {
+      setAssigning(false);
+      setTimeout(() => setAssignMsg(null), 3000);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -574,6 +813,15 @@ const BotMessages: React.FC = () => {
   });
 
   const selectedConv = conversations.find((c) => c.phone === selectedPhone);
+
+  // Load client detail when the side panel opens
+  useEffect(() => {
+    if (showClientPanel && selectedConv?.client_id) {
+      fetchClientDetail(selectedConv.client_id);
+    } else if (!showClientPanel) {
+      setClientDetail(null);
+    }
+  }, [showClientPanel, selectedConv?.client_id, fetchClientDetail]);
 
   // ── Group messages by date ─────────────────────────────────────────────────
 
@@ -641,14 +889,14 @@ const BotMessages: React.FC = () => {
 
         {/* Header */}
         <div className="flex-shrink-0 border-b-2 border-border p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-button">
-              <MessageSquare size={16} />
+          <div className="mb-3 flex min-w-0 items-center gap-2">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-button">
+              <MessageSquare size={18} />
             </div>
-            <h2 className="font-heading text-4xl font-black text-foreground md:text-5xl">
+            <h2 className="min-w-0 flex-1 truncate font-heading text-2xl font-black text-foreground md:text-3xl">
               Conversaciones
             </h2>
-            <NeoBadge variant="neutral" className="ml-auto">
+            <NeoBadge variant="neutral" className="flex-shrink-0 px-3 py-1.5 text-xs">
               {conversations.length}
             </NeoBadge>
           </div>
@@ -767,10 +1015,22 @@ const BotMessages: React.FC = () => {
               {/* Name + phone */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <p className="truncate font-base text-base font-semibold text-foreground">
-                    {selectedConv?.client_name ||
-                      formatPhone(selectedPhone)}
-                  </p>
+                  <button
+                    onClick={() => setShowClientPanel(true)}
+                    className="truncate font-base text-base font-semibold text-foreground hover:text-main hover:underline"
+                    title="Ver información del cliente"
+                  >
+                    {selectedConv?.client_name || formatPhone(selectedPhone)}
+                  </button>
+                  <NeoButton
+                    size="icon"
+                    variant="neutral"
+                    className="h-7 w-7 flex-shrink-0"
+                    onClick={() => setShowClientPanel(true)}
+                    title="Ver información del cliente"
+                  >
+                    <Info size={14} />
+                  </NeoButton>
                   <Circle
                     size={7}
                     className="flex-shrink-0 fill-main text-main"
@@ -783,8 +1043,16 @@ const BotMessages: React.FC = () => {
 
               {/* IA badge + toggle */}
               <div className="flex items-center gap-2">
+                {globalBotActive === false && (
+                  <NeoBadge
+                    variant="outline"
+                    className="hidden px-2 py-0.5 text-[10px] text-red-600 border-red-600 sm:inline"
+                  >
+                    Bot pausado
+                  </NeoBadge>
+                )}
                 {selectedConv?.botActive && (
-                  <NeoBadge variant="main" className="hidden sm:inline">
+                  <NeoBadge variant="main" className="hidden px-2 py-0.5 text-[10px] sm:inline">
                     IA activada
                   </NeoBadge>
                 )}
@@ -803,6 +1071,34 @@ const BotMessages: React.FC = () => {
                   </span>
                 </NeoButton>
               </div>
+
+              {/* Assignment (admin only) */}
+              {isAdmin && (
+                <div className="flex items-center gap-2">
+                  <div className="relative flex items-center gap-1.5">
+                    <UserCheck size={16} className="text-foreground/70" />
+                    <select
+                      disabled={assigning || !selectedConv?.client_id}
+                      value={selectedConv?.client_assigned_to ?? ""}
+                      onChange={(e) => handleAssign(e.target.value)}
+                      className="h-9 max-w-[90px] truncate rounded-base border-2 border-border bg-background px-2 py-1 text-xs font-semibold text-foreground shadow-none focus:outline-none disabled:opacity-50 md:max-w-[140px]"
+                      title="Asignar chat a digitador"
+                    >
+                      <option value="">Sin asignar</option>
+                      {assignableUsers.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name || u.username}
+                        </option>
+                      ))}
+                    </select>
+                    {assignMsg && (
+                      <span className="absolute -bottom-5 right-0 whitespace-nowrap text-[10px] font-semibold text-main">
+                        {assignMsg}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Message search button */}
               <NeoButton
@@ -882,30 +1178,228 @@ const BotMessages: React.FC = () => {
             </div>
 
             {/* ── Input bar ── */}
-            <div className="flex flex-shrink-0 items-center gap-2 border-t-2 border-border bg-secondary-background px-4 py-3">
+            <div className="flex flex-shrink-0 items-center gap-2 border-t-2 border-border bg-secondary-background px-4 py-3 md:py-2">
               <NeoInput
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Escribe un mensaje..."
-                className="flex-1"
+                className="flex-1 text-base md:text-sm"
               />
               <NeoButton
                 onClick={handleSend}
                 disabled={!inputText.trim() || sending}
                 size="icon"
+                className="h-11 w-11 md:h-9 md:w-9"
               >
                 {sending ? (
-                  <RefreshCw size={16} className="animate-spin" />
+                  <RefreshCw size={18} className="animate-spin md:size-4" />
                 ) : (
-                  <Send size={16} />
+                  <Send size={18} />
                 )}
               </NeoButton>
             </div>
           </>
         )}
       </div>
+
+      {/* ════════════════════════════════════════════════════════════
+          CLIENT DETAIL PANEL — slide-over from the right
+      ════════════════════════════════════════════════════════════ */}
+      {showClientPanel && selectedPhone && (
+        <div className="absolute inset-y-0 right-0 z-20 flex w-full flex-col border-l-2 border-border bg-background shadow-xl md:w-96">
+          {/* Header */}
+          <div className="flex flex-shrink-0 items-center justify-between border-b-2 border-border bg-secondary-background px-4 py-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-black text-main-foreground shadow-button">
+                {getInitials(selectedConv?.client_name, selectedPhone)}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate font-base text-base font-semibold text-foreground">
+                  {selectedConv?.client_name || formatPhone(selectedPhone)}
+                </p>
+                <p className="truncate font-base text-xs text-foreground/60">
+                  {formatPhone(selectedPhone)}
+                </p>
+              </div>
+            </div>
+            <NeoButton
+              size="icon"
+              variant="neutral"
+              onClick={() => setShowClientPanel(false)}
+            >
+              <X size={18} />
+            </NeoButton>
+          </div>
+
+          {/* Content */}
+          <div className="custom-scroll flex-1 overflow-y-auto px-4 py-4">
+            {!selectedConv?.client_id ? (
+              <div className="py-12 text-center text-foreground/50">
+                <User size={40} className="mx-auto mb-3 opacity-40" />
+                <p className="font-base text-base">Cliente no registrado</p>
+                <p className="mt-1 font-base text-sm">
+                  Este chat aún no tiene ficha de cliente en el sistema.
+                </p>
+              </div>
+            ) : clientDetailLoading ? (
+              <div className="flex items-center justify-center py-16 text-foreground/50">
+                <RefreshCw size={24} className="animate-spin" />
+              </div>
+            ) : !clientDetail ? (
+              <div className="py-12 text-center text-foreground/50">
+                <p className="font-base text-base">No se pudo cargar la información</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* General info */}
+                <NeoCard variant="neutral" className="p-3">
+                  <h3 className="mb-2 font-base text-sm font-black uppercase tracking-wide text-foreground/70">
+                    Información general
+                  </h3>
+                  <div className="space-y-2">
+                    {clientDetail.client.name && (
+                      <div className="flex items-start gap-2">
+                        <User size={14} className="mt-0.5 text-foreground/50" />
+                        <span className="font-base text-sm">{clientDetail.client.name}</span>
+                      </div>
+                    )}
+                    <div className="flex items-start gap-2">
+                      <Phone size={14} className="mt-0.5 text-foreground/50" />
+                      <span className="font-base text-sm">{formatPhone(clientDetail.client.phone)}</span>
+                    </div>
+                    {clientDetail.client.email && (
+                      <div className="flex items-start gap-2">
+                        <Mail size={14} className="mt-0.5 text-foreground/50" />
+                        <span className="font-base text-sm">{clientDetail.client.email}</span>
+                      </div>
+                    )}
+                    {clientDetail.client.address && (
+                      <div className="flex items-start gap-2">
+                        <MapPin size={14} className="mt-0.5 text-foreground/50" />
+                        <span className="font-base text-sm">{clientDetail.client.address}</span>
+                      </div>
+                    )}
+                    {clientDetail.client.notes && (
+                      <div className="mt-2 rounded-base border-2 border-border bg-background p-2">
+                        <p className="font-base text-xs font-semibold text-foreground/70">Notas</p>
+                        <p className="font-base text-sm">{clientDetail.client.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </NeoCard>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-2">
+                  <NeoCard variant="neutral" className="p-2.5">
+                    <div className="flex items-center gap-1.5 font-base text-xs text-foreground/70">
+                      <Briefcase size={12} />
+                      Casos
+                    </div>
+                    <p className="mt-1 font-heading text-xl font-bold">{clientDetail.stats.totalCases}</p>
+                  </NeoCard>
+                  <NeoCard variant="neutral" className="p-2.5">
+                    <div className="flex items-center gap-1.5 font-base text-xs text-foreground/70">
+                      <Package size={12} />
+                      Servicios
+                    </div>
+                    <p className="mt-1 font-heading text-xl font-bold">{clientDetail.stats.totalServices}</p>
+                  </NeoCard>
+                  <NeoCard variant="neutral" className="p-2.5">
+                    <div className="flex items-center gap-1.5 font-base text-xs text-foreground/70">
+                      <FileText size={12} />
+                      Documentos
+                    </div>
+                    <p className="mt-1 font-heading text-xl font-bold">{clientDetail.stats.totalDocuments}</p>
+                  </NeoCard>
+                  <NeoCard variant="neutral" className="p-2.5">
+                    <div className="flex items-center gap-1.5 font-base text-xs text-foreground/70">
+                      <MessageCircle size={12} />
+                      Mensajes
+                    </div>
+                    <p className="mt-1 font-heading text-xl font-bold">{clientDetail.stats.totalMessages}</p>
+                  </NeoCard>
+                </div>
+
+                {/* Cases */}
+                {clientDetail.cases.length > 0 && (
+                  <NeoCard variant="neutral" className="p-3">
+                    <h3 className="mb-2 font-base text-sm font-black uppercase tracking-wide text-foreground/70">
+                      Casos activos
+                    </h3>
+                    <div className="space-y-2">
+                      {clientDetail.cases.map((c) => (
+                        <div key={c.id} className="rounded-base border-2 border-border bg-background p-2">
+                          <p className="font-base text-sm font-semibold">{c.case_number || `#${c.id}`}</p>
+                          <p className="font-base text-xs text-foreground/70">{c.title}</p>
+                          <p className="mt-1 font-base text-xs uppercase text-main">{c.status}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </NeoCard>
+                )}
+
+                {/* Services */}
+                {clientDetail.services.length > 0 && (
+                  <NeoCard variant="neutral" className="p-3">
+                    <h3 className="mb-2 font-base text-sm font-black uppercase tracking-wide text-foreground/70">
+                      Servicios
+                    </h3>
+                    <div className="space-y-2">
+                      {clientDetail.services.map((s) => (
+                        <div key={s.id} className="rounded-base border-2 border-border bg-background p-2">
+                          <p className="font-base text-sm font-semibold">{s.name}</p>
+                          <p className="font-base text-xs text-foreground/70">{s.abbreviation} · {s.category_type}</p>
+                          <p className="mt-1 font-base text-xs uppercase" style={{ color: s.color }}>{s.status}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </NeoCard>
+                )}
+
+                {/* Documents */}
+                {clientDetail.documents.length > 0 && (
+                  <NeoCard variant="neutral" className="p-3">
+                    <h3 className="mb-2 font-base text-sm font-black uppercase tracking-wide text-foreground/70">
+                      Documentos
+                    </h3>
+                    <div className="space-y-2">
+                      {clientDetail.documents.map((d) => (
+                        <div key={d.id} className="rounded-base border-2 border-border bg-background p-2">
+                          <p className="font-base text-sm font-semibold">{d.doc_type}</p>
+                          {d.file_name && <p className="font-base text-xs text-foreground/70">{d.file_name}</p>}
+                          <p className="mt-1 font-base text-xs uppercase text-foreground/60">{d.status}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </NeoCard>
+                )}
+
+                {/* Appointments */}
+                {clientDetail.appointments.length > 0 && (
+                  <NeoCard variant="neutral" className="p-3">
+                    <h3 className="mb-2 font-base text-sm font-black uppercase tracking-wide text-foreground/70">
+                      Citas
+                    </h3>
+                    <div className="space-y-2">
+                      {clientDetail.appointments.map((a) => (
+                        <div key={a.id} className="flex items-center gap-2 rounded-base border-2 border-border bg-background p-2">
+                          <Calendar size={14} className="text-foreground/50" />
+                          <div>
+                            <p className="font-base text-sm font-semibold">{a.type}</p>
+                            <p className="font-base text-xs text-foreground/70">{a.date} · {a.time}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </NeoCard>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
