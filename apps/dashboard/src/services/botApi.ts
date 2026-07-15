@@ -1,6 +1,7 @@
 import axios from "axios";
+import { getAuthToken } from "../utils";
 
-function getBotApiBaseURL(): string {
+export function getBotApiBaseURL(): string {
   if (typeof window === "undefined") return "/api";
   const host = window.location.hostname;
 
@@ -31,7 +32,7 @@ const botApi = axios.create({
 // Request interceptor to add bot token and API key
 botApi.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("guru_bot_token") || localStorage.getItem("token");
+    const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -57,11 +58,13 @@ botApi.interceptors.response.use(
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export type BotMode = "all" | "selected";
+export type AssignmentMode = "manual" | "automatic";
 
 export interface BotStatus {
   status: "disconnected" | "connecting" | "connected";
   paused?: boolean;
   mode?: BotMode;
+  assignmentMode?: AssignmentMode;
   phone?: string;
 }
 
@@ -265,10 +268,16 @@ export const botAPI = {
   // ── Bot connection ──────────────────────────────────────────────────────
   getStatus: () => botApi.get<BotStatus>("/whatsapp/status"),
   connect: () => botApi.post("/whatsapp/connect"),
-  getQR: () => botApi.get<{ qr: string | null }>("/whatsapp/qr"),
+  getQR: () => botApi.get<{ qr: string | null; status?: string; message?: string }>("/whatsapp/qr"),
   disconnect: () => botApi.post("/whatsapp/disconnect"),
   toggleBot: () => botApi.post("/whatsapp/bot-toggle"),
   setBotMode: (mode: BotMode) => botApi.post("/whatsapp/bot-mode", { mode }),
+  setAssignmentMode: (mode: AssignmentMode) =>
+    botApi.post("/whatsapp/assignment-mode", { mode }),
+
+  /** GET /api/whatsapp/profile-pic/:phone — fetch WhatsApp profile picture URL */
+  getProfilePic: (phone: string) =>
+    botApi.get<{ url: string | null }>(`/whatsapp/profile-pic/${encodeURIComponent(phone)}`),
 
   // ── Legacy message/client endpoints ────────────────────────────────────
   getMessages: () => botApi.get<{ conversations: Array<{phone:string;client_name:string|null;last_message:string;last_message_at:string;message_count:string}> }>("/messages/conversations"),
@@ -317,7 +326,12 @@ export const botAPI = {
   /** GET /api/clients */
   getAllClients: () => botApi.get<BotClient[]>("/clients"),
 
-  /** GET /api/messages/search?q=term — search messages by content */
+  /** POST /api/clients/:id/assign — assign client to a digitador/auxiliar */
+  assignClient: (clientId: number | string, userId: number | string) =>
+    botApi.post<{ client: BotClient; assigned_to_user: { id: number; username: string; name: string; role: string } }>(`/clients/${clientId}/assign`, { user_id: userId }),
+
+  /** GET /api/admin/users — list users for assignment dropdown */
+  getAdminUsers: () => botApi.get<{ users: Array<{ id: number; email: string; username: string; name: string; role: string; created_at: string }> }>("/admin/users"),
   searchConversations: (query: string) =>
     botApi.get<{ conversations: Array<{phone:string;client_name:string|null;last_message:string;last_message_at:string;message_count:string;botActive:boolean;firstMatchId:number|null}> }>("/messages/search", { params: { q: query } }),
 

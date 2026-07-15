@@ -35,6 +35,7 @@ interface ConvRow {
   client_name: string | null;
   client_id?: number | null;
   client_assigned_to?: number | null;
+  profile_pic_url?: string | null;
   last_message: string;
   last_message_at: string;
   message_count: string;
@@ -120,6 +121,43 @@ function getInitials(name?: string | null, phone?: string): string {
   return phone ? phone.slice(-4) : "??";
 }
 
+interface AvatarProps {
+  url?: string | null;
+  name?: string | null;
+  phone?: string;
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}
+
+const Avatar: React.FC<AvatarProps> = ({ url, name, phone, size = "md", className = "" }) => {
+  const [failed, setFailed] = useState(false);
+
+  const sizeClasses = {
+    sm: "h-8 w-8 text-xs",
+    md: "h-10 w-10 text-sm",
+    lg: "h-12 w-12 text-base",
+  };
+
+  if (url && !failed) {
+    return (
+      <img
+        src={url}
+        alt={name || phone || "avatar"}
+        onError={() => setFailed(true)}
+        className={`rounded-full border-2 border-border object-cover shadow-button ${sizeClasses[size]} ${className}`}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`flex flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main font-black text-main-foreground shadow-button ${sizeClasses[size]} ${className}`}
+    >
+      {getInitials(name, phone)}
+    </div>
+  );
+};
+
 function formatRelTime(ts: string): string {
   const date = new Date(ts);
   if (isNaN(date.getTime())) return "";
@@ -188,7 +226,6 @@ const ConvItem: React.FC<ConvItemProps> = ({
   onSelect,
   onToggleAI,
 }) => {
-  const initials = getInitials(conv.client_name, conv.phone);
   const name = conv.client_name || formatPhone(conv.phone);
   const preview = (conv.last_message || "—").slice(0, 40);
   const time = formatRelTime(conv.last_message_at);
@@ -203,9 +240,13 @@ const ConvItem: React.FC<ConvItemProps> = ({
       }`}
     >
       {/* Avatar */}
-      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-black text-main-foreground shadow-button md:h-10 md:w-10">
-        {initials}
-      </div>
+      <Avatar
+        url={conv.profile_pic_url}
+        name={conv.client_name}
+        phone={conv.phone}
+        size="md"
+        className="h-11 w-11 md:h-10 md:w-10"
+      />
 
       {/* Name + preview */}
       <div className="min-w-0 flex-1">
@@ -823,6 +864,27 @@ const BotMessages: React.FC = () => {
     }
   }, [showClientPanel, selectedConv?.client_id, fetchClientDetail]);
 
+  // Fetch WhatsApp profile picture on demand if missing
+  useEffect(() => {
+    if (!selectedPhone || !selectedConv || selectedConv.profile_pic_url) return;
+
+    let cancelled = false;
+    botAPI.getProfilePic(selectedPhone)
+      .then((res) => {
+        const url = (res.data as { url?: string | null }).url;
+        if (url && !cancelled) {
+          setConversations((prev) =>
+            prev.map((c) =>
+              c.phone === selectedPhone ? { ...c, profile_pic_url: url } : c
+            )
+          );
+        }
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [selectedPhone, selectedConv]);
+
   // ── Group messages by date ─────────────────────────────────────────────────
 
   const messageGroups: { date: string; msgs: MsgRow[] }[] = [];
@@ -1008,9 +1070,12 @@ const BotMessages: React.FC = () => {
               </NeoButton>
 
               {/* Avatar */}
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-black text-main-foreground shadow-button">
-                {getInitials(selectedConv?.client_name, selectedConv?.phone)}
-              </div>
+              <Avatar
+                url={selectedConv?.profile_pic_url}
+                name={selectedConv?.client_name}
+                phone={selectedPhone}
+                size="md"
+              />
 
               {/* Name + phone */}
               <div className="min-w-0 flex-1">
@@ -1212,9 +1277,12 @@ const BotMessages: React.FC = () => {
           {/* Header */}
           <div className="flex flex-shrink-0 items-center justify-between border-b-2 border-border bg-secondary-background px-4 py-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-main text-sm font-black text-main-foreground shadow-button">
-                {getInitials(selectedConv?.client_name, selectedPhone)}
-              </div>
+              <Avatar
+                url={selectedConv?.profile_pic_url}
+                name={selectedConv?.client_name}
+                phone={selectedPhone}
+                size="md"
+              />
               <div className="min-w-0">
                 <p className="truncate font-base text-base font-semibold text-foreground">
                   {selectedConv?.client_name || formatPhone(selectedPhone)}
