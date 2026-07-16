@@ -14,6 +14,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/landing" element={<App />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/dashboard/*"
@@ -23,7 +24,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               </ProtectedRoute>
             }
           />
-          <Route path="/landing" element={<App />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

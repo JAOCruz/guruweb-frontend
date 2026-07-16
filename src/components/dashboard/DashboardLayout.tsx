@@ -9,6 +9,9 @@ import {
   BarChart3,
   BookOpen,
   ClipboardList,
+  MessageCircle,
+  Users,
+  Smartphone,
   LogOut,
 } from "lucide-react";
 
@@ -131,6 +134,27 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               to="/dashboard/cases"
               icon={<ClipboardList size={24} />}
               label="Casos"
+              sidebarOpen={sidebarOpen}
+              isMobile={isMobile}
+            />
+            <NavItem
+              to="/dashboard/whatsapp"
+              icon={<Smartphone size={24} />}
+              label="WhatsApp Bot"
+              sidebarOpen={sidebarOpen}
+              isMobile={isMobile}
+            />
+            <NavItem
+              to="/dashboard/messages"
+              icon={<MessageCircle size={24} />}
+              label="Mensajes"
+              sidebarOpen={sidebarOpen}
+              isMobile={isMobile}
+            />
+            <NavItem
+              to="/dashboard/bot-clients"
+              icon={<Users size={24} />}
+              label="Clientes Bot"
               sidebarOpen={sidebarOpen}
               isMobile={isMobile}
             />

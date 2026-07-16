@@ -6,6 +6,9 @@ import DataModificationForm from "../components/dashboard/DataModificationForm";
 import DataCharts from "../components/dashboard/DataCharts";
 import FlipbooksSection from "../components/dashboard/FlipbooksSection";
 import CasesPage from "./CasesPage";
+import WhatsAppBot from "./WhatsAppBot";
+import BotMessages from "./BotMessages";
+import BotClients from "./BotClients";
 import { servicesAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -150,6 +153,9 @@ const Dashboard: React.FC = () => {
           }
         />
         <Route path="/cases" element={<CasesPage />} />
+        <Route path="/whatsapp" element={<WhatsAppBot />} />
+        <Route path="/messages" element={<BotMessages />} />
+        <Route path="/bot-clients" element={<BotClients />} />
       </Routes>
     </DashboardLayout>
   );
