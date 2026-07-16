@@ -582,11 +582,15 @@ const BotMessages: React.FC = () => {
       const raw = res.data as {
         conversations?: Array<{
           phone: string;
-          client_name: string | null;
+          client_id?: number | null;
+          client_name?: string | null;
+          profile_pic_url?: string | null;
           last_message: string;
           last_message_at: string;
           message_count: string;
           botActive?: boolean;
+          chatEnabled?: boolean;
+          manualMode?: boolean;
         }>;
       };
       const convs = raw.conversations ?? [];
@@ -594,6 +598,9 @@ const BotMessages: React.FC = () => {
         const prevMap = new Map(prev.map((c) => [c.phone, c.botActive]));
         return convs.map((c) => ({
           ...c,
+          client_id: c.client_id ?? null,
+          client_name: c.client_name ?? null,
+          profile_pic_url: c.profile_pic_url ?? null,
           botActive: c.botActive ?? prevMap.get(c.phone) ?? true,
         }));
       });
@@ -909,14 +916,14 @@ const BotMessages: React.FC = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    /*
-     * Escape DashboardLayout's padding (p-3 md:p-8) so the 2-panel layout
-     * can fill the full available height below the top bar (h-16 / h-20).
-     */
     <div
       className="-m-3 md:-m-8 flex overflow-hidden"
       style={{ height: "calc(100vh - 4rem)" }}
     >
+      {/*
+       * Escape DashboardLayout's padding (p-3 md:p-8) so the 2-panel layout
+       * can fill the full available height below the top bar (h-16 / h-20).
+       */}
       {/* ════════════════════════════════════════════════════════════
           LEFT PANEL — Conversation List (320 px on desktop)
       ════════════════════════════════════════════════════════════ */}
@@ -1273,33 +1280,40 @@ const BotMessages: React.FC = () => {
           CLIENT DETAIL PANEL — slide-over from the right
       ════════════════════════════════════════════════════════════ */}
       {showClientPanel && selectedPhone && (
-        <div className="absolute inset-y-0 right-0 z-20 flex w-full flex-col border-l-2 border-border bg-background shadow-xl md:w-96">
-          {/* Header */}
-          <div className="flex flex-shrink-0 items-center justify-between border-b-2 border-border bg-secondary-background px-4 py-3">
-            <div className="flex items-center gap-2">
-              <Avatar
-                url={selectedConv?.profile_pic_url}
-                name={selectedConv?.client_name}
-                phone={selectedPhone}
-                size="md"
-              />
-              <div className="min-w-0">
-                <p className="truncate font-base text-base font-semibold text-foreground">
-                  {selectedConv?.client_name || formatPhone(selectedPhone)}
-                </p>
-                <p className="truncate font-base text-xs text-foreground/60">
-                  {formatPhone(selectedPhone)}
-                </p>
+        <>
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 z-10 bg-black/40"
+            onClick={() => setShowClientPanel(false)}
+          />
+          <div className="absolute inset-y-0 right-0 z-20 flex w-full flex-col border-l-2 border-border bg-background shadow-xl md:w-96">
+            {/* Header */}
+            <div className="flex flex-shrink-0 items-center justify-between border-b-2 border-border bg-secondary-background px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Avatar
+                  url={selectedConv?.profile_pic_url}
+                  name={selectedConv?.client_name}
+                  phone={selectedPhone}
+                  size="md"
+                />
+                <div className="min-w-0">
+                  <p className="truncate font-base text-base font-semibold text-foreground">
+                    {selectedConv?.client_name || formatPhone(selectedPhone)}
+                  </p>
+                  <p className="truncate font-base text-xs text-foreground/60">
+                    {formatPhone(selectedPhone)}
+                  </p>
+                </div>
               </div>
+              <NeoButton
+                size="icon"
+                variant="neutral"
+                onClick={() => setShowClientPanel(false)}
+                title="Cerrar panel"
+              >
+                <X size={18} />
+              </NeoButton>
             </div>
-            <NeoButton
-              size="icon"
-              variant="neutral"
-              onClick={() => setShowClientPanel(false)}
-            >
-              <X size={18} />
-            </NeoButton>
-          </div>
 
           {/* Content */}
           <div className="custom-scroll flex-1 overflow-y-auto px-4 py-4">
@@ -1466,7 +1480,8 @@ const BotMessages: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

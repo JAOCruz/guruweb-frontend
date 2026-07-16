@@ -31,12 +31,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     setHeadingFontState(initialFont);
     applyFont(initialFont);
 
-    // Ensure dark mode is removed
     document.documentElement.classList.remove("dark");
-    document.documentElement.style.backgroundColor = "";
-    document.documentElement.style.backgroundImage = "";
-    document.documentElement.style.backgroundSize = "";
-    document.body.style.backgroundColor = "";
   }, []);
 
   const setHeadingFont = (font: HeadingFont) => {

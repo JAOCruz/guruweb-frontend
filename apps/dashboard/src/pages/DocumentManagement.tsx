@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { botAPI, DocumentIndexItem } from '../services/botApi';
-import { Search, ChevronDown, ChevronRight, FileText, Folder, Tag, MessageCircle, Loader, List, Network, Grid3x3, Scale, ExternalLink, Eye, X } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, FileText, Folder, Tag, MessageCircle, Loader, List, Network, Grid3x3, Scale, ExternalLink, Eye, X, Maximize2 } from 'lucide-react';
 import { LAWS } from '../data/laws';
 import { NeoCard, NeoButton, NeoInput, NeoSelect, NeoBadge } from '@guru/ui';
+import { fetchAuthenticatedFile } from '../utils';
 
 type ViewMode = 'folder' | 'tree' | 'outline';
 
@@ -25,6 +26,39 @@ export default function DocumentManagement() {
   const [comment, setComment] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('folder');
   const [showPreview, setShowPreview] = useState(false);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewMaximized, setPreviewMaximized] = useState(false);
+
+  useEffect(() => {
+    if (!showPreview || !selectedDoc || selectedDoc.file_extension !== '.pdf') {
+      setPreviewBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+      return;
+    }
+
+    let revoked = false;
+    setPreviewLoading(true);
+    fetchAuthenticatedFile(botAPI.getDocumentFileUrl(selectedDoc.id))
+      .then((url) => {
+        if (!revoked) setPreviewBlobUrl(url);
+      })
+      .catch((err) => {
+        console.error('Failed to load document preview:', err);
+        setPreviewBlobUrl(null);
+      })
+      .finally(() => setPreviewLoading(false));
+
+    return () => {
+      revoked = true;
+      setPreviewBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    };
+  }, [showPreview, selectedDoc]);
 
   useEffect(() => {
     const loadDocuments = async () => {
@@ -490,7 +524,7 @@ export default function DocumentManagement() {
                     <p className="text-foreground/60 uppercase tracking-wide mb-1">Etiquetas</p>
                     <div className="flex flex-wrap gap-1">
                       {selectedDoc.tags.map((tag, idx) => (
-                        <NeoBadge key={idx} variant="outline" className="px-3 py-1 text-xs truncate">
+                        <NeoBadge key={idx} variant="outline" className="px-3 py-1.5 text-xs truncate">
                           <Tag className="w-2.5 h-2.5 flex-shrink-0" />
                           <span className="truncate">{tag}</span>
                         </NeoBadge>
@@ -521,7 +555,7 @@ export default function DocumentManagement() {
                           href={law.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-base text-foreground hover:text-main hover:bg-secondary-background rounded-base px-2 py-1.5 transition-colors group"
+                          className="flex items-center gap-2 text-base text-foreground hover:text-main hover:bg-secondary-background rounded-base px-3 py-1.5 transition-colors group"
                         >
                           <ExternalLink className="w-3 h-3 flex-shrink-0 text-foreground/60 group-hover:text-main" />
                           <span className="truncate">{law.institution}</span>
@@ -584,29 +618,57 @@ export default function DocumentManagement() {
         {/* PDF Preview Modal */}
         {showPreview && selectedDoc && selectedDoc.file_extension === '.pdf' && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
+            className={`fixed inset-0 z-50 flex bg-overlay p-4 ${previewMaximized ? '' : 'items-center justify-center'}`}
             onClick={() => setShowPreview(false)}
           >
             <NeoCard
-              className="w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden p-0"
+              className={`w-full flex flex-col overflow-hidden p-0 ${previewMaximized ? 'h-full max-w-none' : 'max-w-4xl h-[80vh]'}`}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-3 border-b-2 border-border flex-shrink-0">
                 <span className="text-base font-medium truncate">{selectedDoc.name}</span>
-                <NeoButton
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowPreview(false)}
-                >
-                  <X className="w-4 h-4" />
-                </NeoButton>
+                <div className="flex items-center gap-1">
+                  <NeoButton
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setPreviewMaximized((v) => !v)}
+                    title={previewMaximized ? 'Restaurar tamaño' : 'Pantalla completa'}
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </NeoButton>
+                  <NeoButton
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowPreview(false)}
+                  >
+                    <X className="w-4 h-4" />
+                  </NeoButton>
+                </div>
               </div>
-              <iframe
-                src={botAPI.getDocumentFileUrl(selectedDoc.id)}
-                className="flex-1 w-full border-0"
-                title={selectedDoc.name}
-                sandbox="allow-same-origin allow-scripts"
-              />
+              {previewLoading ? (
+                <div className="flex flex-1 items-center justify-center text-foreground/50">
+                  <Loader size={32} className="animate-spin" />
+                </div>
+              ) : previewBlobUrl ? (
+                <object
+                  data={previewBlobUrl}
+                  type="application/pdf"
+                  className="flex-1 w-full border-0"
+                  aria-label={selectedDoc.name}
+                >
+                  <p className="text-foreground/50 text-center mt-8">
+                    Tu navegador no puede mostrar PDFs.
+                    <a href={previewBlobUrl} download={selectedDoc.name} className="underline text-main ml-2">
+                      Descargar
+                    </a>
+                  </p>
+                </object>
+              ) : (
+                <div className="flex flex-1 flex-col items-center justify-center text-foreground/50">
+                  <FileText size={40} className="mb-2 opacity-40" />
+                  <p className="text-base">No se pudo cargar la vista previa</p>
+                </div>
+              )}
             </NeoCard>
           </div>
         )}

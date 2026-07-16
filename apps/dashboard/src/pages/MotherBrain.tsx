@@ -367,13 +367,13 @@ export default function MotherBrain() {
               <span className="flex h-20 items-center justify-center text-5xl transition-transform group-hover:scale-110">
                 {style.emoji}
               </span>
-              <h2 className="line-clamp-2 min-h-[3.5rem] font-heading text-xl uppercase tracking-wide md:text-2xl">
+              <h2 className="line-clamp-2 min-h-[4rem] font-heading text-xl uppercase tracking-wide md:text-2xl">
                 {cat.name}
               </h2>
-              <p className="line-clamp-2 min-h-[3rem] text-base font-base opacity-80">
+              <p className="line-clamp-2 min-h-[3.5rem] text-base font-base opacity-80">
                 {style.tagline}
               </p>
-              <div className="mt-auto flex flex-wrap items-center justify-center gap-2">
+              <div className="mt-auto flex w-full flex-wrap items-center justify-center gap-2">
                 <NeoBadge variant="main" className="px-4 py-2">{tmplCount} docs</NeoBadge>
                 {leafCount > 0 && (
                   <NeoBadge variant="outline" className="px-4 py-2">{leafCount} subcat</NeoBadge>

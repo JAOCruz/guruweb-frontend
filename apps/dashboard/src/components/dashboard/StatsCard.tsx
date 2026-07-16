@@ -121,7 +121,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
     >
       <div className="mb-3 flex items-start justify-between">
         <p
-          className={`text-lg font-black uppercase tracking-[0.2em] sm:text-xl ${variantSubtle[variant]}`}
+          className={`text-2xl font-black uppercase tracking-tight sm:text-3xl ${variantSubtle[variant]}`}
         >
           {label}
         </p>
@@ -150,7 +150,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
       {subValue && (
         <div className="mt-2">
           <span
-            className={`inline-block rounded-base border-2 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${variantBadge[variant]}`}
+            className={`inline-block rounded-base border-2 px-3 py-1.5 text-[9px] font-black uppercase tracking-wider ${variantBadge[variant]}`}
           >
             {subValue}
           </span>

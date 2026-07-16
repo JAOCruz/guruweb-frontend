@@ -207,7 +207,7 @@ const Dashboard: React.FC = () => {
                   </div>
 
                   {/* Date Filter */}
-                  <div className="flex w-full min-w-0 flex-col gap-2 rounded-base border-2 border-border bg-secondary-background p-3 shadow-shadow sm:flex-row sm:items-center">
+                  <div className="flex w-full min-w-0 flex-col flex-wrap gap-2 rounded-base border-2 border-border bg-secondary-background p-3 shadow-shadow sm:flex-row sm:items-center">
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                       <span className="shrink-0 text-[10px] font-black tracking-widest uppercase text-foreground/60">
                         Desde
@@ -216,7 +216,7 @@ const Dashboard: React.FC = () => {
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                         placeholder="Desde"
-                        className="h-10 flex-1 rounded-base border-2 border-border bg-background text-sm text-foreground shadow-none"
+                        className="h-10 min-w-0 flex-1 rounded-base border-2 border-border bg-background text-sm text-foreground shadow-none"
                       />
                     </div>
                     <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -227,10 +227,10 @@ const Dashboard: React.FC = () => {
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         placeholder="Hasta"
-                        className="h-10 flex-1 rounded-base border-2 border-border bg-background text-sm text-foreground shadow-none"
+                        className="h-10 min-w-0 flex-1 rounded-base border-2 border-border bg-background text-sm text-foreground shadow-none"
                       />
                     </div>
-                    <div className="flex shrink-0 gap-2">
+                    <div className="flex w-full shrink-0 gap-2 sm:w-auto">
                       <NeoButton
                         variant="outline"
                         size="sm"
@@ -238,7 +238,7 @@ const Dashboard: React.FC = () => {
                           setStartDate(getTodayString());
                           setEndDate(getTodayString());
                         }}
-                        className="text-[10px]"
+                        className="flex-1 text-[10px] sm:flex-none"
                       >
                         Hoy
                       </NeoButton>
@@ -249,7 +249,7 @@ const Dashboard: React.FC = () => {
                           setStartDate("");
                           setEndDate("");
                         }}
-                        className="text-[10px]"
+                        className="flex-1 text-[10px] sm:flex-none"
                       >
                         Limpiar
                       </NeoButton>

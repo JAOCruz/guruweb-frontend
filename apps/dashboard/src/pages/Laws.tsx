@@ -51,7 +51,7 @@ function LawCard({ law }: { law: (typeof LAWS)[0] }) {
       </div>
 
       {/* Category badge */}
-      <span className="mb-3 w-fit rounded-base border-2 border-border bg-background px-3 py-1 text-xs font-black uppercase text-main shadow-button">
+      <span className="mb-3 w-fit rounded-base border-2 border-border bg-background px-3 py-1.5 text-xs font-black uppercase text-main shadow-button">
         {law.category}
       </span>
 
@@ -70,7 +70,7 @@ function LawCard({ law }: { law: (typeof LAWS)[0] }) {
             {law.relatedDocCategories.map((cat, i) => (
               <span
                 key={i}
-                className="rounded-base border border-white/30 bg-white/20 px-2 py-0.5 text-xs font-bold text-white whitespace-nowrap"
+                className="rounded-base border border-white/30 bg-white/20 px-3 py-1.5 text-xs font-bold text-white whitespace-nowrap"
               >
                 {cat}
               </span>

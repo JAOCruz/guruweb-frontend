@@ -56,6 +56,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [whatsappOpen, setWhatsappOpen] = useState(() =>
     WHATSAPP_PATHS.some((p) => location.pathname.startsWith(p))
   );
+
+  // Keep WhatsApp submenu open when navigating inside it
+  useEffect(() => {
+    if (WHATSAPP_PATHS.some((p) => location.pathname.startsWith(p))) {
+      setWhatsappOpen(true);
+    }
+  }, [location.pathname]);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showAdvisor, setShowAdvisor] = useState(() => {
     const saved = localStorage.getItem("guru-advisor-visible");
@@ -254,11 +261,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             {(sidebarOpen || isMobile) && whatsappOpen && (
               <div className="mt-2 ml-4 space-y-1 border-l-2 border-white/30 pl-3">
                 {isAdmin && (
-                  <>
-                    <SubNavLink to="/whatsapp" icon={<Wifi size={14} />} label="Conexión" />
-                    <SubNavLink to="/bot-simulator" icon={<Bot size={14} />} label="Simulador Bot" />
-                    <SubNavLink to="/simulator-review" icon={<MessageSquare size={14} />} label="Revisión Simulador" />
-                  </>
+                  <SubNavLink to="/whatsapp" icon={<Wifi size={14} />} label="Conexión" />
                 )}
                 <SubNavLink to="/bot-messages" icon={<MessageSquare size={14} />} label="Mensajes" />
                 <SubNavLink to="/bot-clients" icon={<Users size={14} />} label="Clientes" />
@@ -267,7 +270,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 <SubNavLink to="/documents" icon={<FileText size={14} />} label="Documentos" />
                 <SubNavLink to="/services-catalog" icon={<Database size={14} />} label="Catálogo Precios" />
                 {isAdmin && (
-                  <SubNavLink to="/motherbrain" icon={<Brain size={14} />} label="Mother Brain" />
+                  <>
+                    <SubNavLink to="/motherbrain" icon={<Brain size={14} />} label="Mother Brain" />
+                    <SubNavLink to="/bot-simulator" icon={<Bot size={14} />} label="Simulador Bot" />
+                    <SubNavLink to="/simulator-review" icon={<MessageSquare size={14} />} label="Revisión Simulador" />
+                  </>
                 )}
               </div>
             )}

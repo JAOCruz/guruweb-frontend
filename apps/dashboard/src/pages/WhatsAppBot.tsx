@@ -8,12 +8,14 @@ import {
   CheckCircle2,
   Users,
   UserCheck,
+  User,
+  Bot,
   Pause,
   Play,
   Power,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { botAPI, BotStatus, BotMode } from "../services/botApi";
+import botApi, { botAPI, BotStatus, BotMode } from "../services/botApi";
 import { NeoCard, NeoButton, NeoBadge } from "@guru/ui";
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
@@ -21,7 +23,7 @@ const StatusBadge: React.FC<{ status: BotStatus["status"]; paused?: boolean }> =
   status,
   paused,
 }) => {
-  const badgeClass = "gap-2.5 normal-case text-base px-4 py-2";
+  const badgeClass = "gap-2.5 normal-case text-base px-5 py-2.5";
 
   if (status === "connected") {
     return paused ? (
@@ -54,46 +56,85 @@ const StatusBadge: React.FC<{ status: BotStatus["status"]; paused?: boolean }> =
   );
 };
 
+// ─── Error description helper (visible debug log) ────────────────────────────
+function describeError(e: any): string {
+  if (!e) return "Error desconocido";
+  const parts: string[] = [];
+  if (e.code) parts.push(e.code); // p.ej. ERR_NETWORK (ad-blocker/VPN), ECONNABORTED
+  if (e.response) parts.push(`HTTP ${e.response.status}`);
+  const dataMsg = e.response?.data?.message || e.response?.data?.error;
+  if (dataMsg) parts.push(String(dataMsg));
+  if (!parts.length && e.message) parts.push(e.message);
+  return parts.join(" · ") || "Error desconocido";
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const WhatsAppBot: React.FC = () => {
   const [status, setStatus] = useState<BotStatus>({
     status: "disconnected",
     paused: false,
     mode: "all",
+    assignmentMode: "manual",
   });
   const [qr, setQr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const lastLogRef = useRef<string>("");
 
   const statusIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const qrIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Visible on-screen log — for users without dev console access
+  const logDebug = useCallback((msg: string) => {
+    if (msg === lastLogRef.current) return; // dedupe consecutive repeats
+    lastLogRef.current = msg;
+    const time = new Date().toLocaleTimeString("es-DO", { hour12: false });
+    console.log(`[WA-UI] ${msg}`);
+    setDebugLog((prev) => [`${time}  ${msg}`, ...prev].slice(0, 40));
+  }, []);
+
+  // Log environment once on mount
+  useEffect(() => {
+    logDebug(`Navegador: ${navigator.userAgent}`);
+    logDebug(`API: ${botApi.defaults.baseURL}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Fetch helpers ──────────────────────────────────────────────────────────
 
   const fetchStatus = useCallback(async () => {
     try {
       const res = await botAPI.getStatus();
-      // Adapt backend response: {connected, botActive, botMode} → {status, mode}
-      const raw = res.data as unknown;
-      setStatus({
-        status: (raw as any).connected ? "connected" : "disconnected",
-        paused: !(raw as any).botActive,
-        mode: ((raw as any).botMode as "all" | "selected") ?? "all",
-        // @ts-ignore
-      });
-    } catch {
-      // silently ignore polling errors
+      const raw = res.data as any;
+      setStatus((prev) => ({
+        status: raw.connected ? "connected" : prev.status === "connecting" ? "connecting" : "disconnected",
+        paused: !raw.botActive,
+        mode: raw.botMode ?? "all",
+        assignmentMode: raw.assignmentMode ?? "manual",
+        phone: raw.phone,
+      }));
+    } catch (e: any) {
+      logDebug(`Error consultando estado: ${describeError(e)}`);
     }
-  }, []);
+  }, [logDebug]);
 
   const fetchQR = useCallback(async () => {
     try {
       const res = await botAPI.getQR();
-      setQr(res.data.qr);
-    } catch {
-      // silently ignore
+      if (res.data.qr) {
+        setQr((prev) => {
+          if (!prev) logDebug("QR recibido del servidor — listo para escanear");
+          return res.data.qr;
+        });
+      } else if (res.data.status === "no_qr") {
+        // keep existing QR if still within a connecting window, otherwise clear
+        setQr((prev) => prev);
+      }
+    } catch (e: any) {
+      logDebug(`Error consultando QR: ${describeError(e)}`);
     }
-  }, []);
+  }, [logDebug]);
 
   // ── Polling setup ──────────────────────────────────────────────────────────
 
@@ -120,14 +161,39 @@ const WhatsAppBot: React.FC = () => {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
+  const copyLog = async () => {
+    const text = debugLog.join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      logDebug("Registro copiado al portapapeles");
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      logDebug("Registro copiado (método alternativo)");
+    }
+  };
+
   const handleConnect = async () => {
     setError(null);
     setLoading(true);
+    setQr(null);
+    logDebug("Iniciando conexión (POST /whatsapp/connect)…");
     try {
+      // Move UI immediately into connecting state so QR polling starts
+      setStatus((prev) => ({ ...prev, status: "connecting" }));
       await botAPI.connect();
-      await fetchStatus();
+      logDebug("Conexión iniciada en el servidor — esperando QR");
+      // Start QR polling right away
+      fetchQR();
     } catch (e: any) {
-      setError(e?.response?.data?.message || "Error al iniciar conexión");
+      setStatus((prev) => ({ ...prev, status: "disconnected" }));
+      const msg = e?.response?.data?.message || "Error al iniciar conexión";
+      setError(msg);
+      logDebug(`Error al iniciar conexión: ${describeError(e)}`);
     } finally {
       setLoading(false);
     }
@@ -166,7 +232,18 @@ const WhatsAppBot: React.FC = () => {
     }
   };
 
+  const handleSetAssignmentMode = async (mode: "manual" | "automatic") => {
+    setError(null);
+    try {
+      await botAPI.setAssignmentMode(mode);
+      setStatus((prev) => ({ ...prev, assignmentMode: mode }));
+    } catch (e: any) {
+      setError(e?.response?.data?.message || "Error al cambiar modo de asignación");
+    }
+  };
+
   const currentMode = status.mode ?? "all";
+  const currentAssignmentMode = status.assignmentMode ?? "manual";
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -318,6 +395,40 @@ const WhatsAppBot: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Divider */}
+            <div className="mb-5 mt-6 border-t-2 border-border" />
+
+            {/* Assignment mode selector */}
+            <div>
+              <p className="mb-3 font-base text-base font-bold uppercase tracking-widest text-foreground/60">
+                Asignación de Casos
+              </p>
+              <div className="flex gap-3">
+                <NeoButton
+                  onClick={() => handleSetAssignmentMode("manual")}
+                  variant={currentAssignmentMode === "manual" ? "default" : "neutral"}
+                  className="flex-1"
+                >
+                  <User size={16} />
+                  Manual
+                </NeoButton>
+                <NeoButton
+                  onClick={() => handleSetAssignmentMode("automatic")}
+                  variant={currentAssignmentMode === "automatic" ? "default" : "neutral"}
+                  className="flex-1"
+                >
+                  <Bot size={16} />
+                  Automático
+                </NeoButton>
+              </div>
+
+              <div className="mt-3 rounded-base border-2 border-border bg-secondary-background p-3 font-base text-base text-foreground/80 shadow-shadow">
+                {currentAssignmentMode === "manual"
+                  ? "💡 El admin asigna cada caso a un digitador."
+                  : "🤖 Los nuevos casos se asignan automáticamente según disponibilidad."}
+              </div>
+            </div>
           </NeoCard>
         </motion.div>
 
@@ -382,6 +493,41 @@ const WhatsAppBot: React.FC = () => {
           </NeoCard>
         </motion.div>
       </div>
+
+      {/* ── Registro de conexión (visible sin consola) ── */}
+      <NeoCard className="mt-6">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="font-heading text-lg font-bold text-foreground">
+            Registro de conexión
+          </h3>
+          <div className="flex gap-2">
+            <NeoButton onClick={copyLog} variant="neutral" className="px-3 py-1.5 text-sm">
+              Copiar registro
+            </NeoButton>
+            <NeoButton
+              onClick={() => setDebugLog([])}
+              variant="neutral"
+              className="px-3 py-1.5 text-sm"
+            >
+              Limpiar
+            </NeoButton>
+          </div>
+        </div>
+        <div className="max-h-44 overflow-y-auto rounded-base border-2 border-border bg-black p-3 font-mono text-xs leading-relaxed text-green-300">
+          {debugLog.length === 0 ? (
+            <p className="opacity-60">Sin eventos todavía…</p>
+          ) : (
+            debugLog.map((line, i) => (
+              <p key={i} className="whitespace-pre-wrap break-all">
+                {line}
+              </p>
+            ))
+          )}
+        </div>
+        <p className="mt-2 font-base text-sm text-foreground/60">
+          Si el QR no aparece, copia este registro y envíalo al administrador.
+        </p>
+      </NeoCard>
     </div>
   );
 };

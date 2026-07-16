@@ -418,7 +418,7 @@ const BotSimulator: React.FC = () => {
             >
               <div className="mb-1 flex items-center justify-between gap-2">
                 <span className="truncate font-semibold">{conv.title}</span>
-                <NeoBadge variant={statusBadges[conv.status] || "neutral"}>
+                <NeoBadge variant={statusBadges[conv.status] || "neutral"} className="px-3 py-1.5 text-xs">
                   {statusLabels[conv.status] || conv.status}
                 </NeoBadge>
               </div>

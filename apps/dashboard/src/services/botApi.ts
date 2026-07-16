@@ -185,11 +185,16 @@ export interface Conversation {
   id: string;
   phone: string;
   name?: string;
+  client_id?: number | null;
+  client_name?: string | null;
+  profile_pic_url?: string | null;
   lastMessage: string;
   lastMessageTime: string;
   timestamp: string;
   unreadCount?: number;
   botActive?: boolean;
+  chatEnabled?: boolean;
+  manualMode?: boolean;
   aiActive?: boolean;
   handledBy?: HandledBy;
   status?: "active" | "inactive";

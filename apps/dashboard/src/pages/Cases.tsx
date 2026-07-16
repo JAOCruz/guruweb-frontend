@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Briefcase, Search, RefreshCw, ChevronLeft, Filter, AlertCircle, Tag } from "lucide-react";
 import api from "../services/api";
+import { getAuthToken } from "../utils";
 import { useAuth } from "../context/AuthContext";
 import { NeoCard, NeoButton, NeoInput, NeoBadge } from "@guru/ui";
 
@@ -220,7 +221,7 @@ const Cases: React.FC = () => {
         `${getAPIUrl()}/api/cases?case_type=${caseType}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("guru_bot_token") || localStorage.getItem("token")}`,
+            Authorization: `Bearer ${getAuthToken()}`,
           },
         }
       );
@@ -546,7 +547,7 @@ const Cases: React.FC = () => {
                       const response = await fetch(`${getAPIUrl()}/api/cases/${selectedCase.id}/resolve`, {
                         method: 'POST',
                         headers: {
-                          Authorization: `Bearer ${localStorage.getItem("guru_bot_token") || localStorage.getItem("token")}`,
+                          Authorization: `Bearer ${getAuthToken()}`,
                         },
                       });
                       const data = await response.json().catch(() => ({}));
@@ -573,7 +574,7 @@ const Cases: React.FC = () => {
                       const response = await fetch(`${getAPIUrl()}/api/cases/${selectedCase.id}/reopen`, {
                         method: 'POST',
                         headers: {
-                          Authorization: `Bearer ${localStorage.getItem("guru_bot_token") || localStorage.getItem("token")}`,
+                          Authorization: `Bearer ${getAuthToken()}`,
                         },
                       });
                       const data = await response.json().catch(() => ({}));

@@ -577,7 +577,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                         {item.time || "--:--"}
                       </span>
                       {item.comment && (
-                        <span className="truncate rounded-base border border-border bg-secondary-background px-2 py-0.5 text-foreground/90">
+                        <span className="truncate rounded-base border border-border bg-secondary-background px-3 py-1.5 text-foreground/90">
                           {item.comment}
                         </span>
                       )}

@@ -63,6 +63,7 @@ const Login: React.FC = () => {
               </label>
               <Input
                 type="text"
+                name="username"
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -78,6 +79,7 @@ const Login: React.FC = () => {
               </label>
               <Input
                 type="password"
+                name="password"
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

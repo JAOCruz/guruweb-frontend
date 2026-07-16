@@ -4,8 +4,6 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
-@custom-variant dark (&:is(.dark *));
-
 /* ── Neo-brutalism theme tokens ───────────────────────────────────── */
 :root {
   --border-radius: 5px;
@@ -69,59 +67,6 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: #0a0a0a;
-  --secondary-background: #171717;
-  --foreground: #ffffff;
-  --main-foreground: #ffffff;
-
-  --border: #ffffff;
-  --ring: #ffffff;
-  --overlay: rgba(0, 0, 0, 0.9);
-
-  /* Neo-brutalism official aliases */
-  --bw: #171717;
-  --mtext: #ffffff;
-  --text: #ffffff;
-  --bg: #0a0a0a;
-
-  --shadow: var(--box-shadow-x) var(--box-shadow-y) 0px 0px var(--border);
-  --shadow-sidebar: 4px 0px 0px 0px var(--border);
-  --shadow-header: 0px 4px 0px 0px var(--border);
-  --shadow-button: 2px 2px 0px 0px var(--border);
-  --shadow-primary: 4px 4px 0px 0px #000000;
-
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --chart-active-dot: #000000;
-  --card: #171717;
-  --card-foreground: #ffffff;
-  --popover: #171717;
-  --popover-foreground: #ffffff;
-  --primary: #0000ff;
-  --primary-hover: #0000cc;
-  --primary-foreground: #ffffff;
-  --secondary: #171717;
-  --secondary-foreground: #ffffff;
-  --muted: #171717;
-  --muted-foreground: #a3a3a3;
-  --accent: #171717;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --input: #262626;
-  --sidebar: #0a0a0a;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #0000ff;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #171717;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #ffffff;
-  --sidebar-ring: #ffffff;
 }
 
 @theme inline {
