@@ -27,6 +27,7 @@ const botApi = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // send HttpOnly cookie as auth fallback
 });
 
 // Request interceptor to add bot token and API key
@@ -44,12 +45,14 @@ botApi.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Response interceptor — clear token on 401
+// Response interceptor — clear stored tokens on 401
 botApi.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      localStorage.removeItem("token");
       localStorage.removeItem("guru_bot_token");
+      sessionStorage.removeItem("token");
     }
     return Promise.reject(error);
   },
@@ -281,7 +284,7 @@ export const botAPI = {
 
   // ── Legacy message/client endpoints ────────────────────────────────────
   getMessages: () => botApi.get<{ conversations: Array<{phone:string;client_name:string|null;last_message:string;last_message_at:string;message_count:string}> }>("/messages/conversations"),
-  getClients: () => botApi.get<BotClient[]>("/clients"),
+  getClients: () => botApi.get<{ clients: BotClient[] }>("/clients"),
   getClientDetail: (clientId: string | number) =>
     botApi.get<ClientDetailFull>(`/clients/${clientId}/detail`),
   getClientMedia: (clientId: string | number) =>
@@ -289,9 +292,9 @@ export const botAPI = {
   getClientCasesSummary: (clientId: string | number) =>
     botApi.get(`/clients/${clientId}/cases-summary`),
   toggleContactMode: (phone: string) =>
-    botApi.post(`/messages/chat-toggle/${phone}`),
+    botApi.post(`/messages/manual-toggle/${encodeURIComponent(phone)}`),
   enableContact: (phone: string) =>
-    botApi.post(`/messages/chat-toggle/${phone}`),
+    botApi.post(`/messages/chat-toggle/${encodeURIComponent(phone)}`),
   loginBot: (email: string, password: string) =>
     botApi.post<{ token: string }>("/auth/login", { email, password }),
 
@@ -308,9 +311,9 @@ export const botAPI = {
   sendMessage: (phone: string, message: string) =>
     botApi.post("/messages/send", { phone, message }),
 
-  /** POST /api/messages/chat-toggle/:phone — toggle AI on/off */
+  /** POST /api/messages/manual-toggle/:phone — toggle manual takeover (Bot ↔ Manual) */
   toggleChatAI: (phone: string) =>
-    botApi.post(`/messages/chat-toggle/${encodeURIComponent(phone)}`),
+    botApi.post(`/messages/manual-toggle/${encodeURIComponent(phone)}`),
 
   /** GET /api/messages/phone-status/:phone — get AI/manual status */
   getPhoneStatus: (phone: string) =>
@@ -324,7 +327,7 @@ export const botAPI = {
   getAnalytics: () => botApi.get<AnalyticsData>("/dashboard/analytics"),
 
   /** GET /api/clients */
-  getAllClients: () => botApi.get<BotClient[]>("/clients"),
+  getAllClients: () => botApi.get<{ clients: BotClient[] }>("/clients"),
 
   /** POST /api/clients/:id/assign — assign client to a digitador/auxiliar */
   assignClient: (clientId: number | string, userId: number | string) =>
