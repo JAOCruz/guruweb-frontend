@@ -584,6 +584,7 @@ const BotMessages: React.FC = () => {
           phone: string;
           client_id?: number | null;
           client_name?: string | null;
+          client_assigned_to?: number | null;
           profile_pic_url?: string | null;
           last_message: string;
           last_message_at: string;
@@ -596,10 +597,12 @@ const BotMessages: React.FC = () => {
       const convs = raw.conversations ?? [];
       setConversations((prev) => {
         const prevMap = new Map(prev.map((c) => [c.phone, c.botActive]));
+        const assignedMap = new Map(prev.map((c) => [c.phone, c.client_assigned_to]));
         return convs.map((c) => ({
           ...c,
           client_id: c.client_id ?? null,
           client_name: c.client_name ?? null,
+          client_assigned_to: c.client_assigned_to ?? assignedMap.get(c.phone) ?? null,
           profile_pic_url: c.profile_pic_url ?? null,
           botActive: c.botActive ?? prevMap.get(c.phone) ?? true,
         }));
@@ -790,7 +793,7 @@ const BotMessages: React.FC = () => {
         const res = await botAPI.getAdminUsers();
         const data = res.data as { users?: Array<{ id: number; name: string; role: string; username: string }> } | undefined;
         setAssignableUsers((data?.users || [])
-          .filter((u) => u.role === "digitador" && u.username !== "administracion")
+          .filter((u) => (u.role === "digitador" || u.role === "auxiliar") && u.username !== "administracion")
           .map((u) => ({ id: u.id, name: u.name || u.username, role: u.role, username: u.username })));
       } catch {
         setAssignableUsers([]);
@@ -800,13 +803,29 @@ const BotMessages: React.FC = () => {
 
   const handleAssign = async (userId: string) => {
     if (!selectedConv?.client_id || userId === "") return;
+    const targetUserId = parseInt(userId, 10);
+    const previousAssignedTo = selectedConv.client_assigned_to ?? null;
+
+    // Optimistic update so the UI doesn't flicker back to unassigned
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.phone === selectedPhone ? { ...c, client_assigned_to: targetUserId } : c
+      )
+    );
+
     setAssigning(true);
     setAssignMsg(null);
     try {
-      await botAPI.assignClient(selectedConv.client_id, userId);
+      await botAPI.assignClient(selectedConv.client_id, targetUserId);
       setAssignMsg("Asignado correctamente");
-      fetchConversations(true);
+      await fetchConversations(true);
     } catch (err: any) {
+      // Revert on failure
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.phone === selectedPhone ? { ...c, client_assigned_to: previousAssignedTo } : c
+        )
+      );
       setAssignMsg(err?.response?.data?.error || "Error al asignar");
     } finally {
       setAssigning(false);
