@@ -78,11 +78,13 @@ export default function Cotizaciones() {
     fetchQuotations();
   }, []);
 
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "COTIZACIÓN" | "FACTURA">("ALL");
+
   const fetchQuotations = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get("/invoices/quotations");
-      setQuotations(data.quotations || []);
+      const { data } = await api.get("/invoices");
+      setQuotations(data.invoices || []);
       setError(null);
     } catch (err: any) {
       setError(err?.response?.data?.error || err.message || "Error loading quotations");
@@ -91,6 +93,12 @@ export default function Cotizaciones() {
       setLoading(false);
     }
   };
+
+  const filteredQuotations = useMemo(() => {
+    return typeFilter === "ALL"
+      ? quotations
+      : quotations.filter((q) => q.type === typeFilter);
+  }, [quotations, typeFilter]);
 
   const resetCreateForm = () => {
     setCreateType("COTIZACIÓN");
@@ -275,10 +283,32 @@ export default function Cotizaciones() {
             <h2 className="font-heading text-4xl md:text-5xl font-black">Cotizaciones</h2>
           </div>
           <p className="mt-2 text-base text-foreground/70">
-            {quotations.length} total
+            {filteredQuotations.length} mostrados · {quotations.length} total
             {quotations.filter((q) => q.status === "draft").length > 0 &&
               ` · ${quotations.filter((q) => q.status === "draft").length} pendientes`}
           </p>
+
+          {/* Type filter */}
+          <div className="mt-3 flex gap-1">
+            {(
+              [
+                ["ALL", "Todos"],
+                ["COTIZACIÓN", "Cotizaciones"],
+                ["FACTURA", "Facturas"],
+              ] as const
+            ).map(([val, label]) => (
+              <NeoButton
+                key={val}
+                onClick={() => setTypeFilter(val)}
+                variant={typeFilter === val ? "default" : "neutral"}
+                size="sm"
+                className="flex-1 text-xs"
+              >
+                {label}
+              </NeoButton>
+            ))}
+          </div>
+
           <NeoButton
             onClick={() => {
               resetCreateForm();
@@ -300,14 +330,14 @@ export default function Cotizaciones() {
           <div className="flex flex-1 items-center justify-center p-4 text-center text-foreground">
             <NeoBadge variant="outline" className="text-base">{error}</NeoBadge>
           </div>
-        ) : quotations.length === 0 ? (
+        ) : filteredQuotations.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center p-4 text-center text-foreground/50">
             <FileText size={40} className="mb-3 opacity-40" />
-            <p className="text-base font-medium">No hay cotizaciones</p>
+            <p className="text-base font-medium">No hay documentos</p>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto custom-scroll p-3 space-y-2">
-            {quotations.map((quote) => (
+            {filteredQuotations.map((quote) => (
               <button
                 key={quote.id}
                 onClick={() => handleSelectQuotation(quote)}
