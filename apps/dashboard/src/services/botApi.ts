@@ -312,9 +312,9 @@ export const botAPI = {
   getPhoneMessages: (phone: string) =>
     botApi.get<ChatMessage[]>(`/messages/phone/${encodeURIComponent(phone)}`),
 
-  /** POST /api/messages/send — send a message */
+  /** POST /api/messages/send-direct — send a message from the dashboard (agent reply) */
   sendMessage: (phone: string, message: string) =>
-    botApi.post("/messages/send", { phone, message }),
+    botApi.post("/messages/send-direct", { phone, content: message }),
 
   /** POST /api/messages/manual-toggle/:phone — toggle manual takeover (Bot ↔ Manual) */
   toggleChatAI: (phone: string) =>
