@@ -35,11 +35,6 @@ api.interceptors.request.use(
       // Axios 1.x uses AxiosHeaders — use .set() to be safe
       config.headers.set("Authorization", `Bearer ${token}`);
     }
-    // DEBUG: remove after auth is stable
-    if (import.meta.env.DEV && config.url?.includes("/auth/me")) {
-      const authHeader = config.headers.get("Authorization");
-      console.log("[api] /auth/me — token present:", !!token, "header:", typeof authHeader === "string" ? authHeader.slice(0, 30) + "..." : "none");
-    }
     return config;
   },
   (error) => Promise.reject(error),

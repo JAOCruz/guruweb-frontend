@@ -44,7 +44,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error: any) {
       const status = error.response?.status;
       const isRememberMe = localStorage.getItem("rememberMe") === "true";
-      console.log("[AuthContext] loadUser failed — status:", status, "message:", error.message, "retries left:", retries, "rememberMe:", isRememberMe);
       // Only clear token on 401 (unauthorized). Other errors (500, timeout,
       // network blip) should NOT wipe the session — the user might just be
       // offline or Railway is restarting.
@@ -52,12 +51,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (isRememberMe && retries > 0) {
           // Remember me users get a retry: the first 401 may come from a
           // stale cookie while the localStorage token is still valid.
-          console.log("[AuthContext] Remember me: retrying loadUser in 1.5s...");
           setTimeout(() => loadUser(retries - 1), 1500);
           return; // Keep loading=true while retrying
         }
         localStorage.removeItem("token");
         localStorage.removeItem("rememberMe");
+        sessionStorage.removeItem("token");
         setUser(null);
       } else if (retries > 0 && !error.response) {
         // Network error: retry after 1.5s (Railway cold-start, etc.)
