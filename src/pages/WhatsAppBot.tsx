@@ -4,7 +4,6 @@ import {
   MessageCircle,
   QrCode,
   Wifi,
-  WifiOff,
   Loader2,
   CheckCircle2,
   Users,
@@ -29,7 +28,10 @@ const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({
 );
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
-const StatusBadge: React.FC<{ status: BotStatus["status"]; paused?: boolean }> = ({
+const StatusBadge: React.FC<{
+  status: "disconnected" | "connecting" | "connected";
+  paused?: boolean;
+}> = ({
   status,
   paused,
 }) => {
@@ -69,10 +71,13 @@ const StatusBadge: React.FC<{ status: BotStatus["status"]; paused?: boolean }> =
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const WhatsAppBot: React.FC = () => {
   const [status, setStatus] = useState<BotStatus>({
-    status: "disconnected",
-    paused: false,
-    mode: "all",
+    sessionId: "",
+    connected: false,
+    botActive: false,
+    botMode: "all",
+    assignmentMode: "manual",
   });
+  const [pendingConnect, setPendingConnect] = useState(false);
   const [qr, setQr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,12 +85,24 @@ const WhatsAppBot: React.FC = () => {
   const statusIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const qrIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // ── Derived UI state ───────────────────────────────────────────────────────
+  const uiStatus: "disconnected" | "connecting" | "connected" = status.connected
+    ? "connected"
+    : pendingConnect
+      ? "connecting"
+      : "disconnected";
+  const paused = !status.botActive;
+
   // ── Fetch helpers ──────────────────────────────────────────────────────────
 
   const fetchStatus = useCallback(async () => {
     try {
       const res = await botAPI.getStatus();
       setStatus(res.data);
+      if (res.data.connected) {
+        setPendingConnect(false);
+        setQr(null);
+      }
     } catch {
       // silently ignore polling errors
     }
@@ -111,17 +128,17 @@ const WhatsAppBot: React.FC = () => {
   }, [fetchStatus]);
 
   useEffect(() => {
-    if (status.status === "connecting") {
+    if (uiStatus === "connecting") {
       fetchQR();
       qrIntervalRef.current = setInterval(fetchQR, 2000);
     } else {
       if (qrIntervalRef.current) clearInterval(qrIntervalRef.current);
-      if (status.status !== "connecting") setQr(null);
+      setQr(null);
     }
     return () => {
       if (qrIntervalRef.current) clearInterval(qrIntervalRef.current);
     };
-  }, [status.status, fetchQR]);
+  }, [uiStatus, fetchQR]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
@@ -130,8 +147,10 @@ const WhatsAppBot: React.FC = () => {
     setLoading(true);
     try {
       await botAPI.connect();
+      setPendingConnect(true);
       await fetchStatus();
     } catch (e: any) {
+      setPendingConnect(false);
       setError(e?.response?.data?.message || "Error al iniciar conexión");
     } finally {
       setLoading(false);
@@ -143,6 +162,7 @@ const WhatsAppBot: React.FC = () => {
     setLoading(true);
     try {
       await botAPI.disconnect();
+      setPendingConnect(false);
       await fetchStatus();
     } catch (e: any) {
       setError(e?.response?.data?.message || "Error al desconectar");
@@ -154,8 +174,8 @@ const WhatsAppBot: React.FC = () => {
   const handleToggleBot = async () => {
     setError(null);
     try {
-      await botAPI.toggleBot();
-      await fetchStatus();
+      const res = await botAPI.toggleBot();
+      setStatus((prev) => ({ ...prev, botActive: res.data.botActive }));
     } catch (e: any) {
       setError(e?.response?.data?.message || "Error al cambiar estado del bot");
     }
@@ -165,13 +185,13 @@ const WhatsAppBot: React.FC = () => {
     setError(null);
     try {
       await botAPI.setBotMode(mode);
-      setStatus((prev) => ({ ...prev, mode }));
+      setStatus((prev) => ({ ...prev, botMode: mode }));
     } catch (e: any) {
       setError(e?.response?.data?.message || "Error al cambiar modo");
     }
   };
 
-  const currentMode = status.mode ?? "all";
+  const currentMode = status.botMode ?? "all";
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -219,12 +239,12 @@ const WhatsAppBot: React.FC = () => {
 
             {/* Status badge */}
             <div className="mb-6">
-              <StatusBadge status={status.status} paused={status.paused} />
-              {status.phone && status.status === "connected" && (
+              <StatusBadge status={uiStatus} paused={paused} />
+              {status.sessionId && uiStatus === "connected" && (
                 <p className="mt-2 text-xs text-slate-400">
-                  Número:{" "}
+                  Sesión:{" "}
                   <span className="font-medium text-slate-300">
-                    {status.phone}
+                    {status.sessionId}
                   </span>
                 </p>
               )}
@@ -232,7 +252,7 @@ const WhatsAppBot: React.FC = () => {
 
             {/* Action buttons by state */}
             <div className="mb-6 space-y-3">
-              {status.status === "disconnected" && (
+              {uiStatus === "disconnected" && (
                 <button
                   onClick={handleConnect}
                   disabled={loading}
@@ -247,24 +267,24 @@ const WhatsAppBot: React.FC = () => {
                 </button>
               )}
 
-              {status.status === "connecting" && (
+              {uiStatus === "connecting" && (
                 <div className="flex items-center justify-center gap-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-5 py-3 text-yellow-400">
                   <Loader2 size={18} className="animate-spin" />
                   <span className="font-medium">Esperando escaneo del QR…</span>
                 </div>
               )}
 
-              {status.status === "connected" && (
+              {uiStatus === "connected" && (
                 <div className="flex flex-col gap-3">
                   <button
                     onClick={handleToggleBot}
                     className={`flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold transition-all ${
-                      status.paused
+                      paused
                         ? "bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/30"
                         : "bg-yellow-600/20 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-600/30"
                     }`}
                   >
-                    {status.paused ? (
+                    {paused ? (
                       <>
                         <Play size={18} /> Reanudar Bot
                       </>
@@ -323,7 +343,7 @@ const WhatsAppBot: React.FC = () => {
                 </button>
               </div>
 
-              {currentMode === "selected" && status.status === "disconnected" && (
+              {currentMode === "selected" && uiStatus === "disconnected" && (
                 <p className="mt-3 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-400">
                   💡 Conecta para gestionar contactos habilitados
                 </p>
@@ -343,7 +363,7 @@ const WhatsAppBot: React.FC = () => {
               Código QR
             </h3>
 
-            {status.status === "connected" ? (
+            {uiStatus === "connected" ? (
               <div className="flex flex-col items-center gap-4 py-6">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20">
                   <CheckCircle2 size={40} className="text-emerald-400" />
@@ -372,7 +392,7 @@ const WhatsAppBot: React.FC = () => {
             ) : (
               <div className="flex flex-col items-center gap-4 py-6">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-800">
-                  {status.status === "connecting" ? (
+                  {uiStatus === "connecting" ? (
                     <Loader2 size={36} className="animate-spin text-yellow-400" />
                   ) : (
                     <QrCode size={36} className="text-slate-500" />
@@ -380,7 +400,7 @@ const WhatsAppBot: React.FC = () => {
                 </div>
                 <div className="text-center">
                   <p className="font-semibold text-slate-400">
-                    {status.status === "connecting"
+                    {uiStatus === "connecting"
                       ? "Generando QR…"
                       : "Iniciar Conexión para ver QR"}
                   </p>

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BOT_API_URL = "http://localhost:3000/api";
+const BOT_API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const botApi = axios.create({
   baseURL: BOT_API_URL,
@@ -9,10 +9,10 @@ const botApi = axios.create({
   },
 });
 
-// Request interceptor to add bot token
+// Request interceptor to add dashboard auth token
 botApi.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("guru_bot_token");
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,7 +26,8 @@ botApi.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("guru_bot_token");
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   },
@@ -35,22 +36,26 @@ botApi.interceptors.response.use(
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export type BotMode = "all" | "selected";
+export type AssignmentMode = "manual" | "automatic";
 
 export interface BotStatus {
-  status: "disconnected" | "connecting" | "connected";
-  paused?: boolean;
-  mode?: BotMode;
-  phone?: string;
+  sessionId: string;
+  connected: boolean;
+  botActive: boolean;
+  botMode: BotMode;
+  assignmentMode: AssignmentMode;
 }
 
 export interface BotMessage {
   id: string;
   phone: string;
   name?: string;
+  client_name?: string;
   lastMessage: string;
   timestamp: string;
   botActive: boolean;
   enabled?: boolean; // for "selected" mode
+  profile_pic_url?: string | null;
 }
 
 export interface BotClient {
@@ -65,40 +70,52 @@ export interface BotClient {
 
 export const botAPI = {
   /** Get current WhatsApp bot status */
-  getStatus: () => botApi.get<BotStatus>("/bot/status"),
+  getStatus: () => botApi.get<BotStatus>("/whatsapp/status"),
 
   /** Initiate WhatsApp connection (triggers QR generation) */
-  connect: () => botApi.post("/bot/connect"),
+  connect: () => botApi.post("/whatsapp/connect"),
 
   /** Get current QR code string */
-  getQR: () => botApi.get<{ qr: string | null }>("/bot/qr"),
+  getQR: () => botApi.get<{ qr: string | null; status?: string; message?: string }>("/whatsapp/qr"),
 
   /** Disconnect the WhatsApp session */
-  disconnect: () => botApi.post("/bot/disconnect"),
+  disconnect: () => botApi.post("/whatsapp/disconnect"),
 
   /** Toggle bot paused/active */
-  toggleBot: () => botApi.post("/bot/toggle"),
+  toggleBot: () => botApi.post("/whatsapp/bot-toggle"),
 
   /** Set bot mode: 'all' responds to everyone, 'selected' only to enabled contacts */
-  setBotMode: (mode: BotMode) => botApi.post("/bot/mode", { mode }),
+  setBotMode: (mode: BotMode) => botApi.post("/whatsapp/bot-mode", { mode }),
+
+  /** Set assignment mode: 'manual' or 'automatic' */
+  setAssignmentMode: (mode: AssignmentMode) =>
+    botApi.post("/whatsapp/assignment-mode", { mode }),
 
   /** Get list of conversations with last message info */
-  getMessages: () => botApi.get<BotMessage[]>("/bot/messages"),
+  getMessages: () => botApi.get<{ conversations: BotMessage[] }>("/messages/conversations"),
+
+  /** Search conversations by content */
+  searchMessages: (q: string) =>
+    botApi.get<{ conversations: BotMessage[] }>("/messages/search", { params: { q } }),
 
   /** Get list of known clients */
-  getClients: () => botApi.get<BotClient[]>("/bot/clients"),
+  getClients: () => botApi.get<{ clients: BotClient[] }>("/clients"),
 
   /** Toggle individual contact bot mode (bot vs manual) */
   toggleContactMode: (phone: string) =>
-    botApi.post(`/bot/contacts/${phone}/toggle`),
+    botApi.post(`/messages/manual-toggle/${encodeURIComponent(phone)}`),
 
   /** Enable a contact in "selected" mode */
   enableContact: (phone: string) =>
-    botApi.post(`/bot/contacts/${phone}/enable`),
+    botApi.post(`/messages/chat-toggle/${encodeURIComponent(phone)}`),
 
-  /** Login to bot backend (if it has its own auth) */
-  loginBot: (email: string, password: string) =>
-    botApi.post<{ token: string }>("/auth/login", { email, password }),
+  /** Get full status for a phone number */
+  getPhoneStatus: (phone: string) =>
+    botApi.get(`/messages/phone-status/${encodeURIComponent(phone)}`),
+
+  /** Get profile picture URL for a phone */
+  getProfilePic: (phone: string) =>
+    botApi.get<{ url: string | null }>(`/whatsapp/profile-pic/${encodeURIComponent(phone)}`),
 };
 
 export default botApi;

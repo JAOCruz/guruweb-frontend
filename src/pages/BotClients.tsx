@@ -88,7 +88,14 @@ const BotClients: React.FC = () => {
     else setRefreshing(true);
     try {
       const res = await botAPI.getClients();
-      setClients(res.data);
+      const mapped = (res.data.clients || []).map((c: any) => ({
+        id: String(c.id),
+        name: c.name,
+        phone: c.phone,
+        joinedAt: c.created_at || c.joinedAt,
+        messageCount: c.message_count || 0,
+      }));
+      setClients(mapped);
     } catch {
       // silently ignore
     } finally {

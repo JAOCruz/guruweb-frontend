@@ -133,8 +133,18 @@ const BotMessages: React.FC = () => {
         botAPI.getMessages(),
         botAPI.getStatus(),
       ]);
-      setMessages(msgRes.data);
-      setBotMode(statusRes.data.mode ?? "all");
+      const mapped = (msgRes.data.conversations || []).map((conv: any) => ({
+        id: conv.phone,
+        phone: conv.phone,
+        name: conv.client_name || conv.name || conv.phone,
+        lastMessage: conv.last_message || "—",
+        timestamp: conv.last_message_at,
+        botActive: !conv.manual_mode && conv.bot_active !== false,
+        enabled: conv.bot_active === true,
+        profile_pic_url: conv.profile_pic_url,
+      }));
+      setMessages(mapped);
+      setBotMode(statusRes.data.botMode ?? "all");
       setLastRefresh(new Date());
     } catch {
       // silently ignore
@@ -152,10 +162,11 @@ const BotMessages: React.FC = () => {
 
   const handleToggle = async (phone: string) => {
     try {
-      await botAPI.toggleContactMode(phone);
+      const res = await botAPI.toggleContactMode(phone);
+      const manualMode = res.data.manualMode;
       setMessages((prev) =>
         prev.map((m) =>
-          m.phone === phone ? { ...m, botActive: !m.botActive } : m,
+          m.phone === phone ? { ...m, botActive: !manualMode } : m,
         ),
       );
     } catch {
@@ -165,10 +176,11 @@ const BotMessages: React.FC = () => {
 
   const handleEnable = async (phone: string) => {
     try {
-      await botAPI.enableContact(phone);
+      const res = await botAPI.enableContact(phone);
+      const chatEnabled = res.data.chatEnabled;
       setMessages((prev) =>
         prev.map((m) =>
-          m.phone === phone ? { ...m, enabled: !m.enabled } : m,
+          m.phone === phone ? { ...m, enabled: chatEnabled } : m,
         ),
       );
     } catch {
