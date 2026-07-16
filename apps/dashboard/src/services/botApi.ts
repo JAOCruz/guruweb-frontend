@@ -334,9 +334,9 @@ export const botAPI = {
   /** GET /api/clients */
   getAllClients: () => botApi.get<{ clients: BotClient[] }>("/clients"),
 
-  /** POST /api/clients/:id/assign — assign client to a digitador/auxiliar */
-  assignClient: (clientId: number | string, userId: number | string) =>
-    botApi.post<{ client: BotClient; assigned_to_user: { id: number; username: string; name: string; role: string } }>(`/clients/${clientId}/assign`, { user_id: userId }),
+  /** POST /api/clients/:id/assign — assign client to a digitador/auxiliar (null = unassign) */
+  assignClient: (clientId: number | string, userId: number | string | null) =>
+    botApi.post<{ client: BotClient; assigned_to_user: { id: number; username: string; name: string; role: string } | null }>(`/clients/${clientId}/assign`, { user_id: userId }),
 
   /** GET /api/admin/users — list users for assignment dropdown */
   getAdminUsers: () => botApi.get<{ users: Array<{ id: number; email: string; username: string; name: string; role: string; created_at: string }> }>("/admin/users"),

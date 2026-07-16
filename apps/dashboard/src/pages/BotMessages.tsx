@@ -802,11 +802,12 @@ const BotMessages: React.FC = () => {
   }, [isAdmin]);
 
   const handleAssign = async (userId: string) => {
-    if (!selectedConv?.client_id || userId === "") return;
-    const targetUserId = parseInt(userId, 10);
+    if (!selectedConv?.client_id) return;
+    const isUnassign = userId === "";
+    const targetUserId = isUnassign ? null : parseInt(userId, 10);
     const previousAssignedTo = selectedConv.client_assigned_to ?? null;
 
-    // Optimistic update so the UI doesn't flicker back to unassigned
+    // Optimistic update so the UI doesn't flicker back
     setConversations((prev) =>
       prev.map((c) =>
         c.phone === selectedPhone ? { ...c, client_assigned_to: targetUserId } : c
@@ -817,7 +818,7 @@ const BotMessages: React.FC = () => {
     setAssignMsg(null);
     try {
       await botAPI.assignClient(selectedConv.client_id, targetUserId);
-      setAssignMsg("Asignado correctamente");
+      setAssignMsg(isUnassign ? "Desasignado" : "Asignado correctamente");
       await fetchConversations(true);
     } catch (err: any) {
       // Revert on failure
