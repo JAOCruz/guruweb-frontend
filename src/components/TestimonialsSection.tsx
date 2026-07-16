@@ -49,23 +49,24 @@ const TestimonialsSection: React.FC = () => {
 
   return (
     <motion.div
-      className="px-8 py-20"
+      className="section-base"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.1 }}
       variants={containerVariants}
     >
       <div className="mx-auto max-w-7xl">
-        <motion.div className="mb-12 text-center" variants={itemVariants}>
+        <motion.div className="mb-12 text-center opacity-0 animate-fade-up" variants={itemVariants}>
           <div className="mb-4 flex items-center justify-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+            <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
             <span className="text-sm tracking-wider text-gray-400">
               Testimonios
             </span>
           </div>
-          <h2 className="section-title-neon mb-4 text-4xl font-bold">
+          <h2 className="gradient-text mb-4 text-4xl font-bold">
             Lo que dicen nuestros clientes
           </h2>
+          <div className="neon-divider mx-auto mb-4 w-24" />
           <p className="mx-auto max-w-2xl text-lg text-gray-300">
             Descubre por qué nuestros clientes confían en nosotros para sus
             necesidades legales
@@ -73,20 +74,20 @@ const TestimonialsSection: React.FC = () => {
         </motion.div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {testimonials.map((testimonial) => (
+          {testimonials.map((testimonial, index) => (
             <motion.div
               key={testimonial.id}
-              className="rounded-2xl border border-gray-800 bg-gradient-to-br from-gray-950 to-blue-950 p-8 text-left transition hover:border-blue-500"
+              className={`glass-panel rounded-2xl p-8 text-left opacity-0 animate-fade-up delay-${index * 100}`}
               variants={itemVariants}
               whileHover={{
                 y: -5,
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2)",
+                boxShadow: "0 0 30px rgba(6, 182, 212, 0.15)",
                 transition: { duration: 0.3 },
               }}
             >
               <div className="mb-4 flex gap-1">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <span key={i} className="text-xl text-yellow-400">
+                  <span key={i} className="text-xl text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.6)]">
                     ★
                   </span>
                 ))}

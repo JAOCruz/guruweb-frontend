@@ -1,8 +1,8 @@
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 
 const AboutSection: React.FC = () => {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -14,7 +14,7 @@ const AboutSection: React.FC = () => {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
@@ -26,57 +26,43 @@ const AboutSection: React.FC = () => {
     },
   };
 
-  const dotVariants = {
-    hidden: { scale: 0 },
-    visible: {
-      scale: [0, 1.2, 1],
-      transition: { duration: 0.8, times: [0, 0.6, 1] },
-    },
-  };
-
-  const pulseAnimation = {
-    scale: [1, 1.1, 1],
-    opacity: [0.7, 1, 0.7],
-    transition: {
-      duration: 2,
-      repeat: Infinity,
-      ease: "easeInOut",
-    },
-  };
-
   return (
     <motion.div
-      className="px-8 py-20"
+      className="section-base"
+      id="about"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
       variants={containerVariants}
     >
-      <div className="mx-auto max-w-4xl text-center">
+      <div className="mx-auto max-w-4xl">
         <motion.div
-          className="mb-8 flex items-center justify-center gap-2"
-          variants={itemVariants}
-        ></motion.div>
-
-        <motion.h2
-          className="section-title-neon mb-12 text-6xl font-bold"
+          className="glass-panel-strong neon-border-cyan rounded-2xl p-10 text-center md:p-16 opacity-0 animate-fade-up"
           variants={itemVariants}
         >
-          ¿Quienes Somos?
-        </motion.h2>
+          <motion.h2
+            className="gradient-text mb-8 text-5xl font-bold md:text-6xl"
+            variants={itemVariants}
+          >
+            ¿Quienes Somos?
+          </motion.h2>
 
-        <motion.p
-          className="text-lg leading-relaxed text-gray-300"
-          variants={itemVariants}
-        >
-          <span className="text-3xl font-bold text-white">
-            ¡Somos una empresa de servicios legales automatizados!
-          </span>{" "}
-          <br />
-          Tenemos la capacidad de realizar cualquier tipo de documentación legal
-          de manera personalizada y actualizada. Nuestra misión es simplificar
-          tus procesos más complejos para que puedas cumplir tus sueños.
-        </motion.p>
+          <div className="neon-divider mx-auto mb-8 w-24" />
+
+          <motion.p
+            className="text-lg leading-relaxed text-gray-300"
+            variants={itemVariants}
+          >
+            <span className="text-2xl font-bold text-white">
+              ¡Somos una empresa de servicios legales automatizados!
+            </span>{" "}
+            <br />
+            <br />
+            Tenemos la capacidad de realizar cualquier tipo de documentación legal
+            de manera personalizada y actualizada. Nuestra misión es simplificar
+            tus procesos más complejos para que puedas cumplir tus sueños.
+          </motion.p>
+        </motion.div>
       </div>
     </motion.div>
   );

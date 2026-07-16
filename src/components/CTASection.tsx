@@ -25,37 +25,45 @@ const CTASection: React.FC = () => {
     },
   };
 
-  // Remove unused variables
-
   return (
     <motion.div
-      className="px-8 py-20"
+      className="section-base relative overflow-hidden"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
       variants={containerVariants}
     >
-      <div className="mx-auto max-w-5xl">
+      {/* Geometric Background */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 h-px w-1/2 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+        <div className="absolute bottom-0 left-1/4 h-px w-1/2 bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+        <div className="absolute top-1/4 left-0 h-1/2 w-px bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent" />
+        <div className="absolute top-1/4 right-0 h-1/2 w-px bg-gradient-to-b from-transparent via-purple-500/20 to-transparent" />
+        <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/5 blur-3xl" />
+        <div className="absolute top-1/3 left-1/3 h-48 w-48 rounded-full bg-purple-500/5 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto max-w-5xl">
         <motion.div
-          className="relative overflow-hidden rounded-3xl border-2 border-blue-500 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-950 p-16 text-center"
+          className="glass-panel-strong neon-border-cyan rounded-3xl p-12 text-center md:p-20 opacity-0 animate-fade-up"
           whileHover={{
-            boxShadow:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            boxShadow: "0 0 60px rgba(6, 182, 212, 0.1)",
           }}
           transition={{ duration: 0.3 }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent"></div>
           <div className="relative z-10">
             <motion.h2
-              className="section-title-neon mb-6 text-4xl leading-tight font-bold lg:text-5xl"
+              className="mb-6 text-4xl leading-tight font-black md:text-6xl lg:text-7xl"
               variants={itemVariants}
             >
-              Déjanos hacer el
-              <br />
-              trabajo pesado por ti
+              <span className="gradient-text">
+                Déjanos hacer el
+                <br />
+                trabajo pesado por ti
+              </span>
             </motion.h2>
             <motion.p
-              className="mb-8 text-xl text-gray-300"
+              className="mb-10 text-xl text-gray-300"
               variants={itemVariants}
             >
               Contáctanos ahora y recibe atención inmediata
@@ -64,7 +72,7 @@ const CTASection: React.FC = () => {
               href="https://wa.me/18298049017"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-3 rounded-lg border-2 border-blue-500 bg-transparent px-6 py-3 text-white transition hover:bg-blue-500"
+              className="btn-neon group inline-flex items-center gap-3 rounded-lg px-10 py-4 text-lg"
               variants={itemVariants}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -77,9 +85,9 @@ const CTASection: React.FC = () => {
                   duration: 1.5,
                 }}
               >
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-6 w-6" />
               </motion.div>
-              <span className="text-lg">Contáctanos</span>
+              <span className="text-lg font-semibold">Contáctanos</span>
             </motion.a>
           </div>
         </motion.div>

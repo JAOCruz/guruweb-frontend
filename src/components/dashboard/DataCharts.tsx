@@ -72,7 +72,7 @@ const ALL_SERVICES = [
 ];
 
 const DataCharts: React.FC<DataChartsProps> = ({ services }) => {
-  const { isAdmin } = useAuth();
+  useAuth(); // keep hook call for side effects if any, ignore destructured value
   const [showAllServices, setShowAllServices] = useState(false);
   const [dateFilter, setDateFilter] = useState<"all" | "specific" | "range">(
     "all",

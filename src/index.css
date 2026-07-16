@@ -2,36 +2,250 @@
 
 html,
 body {
-  height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+  height: 100%;
   width: 100%;
-  background-color: #0f172a; /* slate-950 */
+  background-color: #020617;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent body scroll completely, let layout handle it */
+  overflow-x: hidden;
+  font-family: "Outfit", sans-serif;
 }
 
-/* 3D Perspective Container - Keeping generic classes but removing heavy animations from use */
+/* === TRON / CYBERPUNK DESIGN SYSTEM === */
+
+/* Neon accent colors as CSS vars */
+:root {
+  --neon-cyan: #06b6d4;
+  --neon-blue: #3b82f6;
+  --neon-purple: #8b5cf6;
+  --neon-pink: #d946ef;
+  --bg-deep: #020617;
+  --bg-panel: #0b1120;
+  --glass-bg: rgba(11, 17, 32, 0.6);
+  --glass-border: rgba(6, 182, 212, 0.15);
+}
+
+/* Subtle grid background */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(6, 182, 212, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Fade grid at edges */
+.grid-fade {
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+}
+
+/* === GLASSMORPHISM === */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+}
+
+.glass-panel-strong {
+  background: rgba(11, 17, 32, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: 16px;
+}
+
+/* Neon edge glow variants */
+.neon-border-cyan {
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.1), inset 0 0 20px rgba(6, 182, 212, 0.05);
+}
+
+.neon-border-blue {
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.1), inset 0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+.neon-border-purple {
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.1), inset 0 0 20px rgba(139, 92, 246, 0.05);
+}
+
+/* Top accent line */
+.neon-accent-top {
+  position: relative;
+}
+.neon-accent-top::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+}
+
+/* === TEXT EFFECTS === */
+.neon-text-cyan {
+  color: #fff;
+  text-shadow:
+    0 0 10px rgba(6, 182, 212, 0.5),
+    0 0 40px rgba(6, 182, 212, 0.3),
+    0 0 80px rgba(6, 182, 212, 0.1);
+}
+
+.neon-text-blue {
+  color: #fff;
+  text-shadow:
+    0 0 10px rgba(59, 130, 246, 0.5),
+    0 0 40px rgba(59, 130, 246, 0.3),
+    0 0 80px rgba(59, 130, 246, 0.1);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* === ANIMATIONS === */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.15); }
+  50% { box-shadow: 0 0 40px rgba(6, 182, 212, 0.3); }
+}
+
+@keyframes shimmer-line {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+
+/* === BUTTONS === */
+.btn-neon {
+  position: relative;
+  padding: 14px 36px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: transparent;
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.btn-neon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-neon:hover {
+  border-color: rgba(6, 182, 212, 0.9);
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.3), inset 0 0 20px rgba(6, 182, 212, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn-neon:hover::before {
+  opacity: 1;
+}
+
+.btn-neon:active {
+  transform: translateY(0);
+}
+
+/* === DIVIDERS === */
+.neon-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.4), transparent);
+}
+
+.neon-divider-vertical {
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(6, 182, 212, 0.4), transparent);
+}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.5);
+}
+
+/* === SECTION BASE === */
+.section-base {
+  position: relative;
+  padding: 80px 24px;
+}
+
+@media (min-width: 768px) {
+  .section-base {
+    padding: 120px 32px;
+  }
+}
+
+/* Legacy compatibility */
 .perspective-container {
   perspective: 1000px;
 }
 
-/* Map Bevel Effect */
 .map-bevel {
   mask-image: var(--mask-image);
 }
 
-/* Base glow for subtle effects (keeping consistent with non-animated preference) */
 .glow-effect {
   filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
 }
 
-/* Dramatic background effect - Tuned down */
 .hero-bg {
   position: absolute;
   inset: -50%;
   background: radial-gradient(
     circle,
-    rgba(59, 130, 246, 0.1) 0%,
+    rgba(59, 130, 246, 0.08) 0%,
     rgba(0, 0, 0, 0) 70%
   );
   pointer-events: none;

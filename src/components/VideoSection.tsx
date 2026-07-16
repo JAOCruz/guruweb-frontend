@@ -28,24 +28,24 @@ const VideoSection: React.FC = () => {
 
   return (
     <motion.div
-      className="px-8 py-1"
+      className="section-base"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.3 }}
       variants={containerVariants}
     >
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-3xl">
         <motion.div
-          className="overflow-hidden rounded-xl border-2 border-blue-500 bg-black/40 backdrop-blur-sm"
+          className="glass-panel neon-border-blue overflow-hidden rounded-xl p-2 opacity-0 animate-fade-up"
           variants={itemVariants}
           whileHover={{
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+            boxShadow: "0 0 30px rgba(59, 130, 246, 0.2), 0 0 60px rgba(6, 182, 212, 0.1)",
             scale: 1.01,
           }}
         >
           <video
             ref={videoRef}
-            className="w-full rounded-lg object-cover shadow-inner"
+            className="w-full rounded-lg object-cover"
             autoPlay
             loop
             muted
@@ -61,10 +61,10 @@ const VideoSection: React.FC = () => {
           </video>
         </motion.div>
 
-        <motion.div className="mt-6 text-center" variants={itemVariants}>
-          <p className="text-xl font-medium text-gray-200 italic md:text-2xl">
+        <motion.div className="mt-10 text-center opacity-0 animate-fade-up delay-200" variants={itemVariants}>
+          <p className="text-xl font-medium text-gray-300 italic md:text-2xl">
             El GRUPO UNIFICADO DE REDACCIÓN UNIVERSAL (G.U.R.U.),
-            <span className="section-title-neon mt-2 block font-bold">
+            <span className="gradient-text mt-2 block font-bold not-italic">
               Será tu aliado estratégico al garantizar resultados impecables!
             </span>
           </p>
@@ -74,12 +74,9 @@ const VideoSection: React.FC = () => {
               href="https://wa.me/18298049017"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-4 rounded-lg border-2 border-blue-500 bg-transparent px-6 py-3 text-white transition hover:bg-blue-500"
+              className="btn-neon group inline-flex items-center gap-4 rounded-lg px-8 py-4"
               variants={itemVariants}
-              whileHover={{
-                scale: 1.05,
-                backgroundColor: "rgba(59, 130, 246, 0.2)",
-              }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <motion.div
@@ -91,7 +88,7 @@ const VideoSection: React.FC = () => {
                 }}
                 className="transition group-hover:translate-x-1"
               >
-                <span className="text-5xl"> 👉🏾 </span>
+                <span className="text-4xl"> 👉🏾 </span>
               </motion.div>
               <span className="text-xl">
                 Dejale el trabajo sucio al Gurú, haz click aquí ya!

@@ -62,4 +62,23 @@ export const servicesAPI = {
     api.put(`/services/${id}/comment`, { comment }),
 };
 
+export const casesAPI = {
+  getCases: (params?: { case_type?: string; status?: string; client_id?: number }) =>
+    api.get("/cases", { params }),
+
+  getCase: (id: number) => api.get(`/cases/${id}`),
+
+  createCase: (data: any) => api.post("/cases", data),
+
+  updateCase: (id: number, data: any) => api.put(`/cases/${id}`, data),
+
+  changeStatus: (id: number, status: string, notes?: string) =>
+    api.post(`/cases/${id}/status`, { status, notes }),
+
+  getStatusHistory: (id: number) => api.get(`/cases/${id}/status-history`),
+
+  scheduleReminder: (id: number, reminderType: string, scheduledAt: string) =>
+    api.post(`/cases/${id}/reminder`, { reminder_type: reminderType, scheduled_at: scheduledAt }),
+};
+
 export default api;

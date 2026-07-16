@@ -5,6 +5,7 @@ import AdminDataTable from "../components/dashboard/AdminDataTable";
 import DataModificationForm from "../components/dashboard/DataModificationForm";
 import DataCharts from "../components/dashboard/DataCharts";
 import FlipbooksSection from "../components/dashboard/FlipbooksSection";
+import CasesPage from "./CasesPage";
 import { servicesAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -148,6 +149,7 @@ const Dashboard: React.FC = () => {
             <DataCharts services={services} />
           }
         />
+        <Route path="/cases" element={<CasesPage />} />
       </Routes>
     </DashboardLayout>
   );

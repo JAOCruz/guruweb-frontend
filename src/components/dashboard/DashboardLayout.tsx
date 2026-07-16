@@ -8,6 +8,7 @@ import {
   Database,
   BarChart3,
   BookOpen,
+  ClipboardList,
   LogOut,
 } from "lucide-react";
 
@@ -123,6 +124,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               to="/dashboard/flipbooks"
               icon={<BookOpen size={24} />}
               label="Guías"
+              sidebarOpen={sidebarOpen}
+              isMobile={isMobile}
+            />
+            <NavItem
+              to="/dashboard/cases"
+              icon={<ClipboardList size={24} />}
+              label="Casos"
               sidebarOpen={sidebarOpen}
               isMobile={isMobile}
             />

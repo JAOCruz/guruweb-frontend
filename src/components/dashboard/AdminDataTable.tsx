@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { ExcelRow, USER_COLUMNS, WorkerKey } from "../../services/excelService";
 import { servicesAPI } from "../../services/api";
 import {
   Trash2,
-  MessageCircle,
   Sparkles,
-  Search,
-  Filter,
   Check,
   X,
   Loader2,
@@ -173,8 +170,8 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
 
   const handleSaveComment = async (
     serviceId: number | undefined,
-    userId: string,
-    index: number,
+    _userId: string,
+    _index: number,
   ) => {
     if (!serviceId) return;
     try {
