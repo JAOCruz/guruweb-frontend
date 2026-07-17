@@ -45,10 +45,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      sessionStorage.removeItem("token");
-      // Don't hard-redirect here — that breaks public pages like /.
-      // ProtectedRoute already handles redirecting for protected routes.
+      // Don't wipe tokens here automatically. AuthContext decides whether to
+      // clear the session after retries, otherwise a transient 401 during a
+      // backend restart logs the user out even with "remember me" enabled.
+      const rememberMe = localStorage.getItem("rememberMe") === "true";
+      if (!rememberMe) {
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+      }
     }
     return Promise.reject(error);
   },

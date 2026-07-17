@@ -36,31 +36,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loadUser();
   }, []);
 
-  const loadUser = async (retries = 2) => {
+  const loadUser = async (retries = 3) => {
     setLoading(true);
+    const isRememberMe = localStorage.getItem("rememberMe") === "true";
+    const hasToken = !!(localStorage.getItem("token") || sessionStorage.getItem("token"));
+    console.log(`[AuthContext] loadUser attempt (retries=${retries}, rememberMe=${isRememberMe}, hasToken=${hasToken})`);
     try {
       const response = await authAPI.getCurrentUser();
+      console.log("[AuthContext] loadUser success");
       setUser(response.data.user || response.data);
     } catch (error: any) {
       const status = error.response?.status;
-      const isRememberMe = localStorage.getItem("rememberMe") === "true";
-      // Only clear token on 401 (unauthorized). Other errors (500, timeout,
+      console.log(`[AuthContext] loadUser failed — status: ${status}, message: ${error.message}`);
+      // Only clear token on final 401 (unauthorized). Other errors (500, timeout,
       // network blip) should NOT wipe the session — the user might just be
       // offline or Railway is restarting.
       if (status === 401) {
         if (isRememberMe && retries > 0) {
-          // Remember me users get a retry: the first 401 may come from a
-          // stale cookie while the localStorage token is still valid.
+          // Remember me users get retries: the first 401 may come from a
+          // stale cookie while the localStorage token is still valid, or a
+          // backend restart may clear the JWT_SECRET momentarily.
+          console.log("[AuthContext] Retrying loadUser in 1.5s (remember me)...");
           setTimeout(() => loadUser(retries - 1), 1500);
           return; // Keep loading=true while retrying
         }
+        // Final failure: clear session
+        console.log("[AuthContext] Clearing session after final 401");
         localStorage.removeItem("token");
         localStorage.removeItem("rememberMe");
         sessionStorage.removeItem("token");
         setUser(null);
       } else if (retries > 0 && !error.response) {
         // Network error: retry after 1.5s (Railway cold-start, etc.)
-        console.log("[AuthContext] Retrying loadUser in 1.5s...");
+        console.log("[AuthContext] Retrying loadUser in 1.5s (network)...");
         setTimeout(() => loadUser(retries - 1), 1500);
         return; // Keep loading=true while retrying
       }
