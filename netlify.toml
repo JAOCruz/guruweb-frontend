@@ -7,3 +7,9 @@
   SKIP_TYPESCRIPT = "true"
   NPM_FLAGS = "--no-package-lock"
   CI = "false"
+
+# SPA redirect: let React Router handle all client-side routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

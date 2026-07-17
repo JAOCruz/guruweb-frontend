@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { MessageSquare, RefreshCw, Bot, User } from "lucide-react";
+import { MessageSquare, RefreshCw, Bot, User, Zap } from "lucide-react";
 import { botAPI, BotMessage } from "../services/botApi";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -124,8 +124,16 @@ const BotMessages: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [clearingManual, setClearingManual] = useState(false);
+  // After a local toggle we skip one polling cycle so the UI doesn't flicker back
+  // before the backend has persisted the change.
+  const skipNextFetchRef = useRef(false);
 
   const fetchMessages = useCallback(async (silent = false) => {
+    if (skipNextFetchRef.current) {
+      skipNextFetchRef.current = false;
+      return;
+    }
     if (!silent) setLoading(true);
     else setRefreshing(true);
     try {
@@ -161,6 +169,13 @@ const BotMessages: React.FC = () => {
   }, [fetchMessages]);
 
   const handleToggle = async (phone: string) => {
+    // Optimistic update + skip next poll to avoid race condition
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.phone === phone ? { ...m, botActive: !m.botActive } : m,
+      ),
+    );
+    skipNextFetchRef.current = true;
     try {
       const res = await botAPI.toggleContactMode(phone);
       const manualMode = res.data.manualMode;
@@ -171,6 +186,20 @@ const BotMessages: React.FC = () => {
       );
     } catch {
       // silently ignore
+    }
+  };
+
+  const handleClearManual = async () => {
+    if (!window.confirm("¿Reactivar el bot en TODAS las conversaciones?")) return;
+    setClearingManual(true);
+    try {
+      await botAPI.clearManualPhones();
+      setMessages((prev) => prev.map((m) => ({ ...m, botActive: true })));
+      skipNextFetchRef.current = true;
+    } catch {
+      // silently ignore
+    } finally {
+      setClearingManual(false);
     }
   };
 
@@ -233,7 +262,7 @@ const BotMessages: React.FC = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="grid grid-cols-3 gap-3"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
       >
         <StatChip
           label="Conversaciones"
@@ -246,7 +275,24 @@ const BotMessages: React.FC = () => {
           color="text-emerald-400"
         />
         <StatChip label="Manual" value={manualCount} color="text-yellow-400" />
+        <button
+          onClick={handleClearManual}
+          disabled={clearingManual || manualCount === 0}
+          className="flex flex-col items-center justify-center gap-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-400 transition-all hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Zap size={16} className={clearingManual ? "animate-pulse" : ""} />
+          {clearingManual ? "Reactivando…" : "Reactivar Bot en Todos"}
+        </button>
       </motion.div>
+
+      {manualCount > 0 && (
+        <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
+          <strong>Modo manual activo</strong> en {manualCount} chat
+          {manualCount === 1 ? "" : "s"}. El bot no responderá en esos chats.
+          Usa el botón “Reactivar Bot en Todos” para volver a responder
+          automáticamente, o cambia cada chat individualmente.
+        </div>
+      )}
 
       {/* Conversation list */}
       <motion.div

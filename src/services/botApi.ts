@@ -84,6 +84,9 @@ export const botAPI = {
   /** Toggle bot paused/active */
   toggleBot: () => botApi.post("/whatsapp/bot-toggle"),
 
+  /** Clear all manual-mode overrides so bot responds to every chat */
+  clearManualPhones: () => botApi.post("/whatsapp/clear-manual"),
+
   /** Set bot mode: 'all' responds to everyone, 'selected' only to enabled contacts */
   setBotMode: (mode: BotMode) => botApi.post("/whatsapp/bot-mode", { mode }),
 
