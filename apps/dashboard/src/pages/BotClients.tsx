@@ -437,7 +437,8 @@ const BotClients: React.FC = () => {
     const fetchUsers = async () => {
       try {
         const { data } = await api.get("/admin/users");
-        setUsers(data.users || []);
+        // Client assignment is for digitadores only (not auxiliares/admin workload)
+        setUsers((data.users || []).filter((u: any) => u.role === "digitador" && u.username !== "administracion"));
       } catch (err) {
         console.error("Failed to load users:", err);
       }

@@ -793,7 +793,8 @@ const BotMessages: React.FC = () => {
         const res = await botAPI.getAdminUsers();
         const data = res.data as { users?: Array<{ id: number; name: string; role: string; username: string }> } | undefined;
         setAssignableUsers((data?.users || [])
-          .filter((u) => (u.role === "digitador" || u.role === "auxiliar") && u.username !== "administracion")
+          // Only real digitadores (not auxiliares, not the admin workload account)
+          .filter((u) => u.role === "digitador" && u.username !== "administracion")
           .map((u) => ({ id: u.id, name: u.name || u.username, role: u.role, username: u.username })));
       } catch {
         setAssignableUsers([]);
