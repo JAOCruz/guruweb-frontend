@@ -7,6 +7,7 @@ const botApi = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 // Request interceptor to add dashboard auth token

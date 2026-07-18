@@ -11,7 +11,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
 }
@@ -46,12 +46,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string, rememberMe = false) => {
     try {
-      const response = await authAPI.login(username, password);
+      const response = await authAPI.login(username, password, rememberMe);
       const { token, user } = response.data;
 
+      // The backend also sets an HttpOnly cookie. We keep a localStorage
+      // fallback for backward compatibility and for environments that block
+      // third-party cookies.
       localStorage.setItem("token", token);
+      localStorage.setItem("rememberMe", rememberMe ? "true" : "false");
       setUser(user);
       navigate("/dashboard");
     } catch (error: any) {

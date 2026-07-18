@@ -1,15 +1,17 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
+  // Send HttpOnly cookies to the backend for cross-origin auth
+  withCredentials: true,
 });
 
-// Request interceptor to add token
+// Request interceptor to add token (fallback when cookie is not present)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -34,8 +36,8 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  login: (username: string, password: string) =>
-    api.post("/auth/login", { username, password }),
+  login: (username: string, password: string, rememberMe = false) =>
+    api.post("/auth/login", { username, password, rememberMe }),
 
   getCurrentUser: () => api.get("/auth/me"),
 };
