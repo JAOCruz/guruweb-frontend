@@ -803,10 +803,10 @@ const BotMessages: React.FC = () => {
   }, [isAdmin]);
 
   const handleAssign = async (userId: string) => {
-    if (!selectedConv?.client_id) return;
+    if (!selectedPhone) return;
     const isUnassign = userId === "";
     const targetUserId = isUnassign ? null : parseInt(userId, 10);
-    const previousAssignedTo = selectedConv.client_assigned_to ?? null;
+    const previousAssignedTo = selectedConv?.client_assigned_to ?? null;
 
     // Optimistic update so the UI doesn't flicker back
     setConversations((prev) =>
@@ -818,7 +818,11 @@ const BotMessages: React.FC = () => {
     setAssigning(true);
     setAssignMsg(null);
     try {
-      await botAPI.assignClient(selectedConv.client_id, targetUserId);
+      if (selectedConv?.client_id) {
+        await botAPI.assignClient(selectedConv.client_id, targetUserId);
+      } else {
+        await botAPI.assignClientByPhone(selectedPhone, targetUserId);
+      }
       setAssignMsg(isUnassign ? "Desasignado" : "Asignado correctamente");
       await fetchConversations(true);
     } catch (err: any) {
@@ -1171,7 +1175,7 @@ const BotMessages: React.FC = () => {
                   <div className="relative flex items-center gap-1.5">
                     <UserCheck size={16} className="text-foreground/70" />
                     <select
-                      disabled={assigning || !selectedConv?.client_id}
+                      disabled={assigning}
                       value={selectedConv?.client_assigned_to ?? ""}
                       onChange={(e) => handleAssign(e.target.value)}
                       className="h-9 max-w-[90px] truncate rounded-base border-2 border-border bg-background px-2 py-1 text-xs font-semibold text-foreground shadow-none focus:outline-none disabled:opacity-50 md:max-w-[140px]"

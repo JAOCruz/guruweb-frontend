@@ -332,6 +332,10 @@ export const botAPI = {
   assignClient: (clientId: number | string, userId: number | string | null) =>
     botApi.post<{ client: BotClient; assigned_to_user: { id: number; username: string; name: string; role: string } | null }>(`/clients/${clientId}/assign`, { user_id: userId }),
 
+  /** POST /api/clients/assign-by-phone — assign (or create-and-assign) a client by phone (null = unassign) */
+  assignClientByPhone: (phone: string, userId: number | string | null) =>
+    botApi.post<{ client: BotClient; assigned_to_user: { id: number; username: string; name: string; role: string } | null }>(`/clients/assign-by-phone`, { phone, user_id: userId }),
+
   /** GET /api/admin/users — list users for assignment dropdown */
   getAdminUsers: () => botApi.get<{ users: Array<{ id: number; email: string; username: string; name: string; role: string; created_at: string }> }>("/admin/users"),
   searchConversations: (query: string) =>
