@@ -12,7 +12,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
 }
@@ -31,6 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loadUser();
   }, []);
 
+  const clearStoredToken = () => {
+    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
+  };
+
   const loadUser = async (retries = 2) => {
     setLoading(true);
     try {
@@ -43,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // network blip) should NOT wipe the session — the user might just be
       // offline or Railway is restarting.
       if (status === 401) {
-        localStorage.removeItem("token");
+        clearStoredToken();
         setUser(null);
       } else if (retries > 0 && !error.response) {
         // Network error: retry after 1.5s (Railway cold-start, etc.)
@@ -59,14 +64,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string, rememberMe = false) => {
     try {
-      const response = await authAPI.login(username, password);
+      const response = await authAPI.login(username, password, rememberMe);
       const { token, user } = response.data;
 
       // Backend sets HttpOnly cookie automatically.
-      // We keep localStorage as a temporary fallback for backward-compat.
-      if (token) localStorage.setItem("token", token);
+      // Store token in localStorage if rememberMe, otherwise sessionStorage.
+      if (token) {
+        clearStoredToken();
+        if (rememberMe) {
+          localStorage.setItem("token", token);
+        } else {
+          sessionStorage.setItem("token", token);
+        }
+      }
       setUser(user);
       navigate("/dashboard");
     } catch (error: any) {
@@ -80,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (err) {
       // Ignore — always clear local state
     }
-    localStorage.removeItem("token");
+    clearStoredToken();
     setUser(null);
     navigate("/login");
   };

@@ -25,20 +25,15 @@ const api = axios.create({
   withCredentials: true, // Send HttpOnly cookies cross-origin
 });
 
-// Request interceptor: prefer HttpOnly cookie, fallback to localStorage token
+// Request interceptor: prefer HttpOnly cookie, fallback to stored token
 api.interceptors.request.use(
   (config) => {
     // The browser sends the HttpOnly cookie automatically (withCredentials: true).
-    // We keep the localStorage fallback for backward-compat during transition.
-    const token = localStorage.getItem("token");
+    // We keep a stored token fallback for cross-origin cases where cookies don't stick.
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) {
       // Axios 1.x uses AxiosHeaders — use .set() to be safe
       config.headers.set("Authorization", `Bearer ${token}`);
-    }
-    // DEBUG: remove after auth is stable
-    if (import.meta.env.DEV && config.url?.includes("/auth/me")) {
-      const authHeader = config.headers.get("Authorization");
-      console.log("[api] /auth/me — token present:", !!token, "header:", typeof authHeader === "string" ? authHeader.slice(0, 30) + "..." : "none");
     }
     return config;
   },
@@ -51,6 +46,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
       // Don't hard-redirect here — that breaks public pages like /.
       // ProtectedRoute already handles redirecting for protected routes.
     }
@@ -59,8 +55,8 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  login: (email: string, password: string) =>
-    api.post("/auth/login", { email, password }),
+  login: (email: string, password: string, rememberMe = false) =>
+    api.post("/auth/login", { email, password, rememberMe }),
 
   logout: () => api.post("/auth/logout"),
 

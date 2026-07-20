@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -14,7 +15,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -68,6 +69,22 @@ const Login: React.FC = () => {
               placeholder="••••••••"
               required
             />
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="remember-me"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
+            />
+            <label
+              htmlFor="remember-me"
+              className="ml-2 text-sm text-slate-400"
+            >
+              Recuérdame
+            </label>
           </div>
 
           <button
