@@ -45,17 +45,11 @@ botApi.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Response interceptor — clear stored tokens on 401
+// Response interceptor — do NOT wipe tokens here. AuthContext owns session
+// cleanup so a transient 401 from one endpoint doesn't log the user out globally.
 botApi.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("guru_bot_token");
-      sessionStorage.removeItem("token");
-    }
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
 // ─── Types ─────────────────────────────────────────────────────────────────
