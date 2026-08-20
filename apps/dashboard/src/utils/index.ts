@@ -44,3 +44,13 @@ export async function fetchAuthenticatedFile(url: string): Promise<string> {
   const blob = await response.blob();
   return URL.createObjectURL(blob);
 }
+
+/**
+ * Blocks keys that would introduce decimals/exponents in a number input.
+ * Use alongside step="1" to keep values integer-only.
+ */
+export function preventDecimalInput(e: React.KeyboardEvent<HTMLInputElement>) {
+  if ([".", ",", "e", "E"].includes(e.key)) {
+    e.preventDefault();
+  }
+}

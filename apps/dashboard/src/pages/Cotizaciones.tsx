@@ -22,7 +22,7 @@ import api, { getAPIUrl } from "../services/api";
 import { botAPI, BotClient } from "../services/botApi";
 import { useAuth } from "../context/AuthContext";
 import { NeoCard, NeoButton, NeoBadge } from "@guru/ui";
-import { fetchAuthenticatedFile } from "../utils";
+import { fetchAuthenticatedFile, preventDecimalInput } from "../utils";
 
 interface QuotationItem {
   desc?: string;
@@ -1289,6 +1289,8 @@ export default function Cotizaciones() {
                         <input
                           type="number"
                           min={1}
+                          step="1"
+                          onKeyDown={preventDecimalInput}
                           value={item.cantidad || ""}
                           onChange={(e) => updateCreateItem(idx, "cantidad", e.target.value)}
                           placeholder="Cant."
@@ -1297,6 +1299,8 @@ export default function Cotizaciones() {
                         <input
                           type="number"
                           min={0}
+                          step="1"
+                          onKeyDown={preventDecimalInput}
                           value={item.precio || ""}
                           onChange={(e) => updateCreateItem(idx, "precio", e.target.value)}
                           placeholder="Precio"

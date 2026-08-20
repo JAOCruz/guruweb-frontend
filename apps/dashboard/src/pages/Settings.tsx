@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { settingsAPI } from "../services/api";
 import api from "../services/api";
+import { preventDecimalInput } from "../utils";
 import { Database, Play, CheckCircle, AlertCircle, Loader2, Info } from "lucide-react";
 import {
   NeoCard,
@@ -190,7 +191,8 @@ const Settings: React.FC = () => {
                     type="number"
                     min="0"
                     max="100"
-                    step="0.01"
+                    step="1"
+                    onKeyDown={preventDecimalInput}
                     value={newPercentage}
                     onChange={(e) => setNewPercentage(e.target.value)}
                     placeholder="Ej: 50"

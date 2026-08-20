@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { botAPI, getBotApiBaseURL, catalogUnitPrice, type ServiceCatalogItem, type Invoice, type ClientMedia } from "../services/botApi";
-import { getAuthToken, fetchAuthenticatedFile, formatCurrency } from "../utils";
+import { getAuthToken, fetchAuthenticatedFile, formatCurrency, preventDecimalInput } from "../utils";
 import { useAuth } from "../context/AuthContext";
 import { NeoCard, NeoButton, NeoInput, NeoBadge } from "@guru/ui";
 import {
@@ -2308,6 +2308,8 @@ const BotMessages: React.FC = () => {
                             <NeoInput
                               type="number"
                               min={1}
+                              step="1"
+                              onKeyDown={preventDecimalInput}
                               value={item.cantidad}
                               onChange={(e) => updateQuoteItem(idx, "cantidad", e.target.value)}
                               placeholder="Cant."
@@ -2316,6 +2318,8 @@ const BotMessages: React.FC = () => {
                             <NeoInput
                               type="number"
                               min={0}
+                              step="1"
+                              onKeyDown={preventDecimalInput}
                               value={item.precio}
                               onChange={(e) => updateQuoteItem(idx, "precio", e.target.value)}
                               placeholder="Precio"

@@ -5,6 +5,7 @@ import {
   DollarSign, Layers, AlertTriangle, Package, ArrowLeft, Sparkles,
 } from "lucide-react";
 import { serviceCatalogAPI } from "../services/api";
+import { preventDecimalInput } from "../utils";
 import { useAuth } from "../context/AuthContext";
 import { NeoCard, NeoButton, NeoInput, NeoSelect, NeoBadge } from "@guru/ui";
 
@@ -538,14 +539,14 @@ export default function ServicesCatalog() {
                 <label className="mb-1 block text-base font-black uppercase tracking-wider text-foreground/60">Precio / Digitación (RD$) *</label>
                 <div className="relative">
                   <DollarSign size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-foreground/50" />
-                  <NeoInput type="number" min={0} value={form.digitacion_price} onChange={(e) => setForm((p) => ({ ...p, digitacion_price: Number(e.target.value) }))} className="pl-9" />
+                  <NeoInput type="number" min={0} step="1" onKeyDown={preventDecimalInput} value={form.digitacion_price} onChange={(e) => setForm((p) => ({ ...p, digitacion_price: Number(e.target.value) }))} className="pl-9" />
                 </div>
               </div>
               <div>
                 <label className="mb-1 block text-base font-black uppercase tracking-wider text-foreground/60">Notarización (RD$)</label>
                 <div className="relative">
                   <DollarSign size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-foreground/50" />
-                  <NeoInput type="number" min={0} value={form.notarizacion_price} onChange={(e) => setForm((p) => ({ ...p, notarizacion_price: Number(e.target.value) }))} className="pl-9" />
+                  <NeoInput type="number" min={0} step="1" onKeyDown={preventDecimalInput} value={form.notarizacion_price} onChange={(e) => setForm((p) => ({ ...p, notarizacion_price: Number(e.target.value) }))} className="pl-9" />
                 </div>
               </div>
               <div>
@@ -566,10 +567,10 @@ export default function ServicesCatalog() {
                   {(form.price_tiers || []).map((tier, idx) => (
                     <div key={idx} className="grid grid-cols-1 gap-2 rounded-base border-2 border-border bg-secondary-background p-4 sm:grid-cols-5">
                       <NeoInput type="text" placeholder="Etiqueta" value={tier.label} onChange={(e) => updateTier(idx, "label", e.target.value)} className="sm:col-span-2" />
-                      <NeoInput type="number" placeholder="Mín" value={tier.min} onChange={(e) => updateTier(idx, "min", Number(e.target.value))} />
-                      <NeoInput type="number" placeholder="Máx (vacío = ∞)" value={tier.max === null || tier.max === undefined ? "" : tier.max} onChange={(e) => { const val = e.target.value; updateTier(idx, "max", val === "" ? null : Number(val)); }} />
+                      <NeoInput type="number" step="1" onKeyDown={preventDecimalInput} placeholder="Mín" value={tier.min} onChange={(e) => updateTier(idx, "min", Number(e.target.value))} />
+                      <NeoInput type="number" step="1" onKeyDown={preventDecimalInput} placeholder="Máx (vacío = ∞)" value={tier.max === null || tier.max === undefined ? "" : tier.max} onChange={(e) => { const val = e.target.value; updateTier(idx, "max", val === "" ? null : Number(val)); }} />
                       <div className="flex items-center gap-2">
-                        <NeoInput type="number" placeholder="Precio" value={tier.price} onChange={(e) => updateTier(idx, "price", Number(e.target.value))} className="flex-1" />
+                        <NeoInput type="number" step="1" onKeyDown={preventDecimalInput} placeholder="Precio" value={tier.price} onChange={(e) => updateTier(idx, "price", Number(e.target.value))} className="flex-1" />
                         <NeoButton variant="outline" size="icon" onClick={() => removeTier(idx)}><Trash2 size={14} /></NeoButton>
                       </div>
                     </div>
