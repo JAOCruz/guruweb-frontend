@@ -159,6 +159,67 @@ export interface ClientMedia {
   created_at: string;
 }
 
+// ─── Invoice / Quotation types ─────────────────────────────────────────────
+
+export interface InvoiceItemInput {
+  desc: string;
+  cantidad: number;
+  precio: number;
+  itbis?: boolean;
+}
+
+export interface CreateInvoicePayload {
+  type: "COTIZACIÓN" | "FACTURA";
+  clientId?: number;
+  clientName: string;
+  clientPhone?: string;
+  items: InvoiceItemInput[];
+  notes?: string;
+}
+
+export interface Invoice {
+  id: number;
+  doc_number?: string;
+  type?: string;
+  client_name?: string;
+  client_phone?: string;
+  client_id?: number | null;
+  items?: Array<{ desc?: string; name?: string; cantidad?: number; precio?: number; itbis?: boolean }>;
+  total?: number;
+  subtotal?: number;
+  itbis?: number;
+  status?: string;
+  pdf_path?: string;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
+// ─── Service catalog types ──────────────────────────────────────────────────
+
+export interface ServiceCatalogItem {
+  id: number;
+  name: string;
+  description?: string | null;
+  category_name?: string;
+  digitacion_price?: string | number | null;
+  notarizacion_price?: string | number | null;
+  price_tiers?: Array<{ min?: number; max?: number | null; price: number }> | null;
+  unit_type?: string;
+  active?: boolean;
+  [key: string]: unknown;
+}
+
+/** Suggested unit price for a catalog item: digitación → notarización → first tier. */
+export function catalogUnitPrice(item: ServiceCatalogItem): number | null {
+  const dig = Number(item.digitacion_price);
+  if (dig > 0) return dig;
+  const nota = Number(item.notarizacion_price);
+  if (nota > 0) return nota;
+  const tier = item.price_tiers?.[0]?.price;
+  if (tier != null && Number(tier) > 0) return Number(tier);
+  return null;
+}
+
 // ─── Chat / Conversation types ──────────────────────────────────────────────
 
 export type MessageDirection = "inbound" | "outbound";
@@ -251,6 +312,29 @@ export interface DocumentIndexItem {
   }>;
 }
 
+export interface DocGenTemplateVariable {
+  tag: string;
+  description?: string;
+  data_source?: string;
+  format_expected?: string;
+  is_rol_dynamic?: boolean;
+  rol_type?: string;
+  is_required?: boolean;
+}
+
+export interface DocGenTemplateDetail {
+  template: {
+    id: number;
+    name: string;
+    file_path: string;
+    doc_type: string;
+    description?: string;
+    category_name?: string;
+  };
+  variables: DocGenTemplateVariable[];
+  requiredRoles: Record<string, string[]>;
+}
+
 export interface DocumentIndexMetadata {
   total_documents: number;
   generated_at: string;
@@ -284,10 +368,19 @@ export const botAPI = {
   // ── Legacy message/client endpoints ────────────────────────────────────
   getMessages: () => botApi.get<{ conversations: Array<{phone:string;client_name:string|null;last_message:string;last_message_at:string;message_count:string}> }>("/messages/conversations"),
   getClients: () => botApi.get<{ clients: BotClient[] }>("/clients"),
+  /** POST /api/clients — create client record and link existing chat messages (409 if phone exists) */
+  createClient: (data: { name: string; phone: string; email?: string; address?: string; notes?: string }) =>
+    botApi.post<{ client: BotClient }>("/clients", data),
+  /** PUT /api/clients/:id — update client fields (name, phone, email, address, notes) */
+  updateClient: (clientId: string | number, data: { name?: string; phone?: string; email?: string; address?: string; notes?: string }) =>
+    botApi.put<{ client: BotClient }>(`/clients/${clientId}`, data),
   getClientDetail: (clientId: string | number) =>
     botApi.get<ClientDetailFull>(`/clients/${clientId}/detail`),
   getClientMedia: (clientId: string | number) =>
     botApi.get<{ media: ClientMedia[] }>(`/clients/${clientId}/media`),
+  /** GET /api/media/phone/:phone — media for a chat by phone (works for unregistered contacts) */
+  getMediaByPhone: (phone: string) =>
+    botApi.get<{ media: ClientMedia[] }>(`/media/phone/${encodeURIComponent(phone)}`),
   getClientCasesSummary: (clientId: string | number) =>
     botApi.get(`/clients/${clientId}/cases-summary`),
   toggleContactMode: (phone: string) =>
@@ -306,9 +399,31 @@ export const botAPI = {
   getPhoneMessages: (phone: string) =>
     botApi.get<ChatMessage[]>(`/messages/phone/${encodeURIComponent(phone)}`),
 
+  /** POST /api/messages/map-lid — link a privacy @lid chat to a real phone number (admin) */
+  mapLid: (lidPhone: string, realPhone: string) =>
+    botApi.post<{ lidPhone: string; realPhone: string; messagesMoved: number }>(
+      `/messages/map-lid`,
+      { lidPhone, realPhone },
+    ),
+
+  /** POST /api/messages/phone/:phone/mark-read — mark a chat's inbound messages as read */
+  markChatRead: (phone: string) =>
+    botApi.post<{ marked: number }>(`/messages/phone/${encodeURIComponent(phone)}/mark-read`),
+
   /** POST /api/messages/send-direct — send a message from the dashboard (agent reply) */
   sendMessage: (phone: string, message: string) =>
     botApi.post("/messages/send-direct", { phone, content: message }),
+
+  /** POST /api/messages/send-media — send an image/audio/video/document to a chat (multipart) */
+  sendMedia: (phone: string, file: File, caption?: string) => {
+    const formData = new FormData();
+    formData.append("phone", phone);
+    if (caption) formData.append("caption", caption);
+    formData.append("file", file);
+    return botApi.post("/messages/send-media", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 
   /** POST /api/messages/manual-toggle/:phone — toggle manual takeover (Bot ↔ Manual) */
   toggleChatAI: (phone: string) =>
@@ -341,6 +456,28 @@ export const botAPI = {
   searchConversations: (query: string) =>
     botApi.get<{ conversations: Array<{phone:string;client_name:string|null;last_message:string;last_message_at:string;message_count:string;botActive:boolean;firstMatchId:number|null}> }>("/messages/search", { params: { q: query } }),
 
+  // ── Invoices / Quotations ─────────────────────────────────────────────────
+  /** POST /api/invoices — create a quotation or invoice (total computed by backend) */
+  createInvoice: (data: CreateInvoicePayload) =>
+    botApi.post<{ invoice: Invoice }>("/invoices", data),
+
+  /** POST /api/invoices/:id/generate-pdf — generate the PDF WITHOUT marking it as sent (preview) */
+  generateInvoicePdf: (id: number | string) =>
+    botApi.post<{ invoice: Invoice; pdfPath: string }>(`/invoices/${id}/generate-pdf`),
+
+  /** POST /api/invoices/:id/send-whatsapp — send the PDF to the client's WhatsApp chat and mark as sent */
+  sendInvoiceWhatsapp: (id: number | string) =>
+    botApi.post<{ invoice: Invoice; message: string }>(`/invoices/${id}/send-whatsapp`),
+
+  /** GET /api/invoices/:id/pdf — full URL; download via fetchAuthenticatedFile (Bearer + blob) */
+  getInvoicePdfUrl: (id: number | string): string =>
+    `${BOT_API_URL}/invoices/${id}/pdf`,
+
+  // ── Service catalog ───────────────────────────────────────────────────────
+  /** GET /api/service-catalog/ — list ALL catalog services; filter client-side */
+  getServiceCatalog: () =>
+    botApi.get<{ services: ServiceCatalogItem[] }>(`/service-catalog/`),
+
   // ── Document Management (Digitación services) ──────────────────────────────
   /** GET /api/documents/index — fetch document index with all 319 documents */
   getDocumentIndex: () =>
@@ -358,6 +495,30 @@ export const botAPI = {
   getDocumentFileUrl: (docId: string): string => {
     return `${BOT_API_URL}/documents/file/${docId}`;
   },
+
+  // ── Document Generation (Mother Brain) ─────────────────────────────────────
+  /** GET /api/docgen/templates/:id — template detail with variables and roles */
+  getDocGenTemplateDetail: (id: number | string) =>
+    botApi.get<DocGenTemplateDetail>(`/docgen/templates/${id}`),
+
+  /** POST /api/docgen/sessions — create a generation session */
+  createDocGenSession: (templateId: number | string, clientId?: number | string | null, phone?: string) =>
+    botApi.post<{ session: { id: number | string } }>("/docgen/sessions", { templateId, clientId, phone }),
+
+  /** PUT /api/docgen/sessions/:id/data — update collected data and roles */
+  updateDocGenSessionData: (
+    id: number | string,
+    collectedData: Record<string, string>,
+    assignedRoles: Record<string, Record<string, string>>
+  ) => botApi.put(`/docgen/sessions/${id}/data`, { collectedData, assignedRoles }),
+
+  /** POST /api/docgen/sessions/:id/generate — generate the document */
+  generateDocGenSession: (id: number | string) =>
+    botApi.post<{ success: boolean; fileName: string; filePath: string }>(`/docgen/sessions/${id}/generate`),
+
+  /** GET /api/docgen/sessions/:id/download — download URL for generated document */
+  getDocGenSessionDownloadUrl: (id: number | string): string =>
+    `${BOT_API_URL}/docgen/sessions/${id}/download`,
 };
 
 export default botApi;

@@ -15,12 +15,9 @@ import {
   Sparkles,
   LogOut,
   Settings,
-  MessageCircle,
   MessageSquare,
   Wifi,
   Users,
-  ChevronDown,
-  ChevronRight,
   BarChart2,
   Briefcase,
   FileText,
@@ -35,48 +32,25 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-const WHATSAPP_PATHS = [
-  "/whatsapp",
-  "/bot-messages",
-  "/bot-clients",
-  "/cotizaciones",
-  "/cases",
-  "/documents",
-  "/bot-simulator",
-  "/simulator-review",
-  "/motherbrain",
-  "/services-catalog",
-];
-
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user, logout, isAdmin } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [whatsappOpen, setWhatsappOpen] = useState(() =>
-    WHATSAPP_PATHS.some((p) => location.pathname.startsWith(p))
-  );
-
-  // Keep WhatsApp submenu open when navigating inside it
-  useEffect(() => {
-    if (WHATSAPP_PATHS.some((p) => location.pathname.startsWith(p))) {
-      setWhatsappOpen(true);
-    }
-  }, [location.pathname]);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showAdvisor, setShowAdvisor] = useState(() => {
     const saved = localStorage.getItem("guru-advisor-visible");
     return saved === null ? true : saved === "true";
   });
   const { headingFont, setHeadingFont } = useTheme();
-  const isWhatsappActive = WHATSAPP_PATHS.some((p) =>
-    location.pathname.startsWith(p)
-  );
 
   // Notifications
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Array<{ id: number; title: string; message: string; read: boolean; created_at: string; link?: string }>>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Unread WhatsApp messages badge (new inbound messages employees haven't opened)
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     const fetchCount = async () => {
@@ -96,6 +70,28 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     };
     fetchCount();
     const interval = setInterval(fetchCount, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Poll unread WhatsApp message count for the "Mensajes" badge
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch(`${getAPIUrl()}/api/messages/unread-count`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || sessionStorage.getItem("token") || ""}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUnreadMessages(data.count || 0);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000); // check often so the badge feels live
     return () => clearInterval(interval);
   }, []);
 
@@ -233,52 +229,84 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             isMobile={isMobile}
           />
 
-          {/* WhatsApp Bot collapsible */}
-          <div>
-            <button
-              onClick={() => setWhatsappOpen((o) => !o)}
-              className={`group flex w-full items-center gap-3 rounded-base border-2 px-4 py-3 font-base transition-all ${
-                isWhatsappActive
-                  ? "border-border bg-secondary-background text-foreground shadow-shadow"
-                  : "border-transparent bg-[#0000CC] text-white hover:border-white/30"
-              } ${!sidebarOpen && !isMobile ? "justify-center" : ""}`}
-            >
-              <div className="flex-shrink-0">
-                <MessageCircle size={18} />
-              </div>
-              {(sidebarOpen || isMobile) && (
-                <>
-                  <span className="flex-1 text-left font-bold">WhatsApp Bot</span>
-                  {whatsappOpen ? (
-                    <ChevronDown size={15} />
-                  ) : (
-                    <ChevronRight size={15} />
-                  )}
-                </>
-              )}
-            </button>
-
-            {(sidebarOpen || isMobile) && whatsappOpen && (
-              <div className="mt-2 ml-4 space-y-1 border-l-2 border-white/30 pl-3">
-                {isAdmin && (
-                  <SubNavLink to="/whatsapp" icon={<Wifi size={14} />} label="Conexión" />
-                )}
-                <SubNavLink to="/bot-messages" icon={<MessageSquare size={14} />} label="Mensajes" />
-                <SubNavLink to="/bot-clients" icon={<Users size={14} />} label="Clientes" />
-                <SubNavLink to="/cotizaciones" icon={<FileText size={14} />} label="Cotizaciones" />
-                <SubNavLink to="/cases" icon={<Briefcase size={14} />} label="Casos" />
-                <SubNavLink to="/documents" icon={<FileText size={14} />} label="Documentos" />
-                <SubNavLink to="/services-catalog" icon={<Database size={14} />} label="Catálogo Precios" />
-                {isAdmin && (
-                  <>
-                    <SubNavLink to="/motherbrain" icon={<Brain size={14} />} label="Mother Brain" />
-                    <SubNavLink to="/bot-simulator" icon={<Bot size={14} />} label="Simulador Bot" />
-                    <SubNavLink to="/simulator-review" icon={<MessageSquare size={14} />} label="Revisión Simulador" />
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+          {/* WhatsApp section — flat, everything one click away (no collapsed submenu) */}
+          {isAdmin && (
+            <NavItem
+              to="/whatsapp"
+              icon={<Wifi size={18} />}
+              label="WhatsApp Bot"
+              sidebarOpen={sidebarOpen}
+              isMobile={isMobile}
+            />
+          )}
+          <NavItem
+            to="/bot-messages"
+            icon={<MessageSquare size={18} />}
+            label="Mensajes"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+            badge={unreadMessages > 0 ? unreadMessages : null}
+          />
+          <NavItem
+            to="/bot-clients"
+            icon={<Users size={18} />}
+            label="Clientes"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
+          <NavItem
+            to="/cotizaciones"
+            icon={<FileText size={18} />}
+            label="Cotizaciones"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
+          <NavItem
+            to="/cases"
+            icon={<Briefcase size={18} />}
+            label="Casos"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
+          <NavItem
+            to="/documents"
+            icon={<FileText size={18} />}
+            label="Documentos"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
+          <NavItem
+            to="/services-catalog"
+            icon={<Database size={18} />}
+            label="Catálogo Precios"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
+          {isAdmin && (
+            <>
+              <NavItem
+                to="/motherbrain"
+                icon={<Brain size={18} />}
+                label="Mother Brain"
+                sidebarOpen={sidebarOpen}
+                isMobile={isMobile}
+              />
+              <NavItem
+                to="/bot-simulator"
+                icon={<Bot size={18} />}
+                label="Simulador Bot"
+                sidebarOpen={sidebarOpen}
+                isMobile={isMobile}
+              />
+              <NavItem
+                to="/simulator-review"
+                icon={<MessageSquare size={18} />}
+                label="Revisión Simulador"
+                sidebarOpen={sidebarOpen}
+                isMobile={isMobile}
+              />
+            </>
+          )}
 
           <NavItem
             to="/ai-insights"
@@ -450,7 +478,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   );
 };
 
-const NavItem = ({ to, icon, label, sidebarOpen, isMobile }: any) => (
+const NavItem = ({ to, icon, label, sidebarOpen, isMobile, badge }: any) => (
   <NavLink
     to={to}
     end={to === "/"}
@@ -465,24 +493,12 @@ const NavItem = ({ to, icon, label, sidebarOpen, isMobile }: any) => (
     }
   >
     <div className="flex-shrink-0">{icon}</div>
-    {(sidebarOpen || isMobile) && <span className="font-bold">{label}</span>}
-  </NavLink>
-);
-
-const SubNavLink = ({ to, icon, label }: any) => (
-  <NavLink
-    to={to}
-    className={({ isActive }) =>
-      cn(
-        "flex items-center gap-2.5 rounded-base border-2 px-3 py-2 text-sm font-base transition-all",
-        isActive
-          ? "border-border bg-secondary-background text-foreground shadow-button"
-          : "border-transparent text-white/90 hover:border-white/30 hover:bg-[#0000CC]"
-      )
-    }
-  >
-    {icon}
-    <span>{label}</span>
+    {(sidebarOpen || isMobile) && <span className="font-bold flex-1 text-left">{label}</span>}
+    {badge != null && badge > 0 && (
+      <span className="ml-auto flex h-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-red-500 px-1 text-[10px] font-black text-white">
+        {badge > 99 ? "99+" : badge}
+      </span>
+    )}
   </NavLink>
 );
 

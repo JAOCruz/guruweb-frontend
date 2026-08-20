@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loadUser();
   }, []);
 
-  const loadUser = async (retries = 3) => {
+  const loadUser = async (retries = 20) => {
     setLoading(true);
     const isRememberMe = localStorage.getItem("rememberMe") === "true";
     const hasToken = !!(localStorage.getItem("token") || sessionStorage.getItem("token"));
@@ -48,32 +48,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error: any) {
       const status = error.response?.status;
       console.log(`[AuthContext] loadUser failed — status: ${status}, message: ${error.message}`);
-      // Only clear token on final 401 (unauthorized). Other errors (500, timeout,
-      // network blip) should NOT wipe the session — the user might just be
-      // offline or Railway is restarting.
+
+      // If we HOLD a token, almost any failure is transient (backend redeploy /
+      // Railway cold start / network blip). Keep retrying with backoff for ~2 min
+      // instead of dropping the session — this is what forced a re-login on every deploy.
+      if (hasToken && retries > 0 && status !== 401) {
+        const delay = Math.min(1500 + (20 - retries) * 500, 6000); // 1.5s ramping to 6s
+        console.log(`[AuthContext] Backend unavailable, retrying in ${delay}ms...`);
+        setTimeout(() => loadUser(retries - 1), delay);
+        return; // keep loading=true while retrying
+      }
+
       if (status === 401) {
-        if (isRememberMe && retries > 0) {
-          // Remember me users get retries: the first 401 may come from a
-          // stale cookie while the localStorage token is still valid, or a
-          // backend restart may clear the JWT_SECRET momentarily.
-          console.log("[AuthContext] Retrying loadUser in 1.5s (remember me)...");
-          setTimeout(() => loadUser(retries - 1), 1500);
-          return; // Keep loading=true while retrying
+        if (hasToken && retries > 0) {
+          // A 401 right after a redeploy can be a momentary read of a stale cookie or
+          // the backend still warming up. Retry several times before concluding the
+          // token is genuinely invalid.
+          console.log("[AuthContext] 401 with token present, retrying in 3s...");
+          setTimeout(() => loadUser(retries - 1), 3000);
+          return;
         }
-        // Final failure: clear session
-        console.log("[AuthContext] Clearing session after final 401");
+        // Genuine invalid token after all retries: clear session.
+        console.log("[AuthContext] Clearing session after persistent 401");
         localStorage.removeItem("token");
         localStorage.removeItem("rememberMe");
         sessionStorage.removeItem("token");
         setUser(null);
-      } else if (retries > 0 && !error.response) {
-        // Network error: retry after 1.5s (Railway cold-start, etc.)
-        console.log("[AuthContext] Retrying loadUser in 1.5s (network)...");
+      } else if (retries > 0 && !error.response && !hasToken) {
+        // No token at all + network error: just retry quietly
         setTimeout(() => loadUser(retries - 1), 1500);
-        return; // Keep loading=true while retrying
+        return;
       }
-      // For 500s or final retry failure, stay logged out visually
-      // but DON'T wipe the token so a refresh might recover.
+      // Final non-401 failure: stay visually logged out but DON'T wipe the token —
+      // a refresh once the backend is back recovers the session.
       setUser(null);
     } finally {
       setLoading(false);

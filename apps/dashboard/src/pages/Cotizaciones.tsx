@@ -16,8 +16,10 @@ import {
   X,
   Plus,
   Trash2,
+  Send,
 } from "lucide-react";
 import api, { getAPIUrl } from "../services/api";
+import { botAPI, BotClient } from "../services/botApi";
 import { useAuth } from "../context/AuthContext";
 import { NeoCard, NeoButton, NeoBadge } from "@guru/ui";
 import { fetchAuthenticatedFile } from "../utils";
@@ -37,20 +39,25 @@ interface Quotation {
   doc_number: string;
   client_name: string;
   client_phone: string;
+  client_id?: number | null;
   type: string;
   items: QuotationItem[];
   total: number;
   subtotal?: number;
   itbis?: number;
-  status: "draft" | "approved" | "sent" | "paid";
+  status: "draft" | "approved" | "sent" | "paid" | "rejected";
   pdf_path: string;
   created_at: string;
+  created_by?: number;
   created_by_name?: string;
+  rejected_by?: number;
+  rejected_by_name?: string;
+  rejected_at?: string;
   notes?: string;
 }
 
 export default function Cotizaciones() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   const [showRightPanel, setShowRightPanel] = useState(false);
@@ -62,8 +69,9 @@ export default function Cotizaciones() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfFullscreen, setPdfFullscreen] = useState(false);
 
-  // Create invoice/quotation modal
+  // Create / edit invoice/quotation modal
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingQuotation, setEditingQuotation] = useState<Quotation | null>(null);
   const [createType, setCreateType] = useState<"COTIZACIÓN" | "FACTURA">("COTIZACIÓN");
   const [createClientName, setCreateClientName] = useState("");
   const [createClientPhone, setCreateClientPhone] = useState("");
@@ -74,34 +82,95 @@ export default function Cotizaciones() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
+  // Client selection for linking the invoice/quotation
+  const [clients, setClients] = useState<BotClient[]>([]);
+  const [createClientId, setCreateClientId] = useState<string | "">("");
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  // Filters
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "COTIZACIÓN" | "FACTURA">("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | Quotation["status"]>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [creatorFilter, setCreatorFilter] = useState<string>("ALL");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [users, setUsers] = useState<{ id: number; name: string }[]>([]);
+
+  // Reject / delete
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   useEffect(() => {
     fetchQuotations();
   }, []);
 
-  const [typeFilter, setTypeFilter] = useState<"ALL" | "COTIZACIÓN" | "FACTURA">("ALL");
+  useEffect(() => {
+    if (!showCreateModal && !editingQuotation) return;
+    const loadClients = async () => {
+      setLoadingClients(true);
+      try {
+        const { data } = await botAPI.getAllClients();
+        setClients(data.clients || []);
+      } catch (err) {
+        console.error("Failed to load clients", err);
+      } finally {
+        setLoadingClients(false);
+      }
+    };
+    loadClients();
+  }, [showCreateModal, editingQuotation]);
 
-  const fetchQuotations = async () => {
+  useEffect(() => {
+    if (!isAdmin) return;
+    const loadUsers = async () => {
+      try {
+        const { data } = await api.get("/users");
+        setUsers(data.users || data || []);
+      } catch (err) {
+        console.error("Failed to load users", err);
+      }
+    };
+    loadUsers();
+  }, [isAdmin]);
+
+  const fetchQuotations = async (): Promise<Quotation[]> => {
     try {
       setLoading(true);
-      const { data } = await api.get("/invoices");
-      setQuotations(data.invoices || []);
+      const params: Record<string, string> = {};
+      if (typeFilter !== "ALL") params.type = typeFilter;
+      if (statusFilter !== "ALL") params.status = statusFilter;
+      if (searchQuery.trim()) params.q = searchQuery.trim();
+      if (creatorFilter !== "ALL") params.created_by = creatorFilter;
+      if (dateFrom) params.from = dateFrom;
+      if (dateTo) params.to = dateTo;
+      const { data } = await api.get("/invoices", { params });
+      const list: Quotation[] = data.invoices || [];
+      setQuotations(list);
       setError(null);
+      return list;
     } catch (err: any) {
       setError(err?.response?.data?.error || err.message || "Error loading quotations");
       console.error(err);
+      return [];
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredQuotations = useMemo(() => {
-    return typeFilter === "ALL"
-      ? quotations
-      : quotations.filter((q) => q.type === typeFilter);
-  }, [quotations, typeFilter]);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      fetchQuotations();
+    }, 300);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeFilter, statusFilter, searchQuery, creatorFilter, dateFrom, dateTo]);
 
   const resetCreateForm = () => {
     setCreateType("COTIZACIÓN");
+    setCreateClientId("");
     setCreateClientName("");
     setCreateClientPhone("");
     setCreateNotes("");
@@ -158,6 +227,7 @@ export default function Cotizaciones() {
     try {
       const payload = {
         type: createType,
+        clientId: createClientId ? Number(createClientId) : undefined,
         clientName: createClientName.trim(),
         clientPhone: createClientPhone.trim() || undefined,
         items: validItems.map((item) => ({
@@ -189,9 +259,9 @@ export default function Cotizaciones() {
     if (!selectedQuotation) return;
     try {
       await api.post(`/invoices/${selectedQuotation.id}/approve`);
-      await fetchQuotations();
-      // Refresh selected quotation data
-      const refreshed = quotations.find((q) => q.id === selectedQuotation.id);
+      const list = await fetchQuotations();
+      // Refresh selected quotation data (use the freshly returned list, not stale state)
+      const refreshed = list.find((q) => q.id === selectedQuotation.id);
       if (refreshed) setSelectedQuotation(refreshed);
     } catch (err) {
       console.error(err);
@@ -205,8 +275,8 @@ export default function Cotizaciones() {
       await api.post(`/invoices/${selectedQuotation.id}/confirm-payment`, {
         payment_method: "manual",
       });
-      await fetchQuotations();
-      const refreshed = quotations.find((q) => q.id === selectedQuotation.id);
+      const list = await fetchQuotations();
+      const refreshed = list.find((q) => q.id === selectedQuotation.id);
       if (refreshed) setSelectedQuotation(refreshed);
       else setSelectedQuotation((prev) => (prev ? { ...prev, status: "paid" } : prev));
     } catch (err: any) {
@@ -214,6 +284,147 @@ export default function Cotizaciones() {
       alert(err?.response?.data?.error || "Error confirmando pago");
     } finally {
       setConfirmingPayment(false);
+    }
+  };
+
+  const handleEditOpen = (quote: Quotation) => {
+    setEditingQuotation(quote);
+    setCreateType(quote.type as "COTIZACIÓN" | "FACTURA");
+    setCreateClientName(quote.client_name || "");
+    setCreateClientPhone(quote.client_phone || "");
+    setCreateNotes(quote.notes || "");
+    setCreateItems(
+      Array.isArray(quote.items) && quote.items.length > 0
+        ? quote.items.map((item) => ({
+            desc: item.desc || item.name || "",
+            cantidad: item.cantidad || item.quantity || 1,
+            precio: item.precio || item.unitPrice || 0,
+            itbis: !!item.itbis,
+          }))
+        : [{ desc: "", cantidad: 1, precio: 0, itbis: false }]
+    );
+    if (quote.client_id && clients.length > 0) {
+      setCreateClientId(String(quote.client_id));
+    } else {
+      setCreateClientId("");
+    }
+    setShowCreateModal(true);
+  };
+
+  const handleEdit = async () => {
+    if (!editingQuotation) return;
+    if (!createClientName.trim()) {
+      setCreateError("El nombre del cliente es obligatorio");
+      return;
+    }
+    const validItems = createItems.filter(
+      (item) => item.desc?.trim() && (Number(item.precio) || 0) > 0
+    );
+    if (validItems.length === 0) {
+      setCreateError("Agrega al menos un artículo válido");
+      return;
+    }
+
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const payload = {
+        type: createType,
+        clientName: createClientName.trim(),
+        clientPhone: createClientPhone.trim() || undefined,
+        items: validItems.map((item) => ({
+          desc: item.desc,
+          cantidad: Number(item.cantidad) || 1,
+          precio: Number(item.precio) || 0,
+          itbis: !!item.itbis,
+        })),
+        notes: createNotes.trim() || undefined,
+      };
+      await api.put(`/invoices/${editingQuotation.id}`, payload);
+      setShowCreateModal(false);
+      setEditingQuotation(null);
+      resetCreateForm();
+      const list = await fetchQuotations();
+      const refreshed = list.find((q) => q.id === editingQuotation.id);
+      if (refreshed) setSelectedQuotation(refreshed);
+    } catch (err: any) {
+      console.error(err);
+      setCreateError(err?.response?.data?.error || "Error editando documento");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedQuotation) return;
+    setRejecting(true);
+    try {
+      await api.post(`/invoices/${selectedQuotation.id}/reject`, {
+        reason: rejectReason.trim() || undefined,
+      });
+      setShowRejectModal(false);
+      setRejectReason("");
+      const list = await fetchQuotations();
+      const refreshed = list.find((q) => q.id === selectedQuotation.id);
+      if (refreshed) setSelectedQuotation(refreshed);
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.response?.data?.error || "Error rechazando documento");
+    } finally {
+      setRejecting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedQuotation) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/invoices/${selectedQuotation.id}`);
+      setShowDeleteModal(false);
+      setSelectedQuotation(null);
+      setShowRightPanel(false);
+      await fetchQuotations();
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.response?.data?.error || "Error eliminando documento");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const [sending, setSending] = useState(false);
+  // Generate (or regenerate) the PDF for PREVIEW without changing the invoice status.
+  // Available in any status — fixes invoices processed to paid without ever generating a PDF.
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const handleGeneratePdf = async () => {
+    if (!selectedQuotation) return;
+    setGeneratingPdf(true);
+    try {
+      await api.post(`/invoices/${selectedQuotation.id}/generate-pdf`);
+      const list = await fetchQuotations();
+      const refreshed = list.find((q) => q.id === selectedQuotation.id);
+      if (refreshed) setSelectedQuotation(refreshed);
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.response?.data?.error || "Error generando el PDF");
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
+  const handleSendInvoice = async () => {
+    if (!selectedQuotation) return;
+    setSending(true);
+    try {
+      await api.post(`/invoices/${selectedQuotation.id}/send`);
+      const list = await fetchQuotations();
+      const refreshed = list.find((q) => q.id === selectedQuotation.id);
+      if (refreshed) setSelectedQuotation(refreshed);
+      alert("Documento enviado y PDF generado.");
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.response?.data?.error || "Error enviando documento");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -250,18 +461,20 @@ export default function Cotizaciones() {
     };
   }, [rawPdfUrl]);
 
-  const statusBadgeVariant = {
-    draft: "neutral" as const,
-    approved: "main" as const,
-    sent: "outline" as const,
-    paid: "main" as const,
+  const statusBadgeVariant: Record<Quotation["status"], "neutral" | "main" | "outline"> = {
+    draft: "neutral",
+    approved: "main",
+    sent: "outline",
+    paid: "main",
+    rejected: "outline",
   };
 
-  const statusLabel: Record<string, string> = {
+  const statusLabel: Record<Quotation["status"], string> = {
     draft: "Pendiente",
     approved: "Aprobada",
     sent: "Enviada",
     paid: "Pagada",
+    rejected: "Rechazada",
   };
 
   return (
@@ -283,10 +496,21 @@ export default function Cotizaciones() {
             <h2 className="font-heading text-4xl md:text-5xl font-black">Cotizaciones</h2>
           </div>
           <p className="mt-2 text-base text-foreground/70">
-            {filteredQuotations.length} mostrados · {quotations.length} total
+            {quotations.length} documento{quotations.length !== 1 && "s"}
             {quotations.filter((q) => q.status === "draft").length > 0 &&
-              ` · ${quotations.filter((q) => q.status === "draft").length} pendientes`}
+              ` · ${quotations.filter((q) => q.status === "draft").length} pendiente${quotations.filter((q) => q.status === "draft").length !== 1 ? "s" : ""}`}
           </p>
+
+          {/* Search */}
+          <div className="mt-3">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar por número, cliente o teléfono..."
+              className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground shadow-none outline-none focus:border-main"
+            />
+          </div>
 
           {/* Type filter */}
           <div className="mt-3 flex gap-1">
@@ -309,6 +533,97 @@ export default function Cotizaciones() {
             ))}
           </div>
 
+          {/* Status filter */}
+          <div className="mt-3">
+            <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">
+              Estado
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as Quotation["status"] | "ALL")}
+              className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground outline-none focus:border-main"
+            >
+              <option value="ALL">Todos los estados</option>
+              <option value="draft">Pendiente</option>
+              <option value="approved">Aprobada</option>
+              <option value="sent">Enviada</option>
+              <option value="paid">Pagada</option>
+              <option value="rejected">Rechazada</option>
+            </select>
+          </div>
+
+          {/* Creator filter (admin only) */}
+          {isAdmin && users.length > 0 && (
+            <div className="mt-3">
+              <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">
+                Creador
+              </label>
+              <select
+                value={creatorFilter}
+                onChange={(e) => setCreatorFilter(e.target.value)}
+                className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground outline-none focus:border-main"
+              >
+                <option value="ALL">Todos los creadores</option>
+                {users.map((u) => (
+                  <option key={u.id} value={String(u.id)}>
+                    {u.name || `Usuario ${u.id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Date range */}
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div>
+              <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">
+                Desde
+              </label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-full rounded-base border-2 border-border bg-background px-2 py-2 font-base text-sm text-foreground outline-none focus:border-main"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">
+                Hasta
+              </label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-full rounded-base border-2 border-border bg-background px-2 py-2 font-base text-sm text-foreground outline-none focus:border-main"
+              />
+            </div>
+          </div>
+
+          {(typeFilter !== "ALL" ||
+            statusFilter !== "ALL" ||
+            searchQuery ||
+            creatorFilter !== "ALL" ||
+            dateFrom ||
+            dateTo) && (
+            <div className="mt-3">
+              <NeoButton
+                variant="outline"
+                size="sm"
+                className="w-full text-xs"
+                onClick={() => {
+                  setTypeFilter("ALL");
+                  setStatusFilter("ALL");
+                  setSearchQuery("");
+                  setCreatorFilter("ALL");
+                  setDateFrom("");
+                  setDateTo("");
+                }}
+              >
+                Limpiar filtros
+              </NeoButton>
+            </div>
+          )}
+
           <NeoButton
             onClick={() => {
               resetCreateForm();
@@ -330,14 +645,14 @@ export default function Cotizaciones() {
           <div className="flex flex-1 items-center justify-center p-4 text-center text-foreground">
             <NeoBadge variant="outline" className="text-base">{error}</NeoBadge>
           </div>
-        ) : filteredQuotations.length === 0 ? (
+        ) : quotations.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center p-4 text-center text-foreground/50">
             <FileText size={40} className="mb-3 opacity-40" />
             <p className="text-base font-medium">No hay documentos</p>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto custom-scroll p-3 space-y-2">
-            {filteredQuotations.map((quote) => (
+            {quotations.map((quote) => (
               <button
                 key={quote.id}
                 onClick={() => handleSelectQuotation(quote)}
@@ -568,21 +883,91 @@ export default function Cotizaciones() {
               )}
 
               {/* Actions */}
-              {selectedQuotation.status === "draft" && (
+              {isAdmin && selectedQuotation.status === "draft" && (
                 <div className="mt-auto flex gap-2 pt-4">
-                  <NeoButton
-                    onClick={handleApprove}
-                    className="flex-1"
-                  >
+                  <NeoButton onClick={handleApprove} className="flex-1">
                     <CheckCircle size={16} />
                     Aprobar
                   </NeoButton>
-                  <NeoButton variant="outline" className="flex-1">
+                  <NeoButton
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowRejectModal(true)}
+                  >
                     <XCircle size={16} />
                     Rechazar
                   </NeoButton>
                 </div>
               )}
+
+              {/* Admin edit/delete (primary fix path) */}
+              {isAdmin && (
+                <div className="mt-4 flex gap-2 pt-2 border-t-2 border-border">
+                  <NeoButton
+                    onClick={() => handleEditOpen(selectedQuotation)}
+                    variant="neutral"
+                    className="flex-1"
+                  >
+                    <FileText size={16} />
+                    Editar
+                  </NeoButton>
+                  <NeoButton
+                    onClick={() => setShowDeleteModal(true)}
+                    variant="outline"
+                    className="flex-1 border-red-500 text-red-500 hover:bg-red-500/10"
+                  >
+                    <Trash2 size={16} />
+                    Eliminar
+                  </NeoButton>
+                </div>
+              )}
+
+              {/* Employee edit on own drafts */}
+              {!isAdmin &&
+                selectedQuotation.status === "draft" &&
+                selectedQuotation.created_by === user?.id && (
+                  <div className="mt-4 flex gap-2 pt-2 border-t-2 border-border">
+                    <NeoButton
+                      onClick={() => handleEditOpen(selectedQuotation)}
+                      variant="neutral"
+                      className="flex-1"
+                    >
+                      <FileText size={16} />
+                      Editar
+                    </NeoButton>
+                    <NeoButton
+                      onClick={() => setShowDeleteModal(true)}
+                      variant="outline"
+                      className="flex-1 border-red-500 text-red-500 hover:bg-red-500/10"
+                    >
+                      <Trash2 size={16} />
+                      Eliminar
+                    </NeoButton>
+                  </div>
+                )}
+
+              {(isAdmin ||
+                (selectedQuotation.status === "approved" &&
+                  selectedQuotation.created_by === user?.id)) &&
+                selectedQuotation.status !== "sent" &&
+                selectedQuotation.status !== "paid" && (
+                  <div className="mt-4 flex gap-2 pt-2 border-t-2 border-border">
+                    <NeoButton
+                      onClick={handleSendInvoice}
+                      disabled={sending}
+                      className="flex-1"
+                    >
+                      {sending ? (
+                        <RefreshCw size={16} className="mr-1 animate-spin" />
+                      ) : (
+                        <Send size={16} />
+                      )}
+                      {selectedQuotation.status === "draft"
+                        ? "Generar PDF"
+                        : "Enviar documento"}
+                    </NeoButton>
+                  </div>
+                )}
 
               {isAdmin && selectedQuotation.status !== "paid" && (
                 <div className="mt-4 flex gap-2 pt-2 border-t-2 border-border">
@@ -634,6 +1019,18 @@ export default function Cotizaciones() {
                   <p className="mt-1 text-base text-foreground/70">
                     Esta cotización aún no tiene un PDF generado.
                   </p>
+                  <NeoButton
+                    onClick={handleGeneratePdf}
+                    disabled={generatingPdf}
+                    className="mt-4"
+                  >
+                    {generatingPdf ? (
+                      <RefreshCw size={16} className="mr-1 animate-spin" />
+                    ) : (
+                      <FileText size={16} />
+                    )}
+                    {generatingPdf ? "Generando..." : "Generar PDF"}
+                  </NeoButton>
                 </div>
               )}
             </div>
@@ -674,11 +1071,95 @@ export default function Cotizaciones() {
         </div>
       )}
 
+      {/* Reject confirmation modal */}
+      {showRejectModal && selectedQuotation && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setShowRejectModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-base border-2 border-border bg-background p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-2 font-heading text-lg font-black">Rechazar documento</h3>
+            <p className="mb-4 text-base text-foreground/80">
+              ¿Rechazar <strong>{selectedQuotation.doc_number}</strong>? El documento quedará marcado como rechazado y no podrá usarse.
+            </p>
+            <label className="mb-1 block font-base text-sm font-semibold text-foreground/80">
+              Motivo (opcional)
+            </label>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Ej: precios incorrectos, cliente equivocado..."
+              rows={3}
+              className="mb-4 w-full resize-none rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground shadow-none outline-none focus:border-main"
+            />
+            <div className="flex justify-end gap-2">
+              <NeoButton
+                variant="neutral"
+                onClick={() => setShowRejectModal(false)}
+                disabled={rejecting}
+              >
+                Cancelar
+              </NeoButton>
+              <NeoButton
+                onClick={handleReject}
+                disabled={rejecting}
+                className="border-red-500 bg-red-500 text-white hover:bg-red-600"
+              >
+                {rejecting ? <RefreshCw size={16} className="mr-1 animate-spin" /> : <XCircle size={16} />}
+                Rechazar
+              </NeoButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && selectedQuotation && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-base border-2 border-border bg-background p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-2 font-heading text-lg font-black">Eliminar documento</h3>
+            <p className="mb-4 text-base text-foreground/80">
+              ¿Eliminar permanentemente <strong>{selectedQuotation.doc_number}</strong>? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex justify-end gap-2">
+              <NeoButton
+                variant="neutral"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                Cancelar
+              </NeoButton>
+              <NeoButton
+                onClick={handleDelete}
+                disabled={deleting}
+                className="border-red-500 bg-red-500 text-white hover:bg-red-600"
+              >
+                {deleting ? <RefreshCw size={16} className="mr-1 animate-spin" /> : <Trash2 size={16} />}
+                Eliminar
+              </NeoButton>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Create quotation/invoice modal */}
       {showCreateModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          onClick={() => setShowCreateModal(false)}
+          onClick={() => {
+            setShowCreateModal(false);
+            setEditingQuotation(null);
+            resetCreateForm();
+          }}
         >
           <div
             className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-base border-2 border-border bg-background shadow-xl"
@@ -686,9 +1167,15 @@ export default function Cotizaciones() {
           >
             {/* Header */}
             <div className="flex flex-shrink-0 items-center justify-between border-b-2 border-border bg-secondary-background px-4 py-3">
-              <h3 className="font-heading text-lg font-black">Nueva cotización / factura</h3>
+              <h3 className="font-heading text-lg font-black">
+                {editingQuotation ? `Editar ${editingQuotation.doc_number}` : "Nueva cotización / factura"}
+              </h3>
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingQuotation(null);
+                  resetCreateForm();
+                }}
                 className="rounded-base border-2 border-border bg-secondary-background p-1.5 text-foreground hover:bg-main hover:text-main-foreground"
               >
                 <X size={16} />
@@ -719,6 +1206,38 @@ export default function Cotizaciones() {
 
               {/* Client fields */}
               <div className="mb-4 space-y-3">
+                <div>
+                  <label className="mb-1 block font-base text-sm font-semibold text-foreground/80">
+                    Cliente registrado
+                  </label>
+                  <select
+                    value={createClientId}
+                    disabled={loadingClients}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCreateClientId(value);
+                      const client = clients.find((c) => String(c.id) === value);
+                      if (client) {
+                        setCreateClientName(client.name || "");
+                        setCreateClientPhone(client.phone || "");
+                      } else {
+                        setCreateClientName("");
+                        setCreateClientPhone("");
+                      }
+                    }}
+                    className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground outline-none focus:border-main"
+                  >
+                    <option value="">Cliente nuevo / sin vincular</option>
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name || client.phone} ({client.phone})
+                      </option>
+                    ))}
+                  </select>
+                  {loadingClients && (
+                    <p className="mt-1 text-xs text-foreground/50">Cargando clientes...</p>
+                  )}
+                </div>
                 <div>
                   <label className="mb-1 block font-base text-sm font-semibold text-foreground/80">
                     Nombre del cliente *
@@ -851,22 +1370,30 @@ export default function Cotizaciones() {
               <NeoButton
                 type="button"
                 variant="neutral"
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingQuotation(null);
+                  resetCreateForm();
+                }}
                 disabled={creating}
               >
                 Cancelar
               </NeoButton>
               <NeoButton
                 type="button"
-                onClick={handleCreate}
+                onClick={editingQuotation ? handleEdit : handleCreate}
                 disabled={creating}
               >
                 {creating ? (
                   <RefreshCw size={16} className="mr-1 animate-spin" />
+                ) : editingQuotation ? (
+                  <CheckCircle size={16} className="mr-1" />
                 ) : (
                   <Plus size={16} className="mr-1" />
                 )}
-                Crear {createType === "FACTURA" ? "factura" : "cotización"}
+                {editingQuotation
+                  ? "Guardar cambios"
+                  : `Crear ${createType === "FACTURA" ? "factura" : "cotización"}`}
               </NeoButton>
             </div>
           </div>

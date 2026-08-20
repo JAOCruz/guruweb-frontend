@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { botAPI, getBotApiBaseURL } from "../services/botApi";
-import { getAuthToken } from "../utils";
+import { botAPI, getBotApiBaseURL, catalogUnitPrice, type ServiceCatalogItem, type Invoice, type ClientMedia } from "../services/botApi";
+import { getAuthToken, fetchAuthenticatedFile, formatCurrency } from "../utils";
 import { useAuth } from "../context/AuthContext";
 import { NeoCard, NeoButton, NeoInput, NeoBadge } from "@guru/ui";
 import {
@@ -26,6 +26,13 @@ import {
   Mail,
   MapPin,
   Package,
+  Receipt,
+  Plus,
+  Trash2,
+  UserPlus,
+  Pencil,
+  Image as ImageIcon,
+  Paperclip,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -190,9 +197,17 @@ function formatPhone(phone: string): string {
   if (d.length === 11 && d.startsWith("1"))
     return `(${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
   if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
-  // WhatsApp @lid privacy ID — real number hidden by WA
-  if (d.length > 12) return `WA:···${d.slice(-4)}`;
+  // WhatsApp @lid privacy ID — real number hidden by WA; show the full identifier,
+  // grouped for readability (e.g. "233 891 151 499 341" instead of one long blob).
+  if (d.length > 12) return d.replace(/(\d{3})(?=\d)/g, "$1 ").trim();
   return phone;
+}
+
+/** True when the WhatsApp display name looks like a long numeric code (not a real name) */
+function looksLikeNumericCode(s?: string | null): boolean {
+  if (!s || !s.trim()) return true;
+  if (/[A-Za-záéíóúñÁÉÍÓÚÑ]/.test(s)) return false;
+  return s.replace(/\D/g, "").length >= 8;
 }
 
 function getDateLabel(ts: string): string {
@@ -315,6 +330,71 @@ function useMediaBlob(apiPath: string | null | undefined) {
   return { blobUrl, mimeType };
 }
 
+// ─── Fullscreen image lightbox (like WhatsApp's "view photo") ─────────────────
+
+const ImageLightbox: React.FC<{ src: string; alt?: string; onClose: () => void }> = ({ src, alt, onClose }) => (
+  <div
+    className="fixed inset-0 z-[80] flex items-center justify-center bg-black/95 p-4"
+    onClick={onClose}
+  >
+    <button
+      onClick={onClose}
+      title="Cerrar"
+      className="absolute right-4 top-4 rounded-base border-2 border-white/30 bg-white/10 p-2 text-white hover:bg-white/20"
+    >
+      <X size={20} />
+    </button>
+    <img
+      src={src}
+      alt={alt || "imagen"}
+      className="max-h-full max-w-full rounded-base object-contain"
+      onClick={(e) => e.stopPropagation()}
+    />
+  </div>
+);
+
+// ─── Single media item for the client-media viewer grid ────────────────────────
+
+const MediaGridItem: React.FC<{ media: ClientMedia }> = ({ media }) => {
+  const apiPath = `/api/media/${media.id}/download`;
+  const { blobUrl, mimeType } = useMediaBlob(apiPath);
+  const [lightbox, setLightbox] = useState(false);
+  const type = media.media_type || "";
+  const isImage = type === "image" || mimeType.startsWith("image/");
+  const isAudio = type === "audio" || mimeType.startsWith("audio/");
+  const isVideo = type === "video" || mimeType.startsWith("video/");
+  const label = media.original_name || `${type || "archivo"} #${media.id}`;
+
+  return (
+    <div className="rounded-base border-2 border-border bg-background p-2">
+      {isImage ? (
+        blobUrl ? (
+          <button type="button" onClick={() => setLightbox(true)} title="Ver foto" className="block w-full">
+            <img src={blobUrl} alt={label} className="h-36 w-full cursor-pointer rounded-base object-cover" />
+          </button>
+        ) : (
+          <div className="flex h-36 items-center justify-center text-foreground/40"><RefreshCw size={18} className="animate-spin" /></div>
+        )
+      ) : isAudio ? (
+        <div className="flex h-36 items-center justify-center py-2">
+          {blobUrl ? <audio controls src={blobUrl} className="w-full" /> : <RefreshCw size={18} className="animate-spin" />}
+        </div>
+      ) : isVideo ? (
+        blobUrl
+          ? <video controls src={blobUrl} className="h-36 w-full rounded-base object-cover" />
+          : <div className="flex h-36 items-center justify-center"><RefreshCw size={18} className="animate-spin" /></div>
+      ) : (
+        <div className="flex h-36 flex-col items-center justify-center gap-2 text-foreground/60">
+          <FileText size={28} />
+          {blobUrl && <a href={blobUrl} download={label} className="text-xs font-semibold text-main underline">Descargar</a>}
+        </div>
+      )}
+      <p className="mt-1 truncate font-base text-[11px] text-foreground/60" title={label}>{label}</p>
+      {lightbox && blobUrl && <ImageLightbox src={blobUrl} alt={label} onClose={() => setLightbox(false)} />}
+    </div>
+  );
+};
+
 // ─── PDF preview with fullscreen modal ────────────────────────────────────────
 
 const PdfPreview: React.FC<{ blobUrl: string; apiPath: string }> = ({ blobUrl, apiPath }) => {
@@ -386,6 +466,7 @@ const PdfPreview: React.FC<{ blobUrl: string; apiPath: string }> = ({ blobUrl, a
 
 const MediaAttachment: React.FC<{ apiPath: string; isOut: boolean }> = ({ apiPath, isOut }) => {
   const { blobUrl, mimeType } = useMediaBlob(apiPath);
+  const [lightbox, setLightbox] = useState(false);
 
   if (!blobUrl) {
     return (
@@ -413,9 +494,11 @@ const MediaAttachment: React.FC<{ apiPath: string; isOut: boolean }> = ({ apiPat
           src={blobUrl}
           alt="imagen"
           className="w-full max-h-52 cursor-pointer rounded-base border-2 border-border object-cover shadow-button"
-          onClick={() => window.open(blobUrl, "_blank")}
+          onClick={() => setLightbox(true)}
+          title="Ver foto"
         />
         <DownloadLink />
+        {lightbox && <ImageLightbox src={blobUrl} alt="imagen" onClose={() => setLightbox(false)} />}
       </div>
     );
   }
@@ -554,6 +637,12 @@ const BotMessages: React.FC = () => {
   const [msgLoading, setMsgLoading] = useState(false);
   const [inputText, setInputText] = useState("");
   const [sending, setSending] = useState(false);
+  // ── Media attach (send image/file from chat) ──
+  const [attachFile, setAttachFile] = useState<File | null>(null);
+  const [attachPreview, setAttachPreview] = useState<string | null>(null);
+  const [attachCaption, setAttachCaption] = useState("");
+  const [sendingMedia, setSendingMedia] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [highlightMessageId, setHighlightMessageId] = useState<string | number | null>(null);
   const [globalBotActive, setGlobalBotActive] = useState<boolean | null>(null);
 
@@ -567,6 +656,50 @@ const BotMessages: React.FC = () => {
   const [showClientPanel, setShowClientPanel] = useState(false);
   const [clientDetail, setClientDetail] = useState<ClientDetail | null>(null);
   const [clientDetailLoading, setClientDetailLoading] = useState(false);
+  // ── Edit client & media viewer ──
+  const [showEditClient, setShowEditClient] = useState(false);
+  const [editClientForm, setEditClientForm] = useState({ name: "", phone: "", email: "", address: "", notes: "" });
+  const [savingClient, setSavingClient] = useState(false);
+  const [editClientMsg, setEditClientMsg] = useState<string | null>(null);
+  const [showMediaModal, setShowMediaModal] = useState(false);
+  const [clientMediaList, setClientMediaList] = useState<ClientMedia[]>([]);
+  const [clientMediaLoading, setClientMediaLoading] = useState(false);
+
+  // Add-contact form (chat without client record)
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactSaving, setContactSaving] = useState(false);
+  const [contactMsg, setContactMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  // Link @lid to real phone
+  const [linkPhone, setLinkPhone] = useState("");
+  const [linking, setLinking] = useState(false);
+  const [linkMsg, setLinkMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  // Quote/invoice modal
+  interface QuoteItemForm {
+    desc: string;
+    cantidad: number | string;
+    precio: number | string;
+    itbis: boolean;
+  }
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [quoteType, setQuoteType] = useState<"COTIZACIÓN" | "FACTURA">("COTIZACIÓN");
+  const [quoteItems, setQuoteItems] = useState<QuoteItemForm[]>([
+    { desc: "", cantidad: 1, precio: "", itbis: false },
+  ]);
+  const [quoteNotes, setQuoteNotes] = useState("");
+  const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [quoteGenerating, setQuoteGenerating] = useState(false);
+  const [quoteInvoice, setQuoteInvoice] = useState<Invoice | null>(null);
+  const [quotePdfUrl, setQuotePdfUrl] = useState<string | null>(null);
+  const [quotePdfFullscreen, setQuotePdfFullscreen] = useState(false);
+  const [quoteSending, setQuoteSending] = useState(false);
+  const [quoteSent, setQuoteSent] = useState(false);
+  const [catalogQuery, setCatalogQuery] = useState("");
+  const [catalogResults, setCatalogResults] = useState<ServiceCatalogItem[]>([]);
+  const [catalogSearching, setCatalogSearching] = useState(false);
+  const [catalogAll, setCatalogAll] = useState<ServiceCatalogItem[]>([]);
+  const [showCatalogResults, setShowCatalogResults] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -623,12 +756,19 @@ const BotMessages: React.FC = () => {
     }
   }, []);
 
-  // Auto-open chat from BotClients
+  // Auto-open chat from BotClients (localStorage) or from a notification link (?phone=)
   useEffect(() => {
     const phoneToOpen = localStorage.getItem('openChatPhone');
     if (phoneToOpen) {
       localStorage.removeItem('openChatPhone');
       setSelectedPhone(phoneToOpen);
+      setShowRightPanel(true);
+      return;
+    }
+    // From a notification link: /bot-messages?phone=XXXXXXXX
+    const qp = new URLSearchParams(window.location.search).get('phone');
+    if (qp) {
+      setSelectedPhone(qp);
       setShowRightPanel(true);
     }
   }, []);
@@ -657,6 +797,65 @@ const BotMessages: React.FC = () => {
     }
   }, []);
 
+  // ── Edit client ────────────────────────────────────────────────────────────
+  const openEditClient = () => {
+    const c = clientDetail?.client;
+    if (!c) return;
+    setEditClientForm({
+      name: c.name || "",
+      phone: c.phone || "",
+      email: c.email || "",
+      address: c.address || "",
+      notes: c.notes || "",
+    });
+    setEditClientMsg(null);
+    setShowEditClient(true);
+  };
+
+  const saveEditClient = async () => {
+    const c = clientDetail?.client;
+    if (!c?.id) return;
+    setSavingClient(true);
+    setEditClientMsg(null);
+    try {
+      await botAPI.updateClient(c.id, {
+        name: editClientForm.name.trim() || undefined,
+        phone: editClientForm.phone.trim() || undefined,
+        email: editClientForm.email.trim() || undefined,
+        address: editClientForm.address.trim() || undefined,
+        notes: editClientForm.notes,
+      });
+      setEditClientMsg("Guardado ✓");
+      await fetchClientDetail(c.id);
+      await fetchConversations(true);
+      setTimeout(() => setShowEditClient(false), 700);
+    } catch {
+      setEditClientMsg("Error al guardar");
+    } finally {
+      setSavingClient(false);
+    }
+  };
+
+  // ── Media viewer ───────────────────────────────────────────────────────────
+  // Works for registered clients (by client_id) AND unregistered contacts (by phone).
+  const openMediaModal = async () => {
+    const clientId = clientDetail?.client?.id;
+    if (!clientId && !selectedPhone) return;
+    setShowMediaModal(true);
+    setClientMediaLoading(true);
+    setClientMediaList([]);
+    try {
+      const res = clientId
+        ? await botAPI.getClientMedia(clientId)
+        : await botAPI.getMediaByPhone(selectedPhone);
+      setClientMediaList((res.data as { media?: ClientMedia[] }).media ?? []);
+    } catch {
+      setClientMediaList([]);
+    } finally {
+      setClientMediaLoading(false);
+    }
+  };
+
   // ── Fetch messages for selected phone ──────────────────────────────────────
 
   const fetchMessages = useCallback(async (phone: string, silent = false) => {
@@ -674,7 +873,11 @@ const BotMessages: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedPhone) fetchMessages(selectedPhone);
+    if (selectedPhone) {
+      fetchMessages(selectedPhone);
+      // Mark this chat's inbound messages as read so the "Mensajes" badge drops
+      botAPI.markChatRead(selectedPhone).catch(() => {});
+    }
   }, [selectedPhone, fetchMessages]);
 
   // Auto-refresh selected chat (silent — no loading spinner, no scroll reset)
@@ -785,6 +988,47 @@ const BotMessages: React.FC = () => {
     }
   };
 
+  // ── Media attach handlers ──────────────────────────────────────────────────
+  const handleAttachSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 16 * 1024 * 1024) {
+      alert("El archivo es muy grande (máximo 16MB).");
+      return;
+    }
+    setAttachFile(file);
+    setAttachCaption("");
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = () => setAttachPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setAttachPreview(null);
+    }
+    // reset input so the same file can be picked again later
+    e.target.value = "";
+  };
+
+  const cancelAttach = () => {
+    setAttachFile(null);
+    setAttachPreview(null);
+    setAttachCaption("");
+  };
+
+  const handleSendMedia = async () => {
+    if (!attachFile || !selectedPhone || sendingMedia) return;
+    setSendingMedia(true);
+    try {
+      await botAPI.sendMedia(selectedPhone, attachFile, attachCaption.trim() || undefined);
+      cancelAttach();
+      await fetchMessages(selectedPhone);
+    } catch (err) {
+      alert("No se pudo enviar el archivo. Verifica que el bot esté conectado.");
+    } finally {
+      setSendingMedia(false);
+    }
+  };
+
   // ── Assignment (admin only) ───────────────────────────────────────────────
   useEffect(() => {
     if (!isAdmin) return;
@@ -887,6 +1131,10 @@ const BotMessages: React.FC = () => {
 
   const selectedConv = conversations.find((c) => c.phone === selectedPhone);
 
+  // A chat is a privacy @lid when the "phone" is a long numeric ID (WhatsApp hides the
+  // real number). Those can be manually linked to a real phone number.
+  const isLidChat = !!selectedPhone && /^\d{13,}$/.test(selectedPhone.replace(/\D/g, ""));
+
   // Load client detail when the side panel opens
   useEffect(() => {
     if (showClientPanel && selectedConv?.client_id) {
@@ -895,6 +1143,230 @@ const BotMessages: React.FC = () => {
       setClientDetail(null);
     }
   }, [showClientPanel, selectedConv?.client_id, fetchClientDetail]);
+
+  // ── Add contact (chat without client record) ──────────────────────────────
+
+  // Pre-fill the form when the selected chat changes
+  useEffect(() => {
+    setContactPhone(selectedPhone ?? "");
+    const nm = selectedConv?.client_name;
+    setContactName(nm && !looksLikeNumericCode(nm) ? nm : "");
+    setContactMsg(null);
+  }, [selectedPhone, selectedConv?.client_name]);
+
+  const handleAddContact = async () => {
+    if (!selectedPhone || contactSaving) return;
+    if (!contactName.trim()) {
+      setContactMsg({ type: "err", text: "El nombre es obligatorio." });
+      return;
+    }
+    if (!contactPhone.trim()) {
+      setContactMsg({ type: "err", text: "El teléfono es obligatorio." });
+      return;
+    }
+    setContactSaving(true);
+    setContactMsg(null);
+    try {
+      await botAPI.createClient({ name: contactName.trim(), phone: contactPhone.trim() });
+      setContactMsg({ type: "ok", text: "Contacto agregado correctamente." });
+      // Refresh so the conversation picks up the new client_id and the panel shows the record
+      await fetchConversations(true);
+    } catch (err: any) {
+      const msg =
+        err?.response?.status === 409
+          ? "Este número ya está registrado como cliente."
+          : err?.response?.data?.error || "Error al agregar el contacto.";
+      setContactMsg({ type: "err", text: msg });
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
+  // ── Link @lid chat to a real phone number ────────────────────────────────────
+  const handleLinkLid = async () => {
+    if (!selectedPhone || linking) return;
+    const real = linkPhone.replace(/\D/g, "");
+    if (!real) {
+      setLinkMsg({ type: "err", text: "Ingresa el número real del contacto." });
+      return;
+    }
+    setLinking(true);
+    setLinkMsg(null);
+    try {
+      const res = await botAPI.mapLid(selectedPhone, real);
+      setLinkMsg({ type: "ok", text: `Vinculado. ${res.data.messagesMoved} mensajes movidos a ${real}.` });
+      await fetchConversations(true);
+      // Reload the conversation now pointing at the real number
+      setSelectedPhone(real);
+    } catch (err: any) {
+      setLinkMsg({ type: "err", text: err?.response?.data?.error || "Error al vincular el número." });
+    } finally {
+      setLinking(false);
+    }
+  };
+
+  // ── Quote / invoice generation ─────────────────────────────────────────────
+
+  // Load the full service catalog once when the quote modal opens
+  useEffect(() => {
+    if (!showQuoteModal || catalogAll.length > 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await botAPI.getServiceCatalog();
+        const list = (res.data as { services?: ServiceCatalogItem[] }).services ?? [];
+        if (!cancelled) setCatalogAll(list.filter((s) => s.active !== false));
+      } catch {
+        // catalog is optional — employee can still type items manually
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [showQuoteModal, catalogAll.length]);
+
+  // Filter the catalog locally as the user types
+  useEffect(() => {
+    const q = catalogQuery.trim().toLowerCase();
+    if (q.length < 2) {
+      setCatalogResults([]);
+      setCatalogSearching(false);
+      return;
+    }
+    setCatalogSearching(false);
+    setCatalogResults(catalogAll.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 8));
+  }, [catalogQuery, catalogAll]);
+
+  const openQuoteModal = () => {
+    setQuoteType("COTIZACIÓN");
+    setQuoteItems([{ desc: "", cantidad: 1, precio: "", itbis: false }]);
+    setQuoteNotes("");
+    setQuoteError(null);
+    setQuoteInvoice(null);
+    setQuoteSent(false);
+    setQuoteSending(false);
+    setQuotePdfFullscreen(false);
+    setCatalogQuery("");
+    setCatalogResults([]);
+    setShowCatalogResults(false);
+    setQuotePdfUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setShowQuoteModal(true);
+  };
+
+  const closeQuoteModal = () => {
+    setShowQuoteModal(false);
+    setQuotePdfFullscreen(false);
+    setQuotePdfUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  };
+
+  const addQuoteItem = () =>
+    setQuoteItems((prev) => [...prev, { desc: "", cantidad: 1, precio: "", itbis: false }]);
+
+  const removeQuoteItem = (idx: number) =>
+    setQuoteItems((prev) => prev.filter((_, i) => i !== idx));
+
+  const updateQuoteItem = (idx: number, field: keyof QuoteItemForm, value: string | number | boolean) =>
+    setQuoteItems((prev) =>
+      prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item)),
+    );
+
+  const handlePickCatalogItem = (svc: ServiceCatalogItem) => {
+    const price = catalogUnitPrice(svc) ?? 0;
+    setQuoteItems((prev) => {
+      const last = prev[prev.length - 1];
+      // Fill the last row if it is still empty; otherwise append a new line
+      if (last && !last.desc.trim() && !(Number(last.precio) > 0)) {
+        return prev.map((it, i) =>
+          i === prev.length - 1 ? { ...it, desc: svc.name, precio: price } : it,
+        );
+      }
+      return [...prev, { desc: svc.name, cantidad: 1, precio: price, itbis: false }];
+    });
+    setCatalogQuery("");
+    setCatalogResults([]);
+    setShowCatalogResults(false);
+  };
+
+  const quoteTotals = (() => {
+    const subtotal = quoteItems.reduce(
+      (sum, it) => sum + (Number(it.cantidad) || 0) * (Number(it.precio) || 0),
+      0,
+    );
+    const itbis = quoteItems.reduce(
+      (sum, it) =>
+        it.itbis ? sum + (Number(it.cantidad) || 0) * (Number(it.precio) || 0) * 0.18 : sum,
+      0,
+    );
+    return { subtotal, itbis, total: subtotal + itbis };
+  })();
+
+  const handleGenerateQuote = async () => {
+    if (!selectedPhone || quoteGenerating) return;
+    const validItems = quoteItems.filter(
+      (it) => it.desc.trim() && (Number(it.precio) || 0) > 0,
+    );
+    if (validItems.length === 0) {
+      setQuoteError("Agrega al menos un artículo con descripción y precio.");
+      return;
+    }
+    setQuoteGenerating(true);
+    setQuoteError(null);
+    setQuoteSent(false);
+    try {
+      const waName = selectedConv?.client_name;
+      const clientName =
+        waName && !looksLikeNumericCode(waName) ? waName : formatPhone(selectedPhone);
+      const createRes = await botAPI.createInvoice({
+        type: quoteType,
+        clientId: selectedConv?.client_id ?? undefined,
+        clientName,
+        clientPhone: selectedPhone,
+        items: validItems.map((it) => ({
+          desc: it.desc.trim(),
+          cantidad: Number(it.cantidad) || 1,
+          precio: Number(it.precio) || 0,
+          itbis: !!it.itbis,
+        })),
+        notes: quoteNotes.trim() || undefined,
+      });
+      const invoice = createRes.data.invoice;
+      // Generate the PDF (preview only — nothing is sent automatically)
+      await botAPI.generateInvoicePdf(invoice.id);
+      const blobUrl = await fetchAuthenticatedFile(botAPI.getInvoicePdfUrl(invoice.id));
+      setQuotePdfUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return blobUrl;
+      });
+      setQuoteInvoice(invoice);
+    } catch (err: any) {
+      setQuoteError(
+        err?.response?.data?.error || "Error al generar el documento. Inténtalo de nuevo.",
+      );
+    } finally {
+      setQuoteGenerating(false);
+    }
+  };
+
+  const handleSendQuoteWhatsapp = async () => {
+    if (!quoteInvoice || quoteSending || quoteSent) return;
+    setQuoteSending(true);
+    setQuoteError(null);
+    try {
+      await botAPI.sendInvoiceWhatsapp(quoteInvoice.id);
+      setQuoteSent(true);
+    } catch (err: any) {
+      setQuoteError(
+        err?.response?.data?.error ||
+          "No se pudo enviar por WhatsApp. Verifica que el bot esté conectado.",
+      );
+    } finally {
+      setQuoteSending(false);
+    }
+  };
 
   // Fetch WhatsApp profile picture on demand if missing
   useEffect(() => {
@@ -1197,6 +1669,26 @@ const BotMessages: React.FC = () => {
                 </div>
               )}
 
+              {/* Generate quote button */}
+              <NeoButton
+                onClick={openQuoteModal}
+                variant="neutral"
+                size="icon"
+                title="Generar cotización"
+              >
+                <Receipt size={18} />
+              </NeoButton>
+
+              {/* View chat media button (works for registered and unregistered contacts) */}
+              <NeoButton
+                onClick={openMediaModal}
+                variant="neutral"
+                size="icon"
+                title="Ver media del chat"
+              >
+                <ImageIcon size={18} />
+              </NeoButton>
+
               {/* Message search button */}
               <NeoButton
                 onClick={() => {
@@ -1275,27 +1767,74 @@ const BotMessages: React.FC = () => {
             </div>
 
             {/* ── Input bar ── */}
-            <div className="flex flex-shrink-0 items-center gap-2 border-t-2 border-border bg-secondary-background px-4 py-3 md:py-2">
-              <NeoInput
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Escribe un mensaje..."
-                className="flex-1 text-base md:text-sm"
-              />
-              <NeoButton
-                onClick={handleSend}
-                disabled={!inputText.trim() || sending}
-                size="icon"
-                className="h-11 w-11 md:h-9 md:w-9"
-              >
-                {sending ? (
-                  <RefreshCw size={18} className="animate-spin md:size-4" />
-                ) : (
-                  <Send size={18} />
-                )}
-              </NeoButton>
+            <div className="flex flex-shrink-0 flex-col border-t-2 border-border bg-secondary-background">
+              {/* Attach preview */}
+              {attachFile && (
+                <div className="flex items-center gap-3 border-b-2 border-border px-4 py-2">
+                  {attachPreview ? (
+                    <img src={attachPreview} alt="preview" className="h-14 w-14 rounded-base border-2 border-border object-cover" />
+                  ) : (
+                    <div className="flex h-14 w-14 items-center justify-center rounded-base border-2 border-border bg-background">
+                      <FileText size={22} className="text-foreground/50" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-base text-xs font-semibold text-foreground">{attachFile.name}</p>
+                    <NeoInput
+                      type="text"
+                      value={attachCaption}
+                      onChange={(e) => setAttachCaption(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleSendMedia(); }}
+                      placeholder="Descripción (opcional)..."
+                      className="mt-1 text-sm"
+                    />
+                  </div>
+                  <NeoButton onClick={handleSendMedia} disabled={sendingMedia} size="icon" className="h-9 w-9 flex-shrink-0" title="Enviar archivo">
+                    {sendingMedia ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
+                  </NeoButton>
+                  <NeoButton onClick={cancelAttach} variant="neutral" size="icon" className="h-9 w-9 flex-shrink-0" title="Cancelar">
+                    <X size={16} />
+                  </NeoButton>
+                </div>
+              )}
+              <div className="flex items-center gap-2 px-4 py-3 md:py-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                  className="hidden"
+                  onChange={handleAttachSelect}
+                />
+                <NeoButton
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="neutral"
+                  size="icon"
+                  className="h-11 w-11 flex-shrink-0 md:h-9 md:w-9"
+                  title="Adjuntar archivo"
+                >
+                  <Paperclip size={18} />
+                </NeoButton>
+                <NeoInput
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Escribe un mensaje..."
+                  className="flex-1 text-base md:text-sm"
+                />
+                <NeoButton
+                  onClick={handleSend}
+                  disabled={!inputText.trim() || sending}
+                  size="icon"
+                  className="h-11 w-11 md:h-9 md:w-9"
+                >
+                  {sending ? (
+                    <RefreshCw size={18} className="animate-spin md:size-4" />
+                  ) : (
+                    <Send size={18} />
+                  )}
+                </NeoButton>
+              </div>
             </div>
           </>
         )}
@@ -1343,12 +1882,124 @@ const BotMessages: React.FC = () => {
           {/* Content */}
           <div className="custom-scroll flex-1 overflow-y-auto px-4 py-4">
             {!selectedConv?.client_id ? (
-              <div className="py-12 text-center text-foreground/50">
-                <User size={40} className="mx-auto mb-3 opacity-40" />
-                <p className="font-base text-base">Cliente no registrado</p>
-                <p className="mt-1 font-base text-sm">
-                  Este chat aún no tiene ficha de cliente en el sistema.
-                </p>
+              <div className="space-y-4">
+                {/* Chat identity */}
+                <NeoCard variant="neutral" className="p-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      url={selectedConv?.profile_pic_url}
+                      name={selectedConv?.client_name}
+                      phone={selectedPhone}
+                      size="md"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate font-base text-sm font-semibold text-foreground">
+                        {selectedConv?.client_name && !looksLikeNumericCode(selectedConv.client_name)
+                          ? selectedConv.client_name
+                          : "Sin nombre de WhatsApp"}
+                      </p>
+                      <p className="truncate font-base text-xs text-foreground/60">
+                        {formatPhone(selectedPhone)}
+                      </p>
+                    </div>
+                  </div>
+                </NeoCard>
+
+                {/* View chat media (works even without a client record — by phone) */}
+                <NeoButton onClick={openMediaModal} variant="neutral" size="sm" className="w-full">
+                  <ImageIcon size={14} />
+                  Ver media del chat
+                </NeoButton>
+
+                {/* Add contact form */}
+                <NeoCard variant="neutral" className="p-3">
+                  <h3 className="mb-1 font-base text-sm font-black uppercase tracking-wide text-foreground/70">
+                    Agregar contacto
+                  </h3>
+                  <p className="mb-3 font-base text-xs text-foreground/60">
+                    Este chat aún no tiene ficha de cliente. Completa los datos para crearla y
+                    vincular los mensajes automáticamente.
+                  </p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="mb-1 block font-base text-xs font-semibold text-foreground/80">
+                        Nombre *
+                      </label>
+                      <NeoInput
+                        type="text"
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        placeholder="Ej: Juan Pérez"
+                        className="h-10 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block font-base text-xs font-semibold text-foreground/80">
+                        Teléfono *
+                      </label>
+                      <NeoInput
+                        type="text"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        placeholder="Ej: 18095551234"
+                        className="h-10 text-sm"
+                      />
+                    </div>
+                    {contactMsg && (
+                      <p
+                        className={`font-base text-sm font-semibold ${
+                          contactMsg.type === "ok" ? "text-main" : "text-red-600"
+                        }`}
+                      >
+                        {contactMsg.text}
+                      </p>
+                    )}
+                    <NeoButton
+                      onClick={handleAddContact}
+                      disabled={contactSaving}
+                      size="sm"
+                      className="w-full"
+                    >
+                      {contactSaving ? (
+                        <RefreshCw size={14} className="animate-spin" />
+                      ) : (
+                        <UserPlus size={14} />
+                      )}
+                      {contactSaving ? "Guardando..." : "Agregar contacto"}
+                    </NeoButton>
+                  </div>
+                </NeoCard>
+
+                {/* Link @lid to a real phone number */}
+                {isLidChat && (
+                  <NeoCard variant="neutral" className="p-3">
+                    <h3 className="mb-1 font-base text-sm font-black uppercase tracking-wide text-foreground/70">
+                      Vincular número real
+                    </h3>
+                    <p className="mb-3 font-base text-xs text-foreground/60">
+                      Este contacto usa un ID de privacidad de WhatsApp. Si conoces su número
+                      real, vincúlalo para unificar la conversación bajo ese número.
+                    </p>
+                    <div className="space-y-3">
+                      <NeoInput
+                        type="text"
+                        value={linkPhone}
+                        onChange={(e) => setLinkPhone(e.target.value)}
+                        placeholder="Ej: 18095551234"
+                        className="h-10 text-sm"
+                      />
+                      {linkMsg && (
+                        <p className={`font-base text-sm font-semibold ${linkMsg.type === "ok" ? "text-main" : "text-red-600"}`}>
+                          {linkMsg.text}
+                        </p>
+                      )}
+                      <NeoButton onClick={handleLinkLid} disabled={linking} size="sm" className="w-full">
+                        {linking ? <RefreshCw size={14} className="animate-spin" /> : <Phone size={14} />}
+                        {linking ? "Vinculando..." : "Vincular número"}
+                      </NeoButton>
+                    </div>
+                  </NeoCard>
+                )}
               </div>
             ) : clientDetailLoading ? (
               <div className="flex items-center justify-center py-16 text-foreground/50">
@@ -1362,9 +2013,19 @@ const BotMessages: React.FC = () => {
               <div className="space-y-4">
                 {/* General info */}
                 <NeoCard variant="neutral" className="p-3">
-                  <h3 className="mb-2 font-base text-sm font-black uppercase tracking-wide text-foreground/70">
-                    Información general
-                  </h3>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h3 className="font-base text-sm font-black uppercase tracking-wide text-foreground/70">
+                      Información general
+                    </h3>
+                    <div className="flex items-center gap-1">
+                      <NeoButton size="icon" variant="neutral" className="h-7 w-7" onClick={openEditClient} title="Editar contacto">
+                        <Pencil size={13} />
+                      </NeoButton>
+                      <NeoButton size="icon" variant="neutral" className="h-7 w-7" onClick={openMediaModal} title="Ver media del chat">
+                        <ImageIcon size={13} />
+                      </NeoButton>
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     {clientDetail.client.name && (
                       <div className="flex items-start gap-2">
@@ -1507,6 +2168,441 @@ const BotMessages: React.FC = () => {
           </div>
           </div>
         </>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════
+          QUOTE / INVOICE MODAL — generate PDF preview, send via WhatsApp
+      ════════════════════════════════════════════════════════════ */}
+      {showQuoteModal && selectedPhone && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={closeQuoteModal}
+        >
+          <div
+            className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-base border-2 border-border bg-background shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex flex-shrink-0 items-center justify-between border-b-2 border-border bg-secondary-background px-4 py-3">
+              <h3 className="flex items-center gap-2 font-heading text-lg font-black">
+                <Receipt size={18} />
+                {quoteInvoice
+                  ? `${quoteType === "FACTURA" ? "Factura" : "Cotización"} generada`
+                  : "Generar cotización"}
+              </h3>
+              <button
+                onClick={closeQuoteModal}
+                className="rounded-base border-2 border-border bg-secondary-background p-1.5 text-foreground hover:bg-main hover:text-main-foreground"
+                title="Cerrar"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="custom-scroll flex-1 overflow-y-auto p-4">
+              {!quoteInvoice ? (
+                <>
+                  {/* Type selector */}
+                  <div className="mb-4 flex gap-2">
+                    <NeoButton
+                      type="button"
+                      variant={quoteType === "COTIZACIÓN" ? "default" : "neutral"}
+                      className="flex-1"
+                      onClick={() => setQuoteType("COTIZACIÓN")}
+                    >
+                      Cotización
+                    </NeoButton>
+                    <NeoButton
+                      type="button"
+                      variant={quoteType === "FACTURA" ? "default" : "neutral"}
+                      className="flex-1"
+                      onClick={() => setQuoteType("FACTURA")}
+                    >
+                      Factura
+                    </NeoButton>
+                  </div>
+
+                  {/* Client (from chat) */}
+                  <div className="mb-4 rounded-base border-2 border-border bg-secondary-background p-2.5">
+                    <p className="font-base text-xs font-semibold text-foreground/60">Cliente</p>
+                    <p className="truncate font-base text-sm font-semibold text-foreground">
+                      {selectedConv?.client_name && !looksLikeNumericCode(selectedConv.client_name)
+                        ? selectedConv.client_name
+                        : formatPhone(selectedPhone)}
+                      {selectedConv?.client_id ? " · registrado" : " · sin ficha"}
+                    </p>
+                  </div>
+
+                  {/* Catalog search */}
+                  <div className="relative mb-4">
+                    <Search
+                      size={14}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50"
+                    />
+                    <NeoInput
+                      type="text"
+                      value={catalogQuery}
+                      onChange={(e) => {
+                        setCatalogQuery(e.target.value);
+                        setShowCatalogResults(true);
+                      }}
+                      onFocus={() => setShowCatalogResults(true)}
+                      placeholder="Buscar servicio en el catálogo..."
+                      className="h-10 pl-9 pr-8 text-sm"
+                    />
+                    {catalogSearching && (
+                      <RefreshCw
+                        size={14}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-foreground/50"
+                      />
+                    )}
+                    {showCatalogResults && catalogResults.length > 0 && (
+                      <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-base border-2 border-border bg-background shadow-button">
+                        {catalogResults.map((svc, i) => (
+                          <button
+                            key={svc.id ?? i}
+                            type="button"
+                            onClick={() => handlePickCatalogItem(svc)}
+                            className="flex w-full items-center justify-between gap-2 border-b-2 border-border/40 px-3 py-2 text-left last:border-b-0 hover:bg-secondary-background"
+                          >
+                            <span className="truncate font-base text-sm text-foreground">
+                              {svc.name}
+                            </span>
+                            <span className="flex-shrink-0 font-base text-xs font-semibold text-foreground/60">
+                              {(catalogUnitPrice(svc) ?? 0) > 0
+                                ? formatCurrency(catalogUnitPrice(svc) as number)
+                                : "—"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Items */}
+                  <div className="mb-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <label className="font-base text-sm font-semibold text-foreground/80">
+                        Artículos *
+                      </label>
+                      <NeoButton type="button" size="sm" variant="neutral" onClick={addQuoteItem}>
+                        <Plus size={14} />
+                        Agregar
+                      </NeoButton>
+                    </div>
+                    <div className="space-y-2">
+                      {quoteItems.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-base border-2 border-border bg-secondary-background p-2"
+                        >
+                          <NeoInput
+                            type="text"
+                            value={item.desc}
+                            onChange={(e) => updateQuoteItem(idx, "desc", e.target.value)}
+                            placeholder="Descripción"
+                            className="mb-2 h-9 text-sm"
+                          />
+                          <div className="flex items-center gap-2">
+                            <NeoInput
+                              type="number"
+                              min={1}
+                              value={item.cantidad}
+                              onChange={(e) => updateQuoteItem(idx, "cantidad", e.target.value)}
+                              placeholder="Cant."
+                              className="h-9 w-20 px-2 text-sm"
+                            />
+                            <NeoInput
+                              type="number"
+                              min={0}
+                              value={item.precio}
+                              onChange={(e) => updateQuoteItem(idx, "precio", e.target.value)}
+                              placeholder="Precio"
+                              className="h-9 flex-1 px-2 text-sm"
+                            />
+                            <label className="flex items-center gap-1 whitespace-nowrap font-base text-xs font-semibold">
+                              <input
+                                type="checkbox"
+                                checked={item.itbis}
+                                onChange={(e) => updateQuoteItem(idx, "itbis", e.target.checked)}
+                                className="h-4 w-4 accent-main"
+                              />
+                              ITBIS
+                            </label>
+                            {quoteItems.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeQuoteItem(idx)}
+                                className="rounded-base p-1.5 text-red-500 hover:bg-red-500/10"
+                                title="Quitar línea"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  <div className="mb-4">
+                    <label className="mb-1 block font-base text-sm font-semibold text-foreground/80">
+                      Notas
+                    </label>
+                    <textarea
+                      value={quoteNotes}
+                      onChange={(e) => setQuoteNotes(e.target.value)}
+                      placeholder="Condiciones de pago, detalles adicionales..."
+                      rows={2}
+                      className="w-full resize-none rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground shadow-none outline-none focus:border-main"
+                    />
+                  </div>
+
+                  {/* Live totals */}
+                  <NeoCard variant="main" className="mb-4 p-3">
+                    <div className="flex items-center justify-between text-sm text-main-foreground/80">
+                      <span>Subtotal</span>
+                      <span>{formatCurrency(quoteTotals.subtotal)}</span>
+                    </div>
+                    {quoteTotals.itbis > 0 && (
+                      <div className="flex items-center justify-between text-sm text-main-foreground/80">
+                        <span>ITBIS (18%)</span>
+                        <span>{formatCurrency(quoteTotals.itbis)}</span>
+                      </div>
+                    )}
+                    <div className="mt-2 flex items-center justify-between border-t-2 border-main-foreground/30 pt-2">
+                      <span className="font-base text-sm font-black uppercase">Total</span>
+                      <span className="font-heading text-xl font-bold text-main-foreground">
+                        {formatCurrency(quoteTotals.total)}
+                      </span>
+                    </div>
+                  </NeoCard>
+                </>
+              ) : (
+                <>
+                  {/* Generated document summary */}
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate font-base text-sm font-black uppercase text-foreground">
+                        {quoteInvoice.doc_number || `Documento #${quoteInvoice.id}`}
+                      </p>
+                      <p className="font-base text-xs text-foreground/60">
+                        {quoteType} · Total {formatCurrency(Number(quoteInvoice.total) || quoteTotals.total)}
+                      </p>
+                    </div>
+                    <NeoButton
+                      type="button"
+                      size="sm"
+                      variant="neutral"
+                      onClick={() => {
+                        setQuoteInvoice(null);
+                        setQuoteSent(false);
+                      }}
+                    >
+                      Volver a editar
+                    </NeoButton>
+                  </div>
+
+                  {/* PDF preview */}
+                  {quotePdfUrl ? (
+                    <div className="mb-3">
+                      <div className="relative">
+                        <iframe
+                          src={quotePdfUrl}
+                          title="Vista previa del documento"
+                          className="h-[50vh] w-full rounded-base border-2 border-border bg-white shadow-button"
+                        />
+                        <button
+                          onClick={() => setQuotePdfFullscreen(true)}
+                          className="absolute right-2 top-2 rounded-base border-2 border-border bg-secondary-background p-1.5 text-foreground shadow-button hover:bg-main hover:text-main-foreground"
+                          title="Ver en pantalla completa"
+                        >
+                          <Maximize2 size={14} />
+                        </button>
+                      </div>
+                      <a
+                        href={quotePdfUrl}
+                        download={`${quoteInvoice.doc_number || "documento"}.pdf`}
+                        className="mt-2 flex items-center justify-center gap-1 rounded-base border-2 border-border bg-secondary-background px-2 py-1.5 font-base text-xs font-black uppercase tracking-wide text-foreground hover:bg-main hover:text-main-foreground"
+                      >
+                        <Download size={12} />
+                        Descargar PDF
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="mb-3 flex items-center justify-center py-10 text-foreground/50">
+                      <RefreshCw size={20} className="animate-spin" />
+                    </div>
+                  )}
+
+                  {/* Sent confirmation */}
+                  {quoteSent && (
+                    <p className="mb-3 rounded-base border-2 border-border bg-main px-3 py-2 font-base text-sm font-semibold text-main-foreground">
+                      ✓ {quoteType === "FACTURA" ? "Factura" : "Cotización"} enviada al cliente por
+                      WhatsApp
+                    </p>
+                  )}
+                </>
+              )}
+
+              {quoteError && (
+                <p className="mb-2 font-base text-sm font-semibold text-red-600">{quoteError}</p>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex flex-shrink-0 items-center justify-end gap-2 border-t-2 border-border bg-secondary-background px-4 py-3">
+              {!quoteInvoice ? (
+                <>
+                  <NeoButton type="button" variant="neutral" onClick={closeQuoteModal} disabled={quoteGenerating}>
+                    Cancelar
+                  </NeoButton>
+                  <NeoButton type="button" onClick={handleGenerateQuote} disabled={quoteGenerating}>
+                    {quoteGenerating ? (
+                      <RefreshCw size={16} className="animate-spin" />
+                    ) : (
+                      <FileText size={16} />
+                    )}
+                    {quoteGenerating ? "Generando..." : "Generar y previsualizar"}
+                  </NeoButton>
+                </>
+              ) : (
+                <>
+                  <NeoButton type="button" variant="neutral" onClick={closeQuoteModal}>
+                    Cerrar
+                  </NeoButton>
+                  <NeoButton
+                    type="button"
+                    onClick={handleSendQuoteWhatsapp}
+                    disabled={quoteSending || quoteSent || !quotePdfUrl}
+                  >
+                    {quoteSending ? (
+                      <RefreshCw size={16} className="animate-spin" />
+                    ) : (
+                      <Send size={16} />
+                    )}
+                    {quoteSent ? "Enviada" : quoteSending ? "Enviando..." : "Enviar por WhatsApp"}
+                  </NeoButton>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* PDF fullscreen overlay */}
+          {quotePdfFullscreen && quotePdfUrl && (
+            <div
+              className="fixed inset-0 z-[60] flex flex-col bg-black/90 p-4"
+              onClick={() => setQuotePdfFullscreen(false)}
+            >
+              <div className="flex items-center justify-between pb-2">
+                <span className="font-base text-sm font-semibold text-white">
+                  {quoteInvoice.doc_number || "Documento"}
+                </span>
+                <button
+                  onClick={() => setQuotePdfFullscreen(false)}
+                  className="rounded-base border-2 border-white/30 bg-white/10 p-2 text-white hover:bg-white/20"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <iframe
+                src={quotePdfUrl}
+                title="Documento pantalla completa"
+                className="w-full flex-1 rounded-base bg-white"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Edit client modal ── */}
+      {showEditClient && clientDetail?.client && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4" onClick={() => setShowEditClient(false)}>
+          <div className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <NeoCard variant="neutral" className="p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-heading text-lg font-bold">Editar contacto</h3>
+                <NeoButton size="icon" variant="neutral" onClick={() => setShowEditClient(false)} title="Cerrar">
+                  <X size={16} />
+                </NeoButton>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">Nombre</label>
+                  <NeoInput value={editClientForm.name} onChange={(e) => setEditClientForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nombre completo" />
+                </div>
+                <div>
+                  <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">Teléfono</label>
+                  <NeoInput value={editClientForm.phone} onChange={(e) => setEditClientForm((f) => ({ ...f, phone: e.target.value }))} placeholder="8095551234" />
+                </div>
+                <div>
+                  <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">Email</label>
+                  <NeoInput value={editClientForm.email} onChange={(e) => setEditClientForm((f) => ({ ...f, email: e.target.value }))} placeholder="correo@ejemplo.com" />
+                </div>
+                <div>
+                  <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">Dirección</label>
+                  <NeoInput value={editClientForm.address} onChange={(e) => setEditClientForm((f) => ({ ...f, address: e.target.value }))} placeholder="Calle, ciudad" />
+                </div>
+                <div>
+                  <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">Notas</label>
+                  <textarea
+                    value={editClientForm.notes}
+                    onChange={(e) => setEditClientForm((f) => ({ ...f, notes: e.target.value }))}
+                    rows={3}
+                    className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground"
+                    placeholder="Notas internas"
+                  />
+                </div>
+                {editClientMsg && (
+                  <p className={`font-base text-sm font-semibold ${editClientMsg.includes("✓") ? "text-green-600" : "text-red-600"}`}>
+                    {editClientMsg}
+                  </p>
+                )}
+                <div className="flex justify-end gap-2 pt-1">
+                  <NeoButton variant="neutral" onClick={() => setShowEditClient(false)}>Cancelar</NeoButton>
+                  <NeoButton onClick={saveEditClient} disabled={savingClient}>
+                    {savingClient ? "Guardando..." : "Guardar"}
+                  </NeoButton>
+                </div>
+              </div>
+            </NeoCard>
+          </div>
+        </div>
+      )}
+
+      {/* ── Media viewer modal ── */}
+      {showMediaModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4" onClick={() => setShowMediaModal(false)}>
+          <div className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+            <NeoCard variant="neutral" className="flex max-h-[80vh] flex-col p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-heading text-lg font-bold">Media del chat</h3>
+                <NeoButton size="icon" variant="neutral" onClick={() => setShowMediaModal(false)} title="Cerrar">
+                  <X size={16} />
+                </NeoButton>
+              </div>
+              <div className="custom-scroll flex-1 overflow-y-auto">
+                {clientMediaLoading ? (
+                  <div className="flex items-center justify-center py-16 text-foreground/50">
+                    <RefreshCw size={24} className="animate-spin" />
+                  </div>
+                ) : clientMediaList.length === 0 ? (
+                  <div className="py-12 text-center text-foreground/50">
+                    <ImageIcon size={36} className="mx-auto mb-2 opacity-40" />
+                    <p className="font-base text-sm">No hay media en este chat todavía.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {clientMediaList.map((m) => <MediaGridItem key={m.id} media={m} />)}
+                  </div>
+                )}
+              </div>
+            </NeoCard>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -194,7 +194,7 @@ const SECTIONS: Section[] = [
 ];
 
 const Cases: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [activeSection, setActiveSection] = useState<Section>(SECTIONS[0]);
   const [cases, setCases] = useState<CaseRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -612,27 +612,31 @@ const Cases: React.FC = () => {
                 <p className="text-base text-foreground/80 leading-relaxed">{selectedCase.description}</p>
               </div>
 
-              {/* Admin Actions */}
-              {isAdmin && (
+              {/* Admin / assigned employee actions */}
+              {(isAdmin || selectedCase.user_id === user?.id) && (
                 <NeoCard variant="outline" className="space-y-3 p-4">
-                  <p className="font-base text-sm font-black uppercase tracking-wider text-foreground/60">Acciones de administrador</p>
+                  <p className="font-base text-sm font-black uppercase tracking-wider text-foreground/60">
+                    {isAdmin ? "Acciones de administrador" : "Acciones del caso"}
+                  </p>
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <div className="flex-1">
-                      <label className="mb-1 block text-sm text-foreground/60">Asignar caso a</label>
-                      <select
-                        disabled={assigning}
-                        value={selectedCase.user_id || ""}
-                        onChange={(e) => handleAssignCase(e.target.value ? Number(e.target.value) : null)}
-                        className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-base text-foreground focus:outline-none focus:ring-2 focus:ring-main"
-                      >
-                        <option value="">Sin asignar</option>
-                        {users.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.name} ({u.role})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {isAdmin && (
+                      <div className="flex-1">
+                        <label className="mb-1 block text-sm text-foreground/60">Asignar caso a</label>
+                        <select
+                          disabled={assigning}
+                          value={selectedCase.user_id || ""}
+                          onChange={(e) => handleAssignCase(e.target.value ? Number(e.target.value) : null)}
+                          className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-base text-foreground focus:outline-none focus:ring-2 focus:ring-main"
+                        >
+                          <option value="">Sin asignar</option>
+                          {users.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.name} ({u.role})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     {selectedCase.status !== 'paid' && selectedCase.status !== 'resolved' && (
                       <NeoButton
                         onClick={handleCloseCase}

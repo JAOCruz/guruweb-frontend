@@ -224,6 +224,15 @@ const WhatsAppBot: React.FC = () => {
 
   const handleSetMode = async (mode: BotMode) => {
     setError(null);
+    // "selected" with no enabled chats mutes the bot for everyone — confirm first
+    if (
+      mode === "selected" &&
+      !window.confirm(
+        "¿Seguro? En modo 'Seleccionados' el bot SOLO responde en los chats que actives uno por uno. Si no activas ninguno, el bot queda mudo para todos."
+      )
+    ) {
+      return;
+    }
     try {
       await botAPI.setBotMode(mode);
       setStatus((prev) => ({ ...prev, mode }));
