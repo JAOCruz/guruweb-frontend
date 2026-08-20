@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
   ChevronLeft,
   Download,
@@ -17,6 +18,7 @@ import {
   Plus,
   Trash2,
   Send,
+  MessageSquare,
 } from "lucide-react";
 import api, { getAPIUrl } from "../services/api";
 import { botAPI, BotClient } from "../services/botApi";
@@ -808,6 +810,15 @@ export default function Cotizaciones() {
                     <Phone size={16} />
                     {selectedQuotation.client_phone}
                   </div>
+                )}
+                {selectedQuotation.client_phone && (
+                  <Link
+                    to={`/bot-messages?phone=${encodeURIComponent(selectedQuotation.client_phone)}`}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-base border-2 border-border bg-main px-3 py-1.5 text-sm font-black text-main-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                  >
+                    <MessageSquare size={14} />
+                    Ver chat
+                  </Link>
                 )}
                 <div className="mt-2 flex items-center gap-2 text-base text-foreground/60">
                   <Calendar size={16} />
