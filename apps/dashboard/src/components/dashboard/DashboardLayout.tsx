@@ -5,7 +5,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { NeoBadge } from "@guru/ui";
 import GuruAdvisor from "../GuruAdvisor";
 import { cn } from "@guru/ui";
-import { getAPIUrl } from "../../services/api";
+import api, { getAPIUrl } from "../../services/api";
 import {
   Menu,
   X,
@@ -52,6 +52,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   // Unread WhatsApp messages badge (new inbound messages employees haven't opened)
   const [unreadMessages, setUnreadMessages] = useState(0);
 
+  // Pending invoice approval badge (admin only)
+  const [pendingApprovalCount, setPendingApprovalCount] = useState(0);
+
   useEffect(() => {
     const fetchCount = async () => {
       try {
@@ -94,6 +97,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     const interval = setInterval(fetchUnread, 15000); // check often so the badge feels live
     return () => clearInterval(interval);
   }, []);
+
+  // Poll pending invoice approvals for admin badge
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchPending = async () => {
+      try {
+        const res = await api.get("/invoices/pending-approval-count");
+        setPendingApprovalCount(res.data.count || 0);
+      } catch {
+        // ignore
+      }
+    };
+    fetchPending();
+    const interval = setInterval(fetchPending, 30000);
+    return () => clearInterval(interval);
+  }, [isAdmin]);
 
   const openNotifications = async () => {
     setShowNotifications((v) => !v);
@@ -260,6 +279,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             label="Cotizaciones"
             sidebarOpen={sidebarOpen}
             isMobile={isMobile}
+            badge={isAdmin ? pendingApprovalCount : null}
           />
           <NavItem
             to="/cases"

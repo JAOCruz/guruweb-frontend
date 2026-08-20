@@ -45,7 +45,7 @@ interface Quotation {
   total: number;
   subtotal?: number;
   itbis?: number;
-  status: "draft" | "approved" | "sent" | "paid" | "rejected";
+  status: "draft" | "pending_approval" | "approved" | "sent" | "paid" | "rejected";
   pdf_path: string;
   created_at: string;
   created_by?: number;
@@ -463,6 +463,7 @@ export default function Cotizaciones() {
 
   const statusBadgeVariant: Record<Quotation["status"], "neutral" | "main" | "outline"> = {
     draft: "neutral",
+    pending_approval: "main",
     approved: "main",
     sent: "outline",
     paid: "main",
@@ -470,7 +471,8 @@ export default function Cotizaciones() {
   };
 
   const statusLabel: Record<Quotation["status"], string> = {
-    draft: "Pendiente",
+    draft: "Borrador",
+    pending_approval: "Por aprobar",
     approved: "Aprobada",
     sent: "Enviada",
     paid: "Pagada",
@@ -497,8 +499,11 @@ export default function Cotizaciones() {
           </div>
           <p className="mt-2 text-base text-foreground/70">
             {quotations.length} documento{quotations.length !== 1 && "s"}
-            {quotations.filter((q) => q.status === "draft").length > 0 &&
-              ` · ${quotations.filter((q) => q.status === "draft").length} pendiente${quotations.filter((q) => q.status === "draft").length !== 1 ? "s" : ""}`}
+            {isAdmin && quotations.filter((q) => q.status === "pending_approval").length > 0 && (
+              <span className="ml-2 inline-flex items-center gap-1 rounded-base border-2 border-orange-500 bg-orange-500/10 px-2 py-0.5 text-sm font-black text-orange-600">
+                {quotations.filter((q) => q.status === "pending_approval").length} por aprobar
+              </span>
+            )}
           </p>
 
           {/* Search */}
@@ -544,7 +549,8 @@ export default function Cotizaciones() {
               className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground outline-none focus:border-main"
             >
               <option value="ALL">Todos los estados</option>
-              <option value="draft">Pendiente</option>
+              <option value="draft">Borrador</option>
+              <option value="pending_approval">Por aprobar</option>
               <option value="approved">Aprobada</option>
               <option value="sent">Enviada</option>
               <option value="paid">Pagada</option>
@@ -883,22 +889,23 @@ export default function Cotizaciones() {
               )}
 
               {/* Actions */}
-              {isAdmin && selectedQuotation.status === "draft" && (
-                <div className="mt-auto flex gap-2 pt-4">
-                  <NeoButton onClick={handleApprove} className="flex-1">
-                    <CheckCircle size={16} />
-                    Aprobar
-                  </NeoButton>
-                  <NeoButton
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setShowRejectModal(true)}
-                  >
-                    <XCircle size={16} />
-                    Rechazar
-                  </NeoButton>
-                </div>
-              )}
+              {isAdmin &&
+                ["draft", "pending_approval"].includes(selectedQuotation.status) && (
+                  <div className="mt-auto flex gap-2 pt-4">
+                    <NeoButton onClick={handleApprove} className="flex-1">
+                      <CheckCircle size={16} />
+                      Aprobar
+                    </NeoButton>
+                    <NeoButton
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setShowRejectModal(true)}
+                    >
+                      <XCircle size={16} />
+                      Rechazar
+                    </NeoButton>
+                  </div>
+                )}
 
               {/* Admin edit/delete (primary fix path) */}
               {isAdmin && (
@@ -946,11 +953,11 @@ export default function Cotizaciones() {
                   </div>
                 )}
 
-              {(isAdmin ||
-                (selectedQuotation.status === "approved" &&
-                  selectedQuotation.created_by === user?.id)) &&
-                selectedQuotation.status !== "sent" &&
-                selectedQuotation.status !== "paid" && (
+              {/* Admin: send draft / pending_approval / approved */}
+              {isAdmin &&
+                ["draft", "pending_approval", "approved"].includes(
+                  selectedQuotation.status
+                ) && (
                   <div className="mt-4 flex gap-2 pt-2 border-t-2 border-border">
                     <NeoButton
                       onClick={handleSendInvoice}
@@ -962,9 +969,49 @@ export default function Cotizaciones() {
                       ) : (
                         <Send size={16} />
                       )}
-                      {selectedQuotation.status === "draft"
-                        ? "Generar PDF"
+                      {selectedQuotation.status === "pending_approval"
+                        ? "Aprobar y enviar"
                         : "Enviar documento"}
+                    </NeoButton>
+                  </div>
+                )}
+
+              {/* Employee: request approval on own drafts */}
+              {!isAdmin &&
+                selectedQuotation.status === "draft" &&
+                selectedQuotation.created_by === user?.id && (
+                  <div className="mt-4 flex gap-2 pt-2 border-t-2 border-border">
+                    <NeoButton
+                      onClick={handleSendInvoice}
+                      disabled={sending}
+                      className="flex-1"
+                    >
+                      {sending ? (
+                        <RefreshCw size={16} className="mr-1 animate-spin" />
+                      ) : (
+                        <Send size={16} />
+                      )}
+                      Solicitar aprobación
+                    </NeoButton>
+                  </div>
+                )}
+
+              {/* Employee: send own approved invoices */}
+              {!isAdmin &&
+                selectedQuotation.status === "approved" &&
+                selectedQuotation.created_by === user?.id && (
+                  <div className="mt-4 flex gap-2 pt-2 border-t-2 border-border">
+                    <NeoButton
+                      onClick={handleSendInvoice}
+                      disabled={sending}
+                      className="flex-1"
+                    >
+                      {sending ? (
+                        <RefreshCw size={16} className="mr-1 animate-spin" />
+                      ) : (
+                        <Send size={16} />
+                      )}
+                      Enviar documento
                     </NeoButton>
                   </div>
                 )}
