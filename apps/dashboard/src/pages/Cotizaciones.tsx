@@ -679,9 +679,21 @@ export default function Cotizaciones() {
                       {quote.client_name}
                     </p>
                   </div>
-                  <NeoBadge variant={statusBadgeVariant[quote.status]} className="shrink-0 text-xs">
-                    {statusLabel[quote.status]}
-                  </NeoBadge>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {quote.client_phone && (
+                      <Link
+                        to={`/bot-messages?phone=${encodeURIComponent(quote.client_phone)}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded-base border-2 border-border bg-main p-1.5 text-main-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                        title="Ver chat"
+                      >
+                        <MessageSquare size={14} />
+                      </Link>
+                    )}
+                    <NeoBadge variant={statusBadgeVariant[quote.status]} className="text-xs">
+                      {statusLabel[quote.status]}
+                    </NeoBadge>
+                  </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-base">
                   <p className="font-medium text-foreground/90">
@@ -814,10 +826,10 @@ export default function Cotizaciones() {
                 {selectedQuotation.client_phone && (
                   <Link
                     to={`/bot-messages?phone=${encodeURIComponent(selectedQuotation.client_phone)}`}
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-base border-2 border-border bg-main px-3 py-1.5 text-sm font-black text-main-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                    className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-base border-2 border-border bg-main px-4 py-2.5 text-base font-black text-main-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
                   >
-                    <MessageSquare size={14} />
-                    Ver chat
+                    <MessageSquare size={18} />
+                    Ver chat con cliente
                   </Link>
                 )}
                 <div className="mt-2 flex items-center gap-2 text-base text-foreground/60">

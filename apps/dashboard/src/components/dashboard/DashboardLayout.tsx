@@ -26,6 +26,8 @@ import {
   Palette,
   Bird,
   Bell,
+  PanelLeft,
+  PanelLeftOpen,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -207,6 +209,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <div className="mx-auto font-heading text-4xl md:text-5xl font-black text-white">
               G
             </div>
+          )}
+          {!isMobile && (
+            <button
+              onClick={toggleSidebar}
+              className="rounded-base border-2 border-white/30 p-1.5 text-white transition-colors hover:bg-white/20"
+              title={sidebarOpen ? "Minimizar menú" : "Expandir menú"}
+            >
+              {sidebarOpen ? <PanelLeft size={18} /> : <PanelLeftOpen size={18} />}
+            </button>
           )}
           {isMobile && (
             <button
@@ -512,9 +523,16 @@ const NavItem = ({ to, icon, label, sidebarOpen, isMobile, badge }: any) => (
       )
     }
   >
-    <div className="flex-shrink-0">{icon}</div>
+    <div className="relative flex-shrink-0">
+      {icon}
+      {badge != null && badge > 0 && !sidebarOpen && !isMobile && (
+        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-border bg-red-500 px-0.5 text-[8px] font-black text-white">
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
+    </div>
     {(sidebarOpen || isMobile) && <span className="font-bold flex-1 text-left">{label}</span>}
-    {badge != null && badge > 0 && (
+    {badge != null && badge > 0 && (sidebarOpen || isMobile) && (
       <span className="ml-auto flex h-5 min-w-5 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-red-500 px-1 text-[10px] font-black text-white">
         {badge > 99 ? "99+" : badge}
       </span>
