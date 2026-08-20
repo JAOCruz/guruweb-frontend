@@ -523,10 +523,10 @@ const NavItem = ({ to, icon, label, sidebarOpen, isMobile, badge }: any) => (
       )
     }
   >
-    <div className="relative flex-shrink-0">
+    <div className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center">
       {icon}
       {badge != null && badge > 0 && !sidebarOpen && !isMobile && (
-        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-border bg-red-500 px-0.5 text-[8px] font-black text-white">
+        <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-border bg-red-500 px-0.5 text-[8px] font-black text-white">
           {badge > 99 ? "99+" : badge}
         </span>
       )}

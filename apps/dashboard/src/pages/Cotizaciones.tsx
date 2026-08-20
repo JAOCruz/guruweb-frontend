@@ -664,13 +664,18 @@ export default function Cotizaciones() {
               <button
                 key={quote.id}
                 onClick={() => handleSelectQuotation(quote)}
-                className={`w-full text-left rounded-base border-2 p-4 transition-all ${
+                className={`relative w-full text-left rounded-base border-2 p-4 transition-all ${
                   selectedQuotation?.id === quote.id
                     ? "border-border bg-secondary-background shadow-shadow"
                     : "border-transparent hover:border-border hover:bg-secondary-background"
                 }`}
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="absolute right-2 top-2">
+                  <NeoBadge variant={statusBadgeVariant[quote.status]} className="text-xs">
+                    {statusLabel[quote.status]}
+                  </NeoBadge>
+                </div>
+                <div className="flex items-center justify-between gap-2 pr-20">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-base font-semibold">
                       {quote.doc_number}
@@ -679,21 +684,16 @@ export default function Cotizaciones() {
                       {quote.client_name}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    {quote.client_phone && (
-                      <Link
-                        to={`/bot-messages?phone=${encodeURIComponent(quote.client_phone)}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="rounded-base border-2 border-border bg-main p-1.5 text-main-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
-                        title="Ver chat"
-                      >
-                        <MessageSquare size={14} />
-                      </Link>
-                    )}
-                    <NeoBadge variant={statusBadgeVariant[quote.status]} className="text-xs">
-                      {statusLabel[quote.status]}
-                    </NeoBadge>
-                  </div>
+                  {quote.client_phone && (
+                    <Link
+                      to={`/bot-messages?phone=${encodeURIComponent(quote.client_phone)}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-base border-2 border-border bg-main text-main-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                      title="Ver chat"
+                    >
+                      <MessageSquare size={16} />
+                    </Link>
+                  )}
                 </div>
                 <div className="mt-2 flex items-center justify-between text-base">
                   <p className="font-medium text-foreground/90">
@@ -823,7 +823,7 @@ export default function Cotizaciones() {
                     {selectedQuotation.client_phone}
                   </div>
                 )}
-                {selectedQuotation.client_phone && (
+                {selectedQuotation.client_phone ? (
                   <Link
                     to={`/bot-messages?phone=${encodeURIComponent(selectedQuotation.client_phone)}`}
                     className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-base border-2 border-border bg-main px-4 py-2.5 text-base font-black text-main-foreground shadow-button transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
@@ -831,6 +831,10 @@ export default function Cotizaciones() {
                     <MessageSquare size={18} />
                     Ver chat con cliente
                   </Link>
+                ) : (
+                  <div className="mt-3 rounded-base border-2 border-border bg-secondary-background px-4 py-2.5 text-center text-sm font-semibold text-foreground/60">
+                    Cliente sin teléfono registrado
+                  </div>
                 )}
                 <div className="mt-2 flex items-center gap-2 text-base text-foreground/60">
                   <Calendar size={16} />
