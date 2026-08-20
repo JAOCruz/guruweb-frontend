@@ -26,8 +26,6 @@ import {
   Palette,
   Bird,
   Bell,
-  PanelLeft,
-  PanelLeftOpen,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -209,15 +207,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <div className="mx-auto font-heading text-4xl md:text-5xl font-black text-white">
               G
             </div>
-          )}
-          {!isMobile && (
-            <button
-              onClick={toggleSidebar}
-              className="rounded-base border-2 border-white/30 p-1.5 text-white transition-colors hover:bg-white/20"
-              title={sidebarOpen ? "Minimizar menú" : "Expandir menú"}
-            >
-              {sidebarOpen ? <PanelLeft size={18} /> : <PanelLeftOpen size={18} />}
-            </button>
           )}
           {isMobile && (
             <button
