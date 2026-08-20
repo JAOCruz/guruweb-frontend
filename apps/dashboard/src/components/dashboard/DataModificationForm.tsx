@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { servicesAPI } from "../../services/api";
+import { preventDecimalInput } from "../../utils";
 import { NeoCard, NeoCardHeader, NeoCardTitle, NeoCardContent, NeoCardFooter } from "@guru/ui";
 import { NeoInput } from "@guru/ui";
 import { NeoSelect } from "@guru/ui";
@@ -177,7 +178,8 @@ const DataModificationForm: React.FC<DataModificationFormProps> = ({
                   onChange={(e) => setEarnings(e.target.value)}
                   placeholder="Ej: 500"
                   min="0"
-                  step="0.01"
+                  step="1"
+                  onKeyDown={preventDecimalInput}
                 />
               </div>
             </div>
