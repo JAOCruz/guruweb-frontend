@@ -13,6 +13,7 @@ import {
   Pause,
   Play,
   Power,
+  RefreshCw,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import botApi, { botAPI, BotStatus, BotMode } from "../services/botApi";
@@ -78,6 +79,7 @@ const WhatsAppBot: React.FC = () => {
   });
   const [qr, setQr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resyncing, setResyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const lastLogRef = useRef<string>("");
@@ -222,6 +224,40 @@ const WhatsAppBot: React.FC = () => {
     }
   };
 
+  const handleResync = async () => {
+    setError(null);
+    setResyncing(true);
+    logDebug("Refrescando conexión (soft resync)...");
+    try {
+      await botAPI.resync();
+      logDebug("Soft resync enviado — sincronizando estado y despertando el pipe");
+      await fetchStatus();
+    } catch (e: any) {
+      const msg = e?.response?.data?.error || "Error al refrescar conexión";
+      setError(msg);
+      logDebug(`Error en soft resync: ${describeError(e)}`);
+    } finally {
+      setResyncing(false);
+    }
+  };
+
+  const handleReconnect = async () => {
+    setError(null);
+    setLoading(true);
+    logDebug("Forzando reconexión (hard reconnect) con credenciales guardadas...");
+    try {
+      await botAPI.reconnect();
+      logDebug("Reconexión iniciada — se reconstruirá el socket");
+      setStatus((prev) => ({ ...prev, status: "connecting" }));
+    } catch (e: any) {
+      const msg = e?.response?.data?.error || "Error al forzar reconexión";
+      setError(msg);
+      logDebug(`Error en hard reconnect: ${describeError(e)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSetMode = async (mode: BotMode) => {
     setError(null);
     // "selected" with no enabled chats mutes the bot for everyone — confirm first
@@ -353,6 +389,32 @@ const WhatsAppBot: React.FC = () => {
                         <Pause size={18} /> Pausar Bot
                       </>
                     )}
+                  </NeoButton>
+                  <NeoButton
+                    onClick={handleResync}
+                    disabled={resyncing}
+                    variant="neutral"
+                    className="w-full"
+                  >
+                    {resyncing ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <RefreshCw size={16} />
+                    )}
+                    Refrescar conexión
+                  </NeoButton>
+                  <NeoButton
+                    onClick={handleReconnect}
+                    disabled={loading}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {loading ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <RefreshCw size={16} />
+                    )}
+                    Reconectar forzado
                   </NeoButton>
                   <NeoButton
                     onClick={handleDisconnect}
