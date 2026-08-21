@@ -47,6 +47,11 @@ interface Quotation {
   total: number;
   subtotal?: number;
   itbis?: number;
+  discount_type?: "percentage" | "fixed" | "coupon" | null;
+  discount_value?: number;
+  discount_amount?: number;
+  discount_code?: string | null;
+  discount_reason?: string | null;
   status: "draft" | "pending_approval" | "approved" | "sent" | "paid" | "rejected";
   pdf_path: string;
   created_at: string;
@@ -81,6 +86,11 @@ export default function Cotizaciones() {
   const [createItems, setCreateItems] = useState<QuotationItem[]>([
     { desc: "", cantidad: 1, precio: 0, itbis: false },
   ]);
+  // Discounts are admin-only
+  const [createDiscountType, setCreateDiscountType] = useState<"percentage" | "fixed" | "coupon" | "">("");
+  const [createDiscountValue, setCreateDiscountValue] = useState<string>("");
+  const [createDiscountCode, setCreateDiscountCode] = useState<string>("");
+  const [createDiscountReason, setCreateDiscountReason] = useState<string>("");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -177,6 +187,10 @@ export default function Cotizaciones() {
     setCreateClientPhone("");
     setCreateNotes("");
     setCreateItems([{ desc: "", cantidad: 1, precio: 0, itbis: false }]);
+    setCreateDiscountType("");
+    setCreateDiscountValue("");
+    setCreateDiscountCode("");
+    setCreateDiscountReason("");
     setCreateError(null);
   };
 
@@ -208,8 +222,16 @@ export default function Cotizaciones() {
           0
         )
       : 0;
-    return { subtotal, itbis, total: subtotal + itbis };
-  }, [createItems]);
+    const discountValueNum = Number(createDiscountValue) || 0;
+    let discountAmount = 0;
+    if (isAdmin && createDiscountType === "percentage") {
+      discountAmount = subtotal * (discountValueNum / 100);
+    } else if (isAdmin && (createDiscountType === "fixed" || createDiscountType === "coupon")) {
+      discountAmount = discountValueNum;
+    }
+    discountAmount = Math.min(discountAmount, subtotal);
+    return { subtotal, itbis, discountAmount, total: Math.max(0, subtotal + itbis - discountAmount) };
+  }, [createItems, createDiscountType, createDiscountValue, isAdmin]);
 
   const handleCreate = async () => {
     if (!createClientName.trim()) {
@@ -227,7 +249,7 @@ export default function Cotizaciones() {
     setCreating(true);
     setCreateError(null);
     try {
-      const payload = {
+      const payload: any = {
         type: createType,
         clientId: createClientId ? Number(createClientId) : undefined,
         clientName: createClientName.trim(),
@@ -240,6 +262,14 @@ export default function Cotizaciones() {
         })),
         notes: createNotes.trim() || undefined,
       };
+      if (isAdmin && createDiscountType) {
+        payload.discountType = createDiscountType;
+        payload.discountValue = Number(createDiscountValue) || 0;
+        if (createDiscountType === "coupon") {
+          payload.discountCode = createDiscountCode.trim() || undefined;
+        }
+        payload.discountReason = createDiscountReason.trim() || undefined;
+      }
       await api.post("/invoices", payload);
       setShowCreateModal(false);
       resetCreateForm();
@@ -305,6 +335,10 @@ export default function Cotizaciones() {
           }))
         : [{ desc: "", cantidad: 1, precio: 0, itbis: false }]
     );
+    setCreateDiscountType(quote.discount_type || "");
+    setCreateDiscountValue(quote.discount_value ? String(quote.discount_value) : "");
+    setCreateDiscountCode(quote.discount_code || "");
+    setCreateDiscountReason(quote.discount_reason || "");
     if (quote.client_id && clients.length > 0) {
       setCreateClientId(String(quote.client_id));
     } else {
@@ -330,7 +364,7 @@ export default function Cotizaciones() {
     setCreating(true);
     setCreateError(null);
     try {
-      const payload = {
+      const payload: any = {
         type: createType,
         clientName: createClientName.trim(),
         clientPhone: createClientPhone.trim() || undefined,
@@ -342,6 +376,12 @@ export default function Cotizaciones() {
         })),
         notes: createNotes.trim() || undefined,
       };
+      if (isAdmin) {
+        payload.discountType = createDiscountType || undefined;
+        payload.discountValue = createDiscountType ? Number(createDiscountValue) || 0 : undefined;
+        payload.discountCode = createDiscountType === "coupon" ? createDiscountCode.trim() || undefined : undefined;
+        payload.discountReason = createDiscountReason.trim() || undefined;
+      }
       await api.put(`/invoices/${editingQuotation.id}`, payload);
       setShowCreateModal(false);
       setEditingQuotation(null);
@@ -884,13 +924,27 @@ export default function Cotizaciones() {
                   </div>
                 )}
                 {selectedQuotation.itbis ? (
-                  <div className="mb-2 flex items-center justify-between text-base text-main-foreground/80">
+                  <div className="mb-1 flex items-center justify-between text-base text-main-foreground/80">
                     <span>ITBIS (18%)</span>
                     <span>RD$ {selectedQuotation.itbis.toLocaleString("es-DO")}</span>
                   </div>
                 ) : (
                   <div className="mb-2 flex items-center justify-between text-base text-main-foreground/70 italic">
                     <span>ITBIS no aplicado</span>
+                  </div>
+                )}
+                {(selectedQuotation.discount_amount || 0) > 0 && (
+                  <div className="mb-2 flex items-center justify-between text-base text-main-foreground/90">
+                    <span>
+                      Descuento
+                      {selectedQuotation.discount_type === "percentage" &&
+                        selectedQuotation.discount_value &&
+                        ` (${selectedQuotation.discount_value}%)`}
+                      {selectedQuotation.discount_type === "coupon" &&
+                        selectedQuotation.discount_code &&
+                        ` (${selectedQuotation.discount_code})`}
+                    </span>
+                    <span>-RD$ {selectedQuotation.discount_amount.toLocaleString("es-DO")}</span>
                   </div>
                 )}
                 <div className="flex items-center justify-between border-t-2 border-main-foreground/30 pt-2">
@@ -1404,6 +1458,81 @@ export default function Cotizaciones() {
                 </div>
               </div>
 
+              {/* Discounts — admin only */}
+              {isAdmin && (
+                <div className="mb-4 rounded-base border-2 border-dashed border-main/40 bg-main/5 p-3">
+                  <p className="mb-2 font-base text-sm font-black uppercase tracking-wider text-main/80">
+                    Descuento (solo admin)
+                  </p>
+                  <div className="mb-2">
+                    <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">
+                      Tipo de descuento
+                    </label>
+                    <select
+                      value={createDiscountType}
+                      onChange={(e) => setCreateDiscountType(e.target.value as any)}
+                      className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground outline-none focus:border-main"
+                    >
+                      <option value="">Sin descuento</option>
+                      <option value="percentage">Porcentaje (%)</option>
+                      <option value="fixed">Monto fijo (RD$)</option>
+                      <option value="coupon">Cupón</option>
+                    </select>
+                  </div>
+                  {createDiscountType && (
+                    <>
+                      <div className="mb-2">
+                        <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">
+                          {createDiscountType === "percentage"
+                            ? "Porcentaje"
+                            : createDiscountType === "coupon"
+                            ? "Valor del cupón (RD$)"
+                            : "Monto (RD$)"}
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          step="1"
+                          onKeyDown={preventDecimalInput}
+                          value={createDiscountValue}
+                          onChange={(e) => setCreateDiscountValue(e.target.value)}
+                          placeholder={
+                            createDiscountType === "percentage" ? "Ej: 10" : "Ej: 500"
+                          }
+                          className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground shadow-none outline-none focus:border-main"
+                        />
+                      </div>
+                      {createDiscountType === "coupon" && (
+                        <div className="mb-2">
+                          <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">
+                            Código de cupón
+                          </label>
+                          <input
+                            type="text"
+                            value={createDiscountCode}
+                            onChange={(e) => setCreateDiscountCode(e.target.value)}
+                            placeholder="Ej: PROMO10"
+                            className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground shadow-none outline-none focus:border-main"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <label className="mb-1 block font-base text-xs font-semibold text-foreground/70">
+                          Motivo / nota del descuento
+                        </label>
+                        <input
+                          type="text"
+                          value={createDiscountReason}
+                          onChange={(e) => setCreateDiscountReason(e.target.value)}
+                          placeholder="Ej: cliente frecuente, promoción..."
+                          className="w-full rounded-base border-2 border-border bg-background px-3 py-2 font-base text-sm text-foreground shadow-none outline-none focus:border-main"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Notes */}
               <div className="mb-4">
                 <label className="mb-1 block font-base text-sm font-semibold text-foreground/80">
@@ -1428,6 +1557,16 @@ export default function Cotizaciones() {
                   <div className="flex items-center justify-between text-sm text-main-foreground/80">
                     <span>ITBIS (18%)</span>
                     <span>RD$ {createTotals.itbis.toLocaleString("es-DO")}</span>
+                  </div>
+                )}
+                {createTotals.discountAmount > 0 && (
+                  <div className="flex items-center justify-between text-sm text-main-foreground/90">
+                    <span>
+                      Descuento
+                      {createDiscountType === "percentage" && ` (${createDiscountValue}%)`}
+                      {createDiscountType === "coupon" && createDiscountCode && ` (${createDiscountCode})`}
+                    </span>
+                    <span>-RD$ {createTotals.discountAmount.toLocaleString("es-DO")}</span>
                   </div>
                 )}
                 <div className="mt-2 flex items-center justify-between border-t-2 border-main-foreground/30 pt-2">
