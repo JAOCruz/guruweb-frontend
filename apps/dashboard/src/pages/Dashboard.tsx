@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import LoadingScreen from "../components/LoadingScreen";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
@@ -21,25 +21,21 @@ import ServicesCatalog from "./ServicesCatalog";
 import MotherBrain from "./MotherBrain";
 import BotSimulator from "./BotSimulator";
 import SimulatorReview from "./SimulatorReview";
+import MiCuenta from "./MiCuenta";
+import Usuarios from "./Usuarios";
 import { NeoButton } from "@guru/ui";
 import { NeoDateInput } from "@guru/ui";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { useUserColors } from "../context/UserColorsContext";
 import { Zap, Eye, EyeOff } from "lucide-react";
-import { USER_COLUMNS, WorkerKey } from "../services/excelService";
+import { payrollColumns } from "../lib/payroll";
 import { formatCurrency } from "../utils";
 
-const WORKER_VARIANTS: Record<WorkerKey, "success" | "warning" | "danger" | "purple" | "orange" | "pink" | "teal" | "cyan"> = {
-  HENGI: "success",
-  MARLENI: "warning",
-  ISRAEL: "danger",
-  THAICAR: "purple",
-  AUXILIAR_I: "orange",
-  AUXILIAR_II: "pink",
-};
 
 const Dashboard: React.FC = () => {
   const { isAdmin, user } = useAuth();
+  const { appearanceOfColumn, users: directoryUsers } = useUserColors();
   const location = useLocation();
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,19 +102,22 @@ const Dashboard: React.FC = () => {
     );
   };
 
+  // Employees in earnings come from the user directory (active + "Participa en ganancias")
+  const payroll = useMemo(() => payrollColumns(directoryUsers, services), [directoryUsers, services]);
+
   const transformToExcelFormat = () => {
     if (!services.length) return [];
 
-    // Initialize groupedByUser with ALL USER_COLUMNS (UPPERCASE)
+    // Initialize groupedByUser with ALL payroll.columns (UPPERCASE)
     const groupedByUser: Record<string, any[]> = {};
-    USER_COLUMNS.forEach((u) => {
+    payroll.columns.forEach((u) => {
       groupedByUser[u] = [];
     });
 
     services.forEach((service: any) => {
       // Handle case-insensitive mapping
       const dataCol = (service.data_column || "").toUpperCase();
-      const match = USER_COLUMNS.find((u) => u === dataCol);
+      const match = payroll.columns.find((u) => u === dataCol);
       if (match) {
         groupedByUser[match].push(service);
       }
@@ -137,7 +136,7 @@ const Dashboard: React.FC = () => {
       const earningsRow: any = { DETALLE: "GANANCIA" };
       const commentRow: any = { DETALLE: "NOTA" };
 
-      USER_COLUMNS.forEach((u) => {
+      payroll.columns.forEach((u) => {
         const userServices = groupedByUser[u] || [];
         const service = userServices[i];
 
@@ -282,9 +281,7 @@ const Dashboard: React.FC = () => {
                     value={formatCurrency(
                       services
                         .filter((s: any) =>
-                          USER_COLUMNS.includes(
-                            (s.data_column || "").toUpperCase() as WorkerKey,
-                          ),
+                          payroll.columns.includes((s.data_column || "").toUpperCase()),
                         )
                         .reduce(
                           (acc, s: any) => acc + (Number(s.earnings) || 0) * (employeePercentage / 100),
@@ -293,9 +290,7 @@ const Dashboard: React.FC = () => {
                     )}
                     subValue={`${
                       services.filter((s: any) =>
-                        USER_COLUMNS.includes(
-                          (s.data_column || "").toUpperCase() as WorkerKey,
-                        ),
+                        payroll.columns.includes((s.data_column || "").toUpperCase()),
                       ).length
                     } serv.`}
                     variant="main"
@@ -305,7 +300,7 @@ const Dashboard: React.FC = () => {
                   />
 
                   {/* Dynamic stats for workers - showing their share */}
-                  {USER_COLUMNS.map((worker, idx) => {
+                  {payroll.columns.map((worker, idx) => {
                     const workerServices = services.filter(
                       (s: any) =>
                         (s.data_column || "").toUpperCase() === worker,
@@ -313,8 +308,9 @@ const Dashboard: React.FC = () => {
                     return (
                       <StatsCard
                         key={worker}
-                        label={worker.replace("_", " ")}
-                        variant={WORKER_VARIANTS[worker]}
+                        label={worker.replace("_", " ") + (payroll.inactive.has(worker) ? " (Desactivado)" : "")}
+                        accent={appearanceOfColumn(worker).color}
+                        icon={appearanceOfColumn(worker).emoji}
                         value={formatCurrency(
                           workerServices.reduce(
                             (acc, s: any) =>
@@ -334,7 +330,10 @@ const Dashboard: React.FC = () => {
 
               {isAdmin && (
                 <div className="mb-6">
-                  <DataModificationForm onServiceAdded={fetchData} />
+                  <DataModificationForm
+                    onServiceAdded={fetchData}
+                    workers={payroll.columns.filter((c) => !payroll.inactive.has(c))}
+                  />
                 </div>
               )}
 
@@ -345,6 +344,8 @@ const Dashboard: React.FC = () => {
                   onServiceDeleted={fetchData}
                   employeePercentage={employeePercentage}
                   isEmployeeView={false}
+                  workers={payroll.columns}
+                  inactiveWorkers={payroll.inactive}
                 />
               ) : (
                 <div className="space-y-8">
@@ -365,6 +366,8 @@ const Dashboard: React.FC = () => {
                   onSort={() => {}}
                   onServiceDeleted={fetchData}
                   employeePercentage={employeePercentage}
+                  workers={payroll.columns}
+                  inactiveWorkers={payroll.inactive}
                 />
               ) : (
                 <EmployeeDataTable services={getEmployeeServices()} />
@@ -382,6 +385,11 @@ const Dashboard: React.FC = () => {
           }
         />
         <Route path="/ai-guru" element={<AIGuru />} />
+        <Route path="/mi-cuenta" element={<MiCuenta />} />
+        <Route
+          path="/usuarios"
+          element={isAdmin ? <Usuarios /> : <div className="text-center text-slate-400 py-8">No tienes acceso a esta página</div>}
+        />
         <Route
           path="/settings"
           element={isAdmin ? <Settings /> : <div className="text-center text-slate-400 py-8">No tienes acceso a esta página</div>}

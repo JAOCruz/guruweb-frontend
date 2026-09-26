@@ -2,20 +2,29 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authAPI } from "../services/api";
 import LoadingScreen from "../components/LoadingScreen";
+import ForcePasswordChange from "../components/ForcePasswordChange";
 
 type UserRole = "admin" | "digitador" | "auxiliar" | "employee";
 
 interface User {
   id: number;
   username: string;
+  name?: string;
+  email?: string;
   role: UserRole;
   dataColumn: string | null;
+  color?: string | null;
+  avatar?: string | null;
+  mustChangePassword?: boolean;
+  isActive?: boolean;
+  inPayroll?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAdmin: boolean;
   isDigitador: boolean;
   isAuxiliar: boolean;
@@ -143,6 +152,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     navigate("/login");
   };
 
+  const refreshUser = async () => {
+    const response = await authAPI.getCurrentUser();
+    setUser(response.data.user || response.data);
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -153,6 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         user,
         login,
         logout,
+        refreshUser,
         isAdmin: user?.role === "admin",
         isDigitador: user?.role === "digitador" || user?.role === "employee",
         isAuxiliar: user?.role === "auxiliar",
@@ -186,6 +201,11 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
 
   if (!user) {
     return null;
+  }
+
+  // Admin-issued temporary password: nothing else is reachable until it's replaced
+  if (user.mustChangePassword) {
+    return <ForcePasswordChange />;
   }
 
   return <>{children}</>;

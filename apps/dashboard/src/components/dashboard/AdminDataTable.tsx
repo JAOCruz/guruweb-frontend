@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { ExcelRow, USER_COLUMNS, WorkerKey } from "../../services/excelService";
+import { ExcelRow, WorkerKey } from "../../services/excelService";
 import { servicesAPI } from "../../services/api";
 import { NeoButton } from "@guru/ui";
 import { NeoInput } from "@guru/ui";
@@ -12,45 +12,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { formatCurrency } from "../../utils";
-
-const workerButtonStyles: Record<
-  WorkerKey,
-  { active: string; inactive: string }
-> = {
-  HENGI: {
-    active: "bg-green-500 text-white border-green-600 hover:bg-green-600",
-    inactive: "bg-white text-green-600 border-green-600 hover:bg-green-50",
-  },
-  MARLENI: {
-    active: "bg-yellow-400 text-black border-yellow-500 hover:bg-yellow-500",
-    inactive: "bg-white text-yellow-600 border-yellow-500 hover:bg-yellow-50",
-  },
-  ISRAEL: {
-    active: "bg-red-500 text-white border-red-600 hover:bg-red-600",
-    inactive: "bg-white text-red-600 border-red-600 hover:bg-red-50",
-  },
-  THAICAR: {
-    active: "bg-purple-600 text-white border-purple-700 hover:bg-purple-700",
-    inactive: "bg-white text-purple-600 border-purple-700 hover:bg-purple-50",
-  },
-  AUXILIAR_I: {
-    active: "bg-orange-500 text-white border-orange-600 hover:bg-orange-600",
-    inactive: "bg-white text-orange-600 border-orange-600 hover:bg-orange-50",
-  },
-  AUXILIAR_II: {
-    active: "bg-pink-500 text-white border-pink-600 hover:bg-pink-600",
-    inactive: "bg-white text-pink-600 border-pink-600 hover:bg-pink-50",
-  },
-};
-
-const workerHeaderStyles: Record<WorkerKey, { bg: string; text: string; muted: string }> = {
-  HENGI: { bg: "bg-green-500", text: "text-white", muted: "text-white/90" },
-  MARLENI: { bg: "bg-yellow-400", text: "text-black", muted: "text-black/90" },
-  ISRAEL: { bg: "bg-red-500", text: "text-white", muted: "text-white/90" },
-  THAICAR: { bg: "bg-purple-600", text: "text-white", muted: "text-white/90" },
-  AUXILIAR_I: { bg: "bg-orange-500", text: "text-white", muted: "text-white/90" },
-  AUXILIAR_II: { bg: "bg-pink-500", text: "text-white", muted: "text-white/90" },
-};
+import { useUserColors } from "../../context/UserColorsContext";
 
 // --- TIPOS ---
 interface AdminDataTableProps {
@@ -60,6 +22,8 @@ interface AdminDataTableProps {
   employeePercentage: number;
   isEmployeeView?: boolean;
   currentEmployee?: string;
+  workers: string[];
+  inactiveWorkers?: Set<string>;
 }
 
 interface UserServiceEntry {
@@ -81,7 +45,10 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
   employeePercentage,
   isEmployeeView = false,
   currentEmployee,
+  workers,
+  inactiveWorkers,
 }) => {
+  const { appearanceOfColumn } = useUserColors();
   // --- ESTADOS ---
   const [activeUser, setActiveUser] = useState<WorkerKey | "all">(
     isEmployeeView && currentEmployee ? (currentEmployee as WorkerKey) : "all",
@@ -92,22 +59,15 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
 
   // Pagination state
   const ITEMS_PER_PAGE = 10;
-  const [pageByUser, setPageByUser] = useState<Record<WorkerKey, number>>({
-    HENGI: 1,
-    MARLENI: 1,
-    ISRAEL: 1,
-    THAICAR: 1,
-    AUXILIAR_I: 1,
-    AUXILIAR_II: 1,
-  });
+  const [pageByUser, setPageByUser] = useState<Record<WorkerKey, number>>({});
 
   const getCurrentPage = (user: WorkerKey) => pageByUser[user] || 1;
 
   const getTotalPages = (user: WorkerKey) =>
-    Math.max(1, Math.ceil(groupedData[user].length / ITEMS_PER_PAGE));
+    Math.max(1, Math.ceil((groupedData[user] ?? []).length / ITEMS_PER_PAGE));
 
   const getPaginatedData = (user: WorkerKey) => {
-    const all = groupedData[user];
+    const all = groupedData[user] ?? [];
     const page = Math.min(getCurrentPage(user), getTotalPages(user));
     const start = (page - 1) * ITEMS_PER_PAGE;
     return all.slice(start, start + ITEMS_PER_PAGE);
@@ -120,7 +80,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
 
   // --- LÓGICA DE DATOS ---
   const groupDataByUser = (): GroupedUserData => {
-    const groupedData = USER_COLUMNS.reduce<GroupedUserData>((acc, user) => {
+    const groupedData = workers.reduce<GroupedUserData>((acc, user) => {
       acc[user] = [];
       return acc;
     }, {} as GroupedUserData);
@@ -158,7 +118,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
     data.forEach((row, index) => {
       if (row.DETALLE !== "SERVICIO") return;
 
-      USER_COLUMNS.forEach((user) => {
+      workers.forEach((user) => {
         const serviceValue = row[user];
         if (!serviceValue) return;
 
@@ -186,14 +146,14 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
     return groupedData;
   };
 
-  const groupedData = useMemo(() => groupDataByUser(), [data]);
+  const groupedData = useMemo(() => groupDataByUser(), [data, workers]);
 
   // Clamp pages when data changes to avoid empty pages after deletions
   useEffect(() => {
     setPageByUser((prev) => {
       const next: Record<WorkerKey, number> = { ...prev };
-      USER_COLUMNS.forEach((user) => {
-        const total = Math.max(1, Math.ceil(groupedData[user].length / ITEMS_PER_PAGE));
+      workers.forEach((user) => {
+        const total = Math.max(1, Math.ceil((groupedData[user] ?? []).length / ITEMS_PER_PAGE));
         next[user] = Math.min(prev[user] || 1, total);
       });
       return next;
@@ -202,8 +162,8 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
 
   const calculateUserTotals = () => {
     const totals: any = {};
-    USER_COLUMNS.forEach((user) => {
-      const total = groupedData[user].reduce(
+    workers.forEach((user) => {
+      const total = (groupedData[user] ?? []).reduce(
         (acc, s) => acc + (Number(s.earnings) || 0),
         0,
       );
@@ -221,7 +181,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
     [groupedData, employeePercentage],
   );
 
-  const adminTotal = USER_COLUMNS.reduce(
+  const adminTotal = workers.reduce(
     (acc, user) => acc + (userTotals[user]?.adminShare ?? 0),
     0,
   );
@@ -273,16 +233,16 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
     const statsText =
       activeUser === "all"
         ? `Total Global: ${adminTotal}`
-        : `Usuario: ${activeUser}, Total: ${userTotals[activeUser].total}`;
+        : `Usuario: ${activeUser}, Total: ${userTotals[activeUser]?.total ?? 0}`;
 
     const contextData =
       activeUser === "all"
-        ? USER_COLUMNS.map((u) => ({
+        ? workers.map((u) => ({
             user: u,
-            total: userTotals[u].total,
-            count: groupedData[u].length,
+            total: userTotals[u]?.total ?? 0,
+            count: (groupedData[u] ?? []).length,
           }))
-        : groupedData[activeUser].map((s) => ({ s: s.service, m: s.earnings }));
+        : (groupedData[activeUser] ?? []).map((s) => ({ s: s.service, m: s.earnings }));
 
     const prompt = `
       Actúa como gerente de "Gurú Soluciones". Analiza estos datos del día:
@@ -317,7 +277,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
   };
 
   // --- RENDER ---
-  const usersToRender = activeUser === "all" ? USER_COLUMNS : [activeUser];
+  const usersToRender = activeUser === "all" || !workers.includes(activeUser) ? workers : [activeUser];
 
   return (
     <div className="animate-in fade-in space-y-8 duration-500">
@@ -338,8 +298,9 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
             >
               Todos
             </NeoButton>
-            {USER_COLUMNS.map((user) => {
-              const style = workerButtonStyles[user];
+            {workers.map((user) => {
+              const a = appearanceOfColumn(user);
+              const active = activeUser === user;
               return (
                 <NeoButton
                   key={user}
@@ -347,10 +308,13 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => setActiveUser(user)}
-                  className={
-                    activeUser === user ? style.active : style.inactive
+                  style={
+                    active
+                      ? { backgroundColor: a.color.bg, color: a.color.text }
+                      : { backgroundColor: "#ffffff", color: "#000000", borderColor: a.color.bg }
                   }
                 >
+                  {a.emoji && <span className="mr-1">{a.emoji}</span>}
                   {user.replace("_", " ")}
                 </NeoButton>
               );
@@ -369,28 +333,35 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
       </div>
 
       {/* 2. TABLAS / LISTAS DE SERVICIOS */}
-      {usersToRender.map((user) => (
+      {usersToRender.map((user) => {
+        const a = appearanceOfColumn(user);
+        return (
         <div
           key={user}
           className="overflow-hidden rounded-base border-2 border-border bg-background shadow-shadow"
         >
           {/* Header de la Tabla */}
-          <div className={`flex flex-col gap-3 border-b-2 border-border p-5 sm:flex-row sm:items-center sm:justify-between ${workerHeaderStyles[user].bg}`}>
-            <h3 className={`font-heading text-lg font-black uppercase tracking-wider md:text-xl ${workerHeaderStyles[user].text}`}>
+          <div
+            className="flex flex-col gap-3 border-b-2 border-border p-5 sm:flex-row sm:items-center sm:justify-between"
+            style={{ backgroundColor: a.color.bg, color: a.color.text }}
+          >
+            <h3 className="font-heading text-lg font-black uppercase tracking-wider md:text-xl">
+              {a.emoji && <span className="mr-2">{a.emoji}</span>}
               {user.replace("_", " ")}
+              {inactiveWorkers?.has(user) && (
+                <span className="ml-3 rounded-full border-2 border-current px-2 py-0.5 align-middle text-xs normal-case tracking-normal">
+                  Desactivado
+                </span>
+              )}
             </h3>
             <div className="flex flex-wrap gap-4 font-mono text-sm">
-              <span className={`font-bold tracking-widest uppercase ${workerHeaderStyles[user].muted}`}>
+              <span className="font-bold uppercase tracking-widest opacity-90">
                 Total:{" "}
-                <span className={workerHeaderStyles[user].text}>
-                  {formatCurrency(userTotals[user].total)}
-                </span>
+                <span>{formatCurrency(userTotals[user].total)}</span>
               </span>
-              <span className={`font-bold tracking-widest uppercase ${workerHeaderStyles[user].muted}`}>
+              <span className="font-bold uppercase tracking-widest opacity-90">
                 Admin:{" "}
-                <span className={workerHeaderStyles[user].text}>
-                  {formatCurrency(userTotals[user].adminShare)}
-                </span>
+                <span>{formatCurrency(userTotals[user].adminShare)}</span>
               </span>
             </div>
           </div>
@@ -421,7 +392,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {groupedData[user].length > 0 ? (
+                {(groupedData[user] ?? []).length > 0 ? (
                   getPaginatedData(user).map((item, idx) => {
                     const isEditing = editingCommentId === `${user}-${idx}`;
                     return (
@@ -555,7 +526,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
 
           {/* VISTA MÓVIL (Tarjetas) */}
           <div className="divide-y divide-border md:hidden">
-            {groupedData[user].length > 0 ? (
+            {(groupedData[user] ?? []).length > 0 ? (
               getPaginatedData(user).map((item, idx) => (
                 <div key={`${user}-m-${idx}`} className="bg-background p-5">
                   <div className="mb-2 flex items-start justify-between gap-3">
@@ -607,7 +578,7 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
           </div>
 
           {/* Pagination */}
-          {groupedData[user].length > ITEMS_PER_PAGE && (
+          {(groupedData[user] ?? []).length > ITEMS_PER_PAGE && (
             <div className="flex items-center justify-between border-t-2 border-border bg-secondary-background p-4">
               <span className="text-sm font-bold text-foreground/70">
                 Página {getCurrentPage(user)} de {getTotalPages(user)}
@@ -635,7 +606,8 @@ const AdminDataTable: React.FC<AdminDataTableProps> = ({
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
 
       {/* MODAL IA */}
       {aiModalOpen && (
