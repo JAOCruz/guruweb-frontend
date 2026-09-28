@@ -9,6 +9,8 @@ const LINKS = [
   { href: "#nosotros", label: "Nosotros" },
   { href: "#ubicacion", label: "Ubicación" },
 ];
+// Team login to the dashboard, same link as the previous site's menu
+const TEAM_URL = "https://guruweb-dashboard-prod.netlify.app/login";
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
@@ -35,6 +37,12 @@ export default function Nav() {
         </nav>
         <div className="flex items-center gap-2">
           <a
+            href={TEAM_URL}
+            className="brut-sm press hidden items-center rounded-full bg-paper px-4 py-2 text-sm font-bold md:inline-flex"
+          >
+            ¿Trabajas con nosotros?
+          </a>
+          <a
             href={whatsappLink()}
             target="_blank"
             rel="noopener"
@@ -60,6 +68,9 @@ export default function Nav() {
               {l.label}
             </a>
           ))}
+          <a href={TEAM_URL} className="block border-b border-ink/15 py-4 font-display text-lg font-bold text-guru">
+            ¿Trabajas con nosotros?
+          </a>
           <a href={whatsappLink()} target="_blank" rel="noopener" className="brut press mt-4 flex items-center justify-center gap-2 rounded-2xl bg-mint py-4 font-bold">
             <WhatsAppIcon /> Escríbenos por WhatsApp
           </a>
