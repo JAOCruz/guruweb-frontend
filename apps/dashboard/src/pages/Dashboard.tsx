@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import LoadingScreen from "../components/LoadingScreen";
-import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import AdminDataTable from "../components/dashboard/AdminDataTable";
 import EmployeeDataTable from "../components/dashboard/EmployeeDataTable";
@@ -55,6 +55,17 @@ const Dashboard: React.FC = () => {
   const [servicesFocus, setServicesFocus] = useState<{ worker: string; at: number } | null>(null);
   const openServices = (worker: string) => setServicesFocus({ worker, at: Date.now() });
 
+  // From a notification: /?service=12&date=2026-10-20 shows that day and highlights the service
+  const [searchParams] = useSearchParams();
+  const highlightService = Number(searchParams.get("service")) || null;
+  useEffect(() => {
+    const day = searchParams.get("date");
+    if (day && /^\d{4}-\d{2}-\d{2}$/.test(day)) {
+      setStartDate(day);
+      setEndDate(day);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     // Check if on a bot-related route (skip service fetching for these)
     const isBotRoute = /\/(whatsapp|bot-|cases|cotizaciones|ai-insights|ai-guru|documents|laws|services-catalog|motherbrain|simulator-review)/.test(location.pathname);
@@ -72,7 +83,7 @@ const Dashboard: React.FC = () => {
       fetchData();
       fetchEmployeePercentage();
     }
-  }, [startDate, endDate, location.pathname]);
+  }, [startDate, endDate, location.pathname, location.state]); // a notification's click reloads (its service may be new)
 
   const fetchEmployeePercentage = async () => {
     try {
@@ -363,7 +374,7 @@ const Dashboard: React.FC = () => {
                 />
               ) : (
                 <div className="space-y-8">
-                  <EmployeeDataTable services={getEmployeeServices()} />
+                  <EmployeeDataTable services={getEmployeeServices()} highlightId={highlightService} />
                   <AIGuru />
                 </div>
               )}
@@ -384,7 +395,7 @@ const Dashboard: React.FC = () => {
                   inactiveWorkers={payroll.inactive}
                 />
               ) : (
-                <EmployeeDataTable services={getEmployeeServices()} />
+                <EmployeeDataTable services={getEmployeeServices()} highlightId={highlightService} />
               )}
               {!isAdmin && <AIGuru />}
             </div>
