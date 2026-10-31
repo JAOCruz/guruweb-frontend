@@ -6,7 +6,7 @@ import { MemoryRouter } from "react-router-dom";
 const { api, auth, downloadFile } = vi.hoisted(() => ({
   api: {
     models: vi.fn(), aiSearch: vi.fn(), clients: vi.fn(), searchAllClients: vi.fn(), createClient: vi.fn(),
-    documents: vi.fn(), document: vi.fn(), upload: vi.fn(), uploadVersion: vi.fn(), approve: vi.fn(), send: vi.fn(),
+    documents: vi.fn(), document: vi.fn(), upload: vi.fn(), uploadVersion: vi.fn(), approve: vi.fn(), send: vi.fn(), createNew: vi.fn(),
   },
   auth: { isAdmin: false, user: { id: 2, username: "hengi", role: "digitador" } },
   downloadFile: vi.fn(),
@@ -61,9 +61,82 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe("Documentos — Buscar por nombre", () => {
-  it("lists our selection, searches by name and downloads a model as Word", async () => {
+describe("Documentos — Inicio (menú de fichas)", () => {
+  it("shows the tiles with the counters on «Mis documentos»; a tile opens its view and «Volver al menú» comes back", async () => {
+    api.documents.mockResolvedValue({ data: { documents: [DOC, { ...DOC, id: 12, title: "Poder enviado", approved_version: 1, sent_at: "2026-10-01T00:00:00Z" }] } });
     renderAt();
+    const menu = await screen.findByRole("navigation", { name: /menú de documentos/i });
+    expect(within(menu).getByRole("button", { name: /nuevo documento/i })).toBeTruthy();
+    expect(within(menu).getByRole("button", { name: /servicios/i })).toBeTruthy();
+    expect(within(menu).getByRole("button", { name: /biblioteca de modelos/i })).toBeTruthy();
+    const mine = within(menu).getByRole("button", { name: /mis documentos/i });
+    await waitFor(() => expect(mine.textContent).toMatch(/1\s*Borradores/));
+    expect(mine.textContent).toMatch(/1\s*Enviados/);
+    fireEvent.click(mine);
+    expect(await screen.findByRole("heading", { name: /mis documentos/i })).toBeTruthy();
+    expect(screen.queryByRole("navigation", { name: /menú de documentos/i })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /volver al menú/i }));
+    expect(await screen.findByRole("navigation", { name: /menú de documentos/i })).toBeTruthy();
+  });
+
+  it("«Servicios» opens the internal guide; «Volver al menú» returns to the tiles", async () => {
+    renderAt();
+    const menu = await screen.findByRole("navigation", { name: /menú de documentos/i });
+    fireEvent.click(within(menu).getByRole("button", { name: /servicios/i }));
+    expect(await screen.findByRole("heading", { name: /servicios/i })).toBeTruthy();
+    expect(screen.getByText(/guía interna para digitadores/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /digitación/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /volver al menú/i }));
+    expect(await screen.findByRole("navigation", { name: /menú de documentos/i })).toBeTruthy();
+    expect(screen.queryByText(/guía interna/i)).toBeNull();
+  });
+
+  it("the ⌘K search finds models, my documents and clients", async () => {
+    renderAt();
+    await screen.findByRole("navigation", { name: /menú de documentos/i });
+    fireEvent.keyDown(window, { key: "k", metaKey: true });
+    const dialog = await screen.findByRole("dialog", { name: /buscar en documentos/i });
+    fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "poder" } });
+    await waitFor(() => expect(api.models).toHaveBeenCalledWith("poder"));
+    expect(await within(dialog).findByText(/modelos \(/i)).toBeTruthy();
+    expect(within(dialog).getByText(/clientes \(1\)/i)).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole("button", { name: /juan pérez/i }));
+    expect(await screen.findByRole("heading", { name: /mis documentos/i })).toBeTruthy();
+  });
+
+  it("'Nuevo documento' → 'Desde cero con IA' runs inline: steps, then the draft and its missing data", async () => {
+    api.createNew.mockResolvedValue({ data: { document: { ...DOC, id: 30, title: "CONTRATO DE ALQUILER", versions: VERSIONS }, placeholders: ["NOMBRE_ARRENDADOR"], staff_placeholders: ["CIUDAD_FIRMA"] } });
+    renderAt();
+    const menu = await screen.findByRole("navigation", { name: /menú de documentos/i });
+    fireEvent.click(within(menu).getByRole("button", { name: /nuevo documento/i }));
+    const view = await screen.findByRole("region", { name: /nuevo documento/i });
+    expect(screen.queryByRole("dialog")).toBeNull(); // not a modal any more
+    fireEvent.click(within(view).getByRole("button", { name: /desde cero con ia/i }));
+    expect(await screen.findByRole("heading", { name: /crear desde cero/i })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(/qué necesitas/i), { target: { value: "Contrato de alquiler de un local comercial en Piantini por 2 años" } });
+    fireEvent.click(screen.getByRole("button", { name: /redactar con ia/i }));
+    await waitFor(() => expect(api.createNew).toHaveBeenCalledWith({ request: "Contrato de alquiler de un local comercial en Piantini por 2 años" }));
+    expect(await screen.findByText(/guardado como borrador/i)).toBeTruthy();
+    expect(screen.getByText("{{NOMBRE_ARRENDADOR}}")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /abrir en mis documentos/i }));
+    expect(await screen.findByRole("heading", { name: /mis documentos/i })).toBeTruthy();
+  });
+
+  it("'Desde un modelo' goes to the library and 'Subir archivo' opens the upload dialog", async () => {
+    renderAt("/documents?tab=nuevo");
+    fireEvent.click(await screen.findByRole("button", { name: /desde un modelo/i }));
+    expect(await screen.findByRole("heading", { name: /biblioteca de modelos/i })).toBeTruthy();
+    expect(await screen.findByText("PODER ESPECIAL")).toBeTruthy();
+    cleanup();
+    renderAt("/documents?tab=nuevo");
+    fireEvent.click(await screen.findByRole("button", { name: /subir archivo/i }));
+    expect(await screen.findByRole("dialog", { name: /subir documento/i })).toBeTruthy();
+  });
+});
+
+describe("Documentos — Biblioteca de modelos", () => {
+  it("lists our selection, searches by name and downloads a model as Word", async () => {
+    renderAt("/documents?tab=biblioteca");
     expect(await screen.findByText("PODER ESPECIAL")).toBeTruthy();
     fireEvent.change(screen.getByPlaceholderText(/buscar modelo/i), { target: { value: "declaracion" } });
     await waitFor(() => expect(api.models).toHaveBeenCalledWith("declaracion"));
@@ -74,7 +147,7 @@ describe("Documentos — Buscar por nombre", () => {
 
   it("'Buscar con IA' shows the models Gemini picked and why", async () => {
     api.aiSearch.mockResolvedValue({ data: { models: [{ ...MODELS[1], reason: "Para que alguien firme por ti" }] } });
-    renderAt();
+    renderAt("/documents?tab=biblioteca");
     await screen.findByText("PODER ESPECIAL");
     fireEvent.change(screen.getByPlaceholderText(/buscar modelo/i), { target: { value: "que alguien firme por mí" } });
     fireEvent.click(screen.getByRole("button", { name: /buscar con ia/i }));
@@ -86,7 +159,7 @@ describe("Documentos — Buscar por nombre", () => {
 describe("Documentos — Mis documentos", () => {
   it("la pestaña se llama «Mis documentos»", async () => {
     renderAt("/documents?tab=historial");
-    expect(await screen.findByRole("tab", { name: /mis documentos/i })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /mis documentos/i })).toBeTruthy();
     expect(screen.queryByText(/historial/i)).toBeNull();
   });
 
@@ -156,7 +229,7 @@ describe("Documentos — Etiquetas", () => {
 
   it("employees get 'Llenar' only on approved models; it opens the fill editor", async () => {
     api.models.mockResolvedValue({ data: { models: TAGGED } });
-    renderAt();
+    renderAt("/documents?tab=biblioteca");
     const approved = (await screen.findByText("DECLARACIÓN JURADA DE INGRESOS")).closest("li")!;
     const pending = screen.getByText("PODER ESPECIAL").closest("li")!;
     expect(within(approved).getByText(/listo para llenar/i)).toBeTruthy();
@@ -168,21 +241,22 @@ describe("Documentos — Etiquetas", () => {
   it("the admin also fills pending models and sees their status", async () => {
     auth.isAdmin = true;
     api.models.mockResolvedValue({ data: { models: TAGGED } });
-    renderAt();
+    renderAt("/documents?tab=biblioteca");
     const pending = (await screen.findByText("PODER ESPECIAL")).closest("li")!;
     expect(within(pending).getByText(/pendiente de revisión/i)).toBeTruthy();
     expect(within(pending).getByRole("button", { name: /^llenar/i })).toBeTruthy();
   });
 
-  it("only the admin has the 'Revisión de etiquetas' tab", async () => {
+  it("only the admin has the 'Revisión de etiquetas' tile", async () => {
     renderAt();
-    await screen.findByText("PODER ESPECIAL");
-    expect(screen.queryByRole("tab", { name: /revisión de etiquetas/i })).toBeNull();
+    await screen.findByRole("navigation", { name: /menú de documentos/i });
+    expect(screen.queryByRole("button", { name: /revisión de etiquetas/i })).toBeNull();
     cleanup();
     auth.isAdmin = true;
     renderAt();
-    fireEvent.click(await screen.findByRole("tab", { name: /revisión de etiquetas/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /revisión de etiquetas/i }));
     expect(await screen.findByTestId("tag-review")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: /revisión de etiquetas/i })).toBeTruthy();
   });
 });
 
