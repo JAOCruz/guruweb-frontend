@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Eye, FileDown, FileText, Search, Send, Sparkles, Upload, X } from "lucide-react";
+import { Eye, FileDown, Search, Send, Sparkles, Upload, X } from "lucide-react";
 import { NeoButton } from "@guru/ui";
 import { useAuth } from "../../context/AuthContext";
 import { useUserColors } from "../../context/UserColorsContext";
@@ -24,6 +24,35 @@ const SORTS: { key: DocSort; label: string; emoji: string }[] = [
   { key: "name", label: "Nombre", emoji: "🔤" },
 ];
 
+const OTROS = "Otros documentos";
+const TODOS = "todos";
+// A big emoji per folder of the model tree (CONTRATOS CIVILES › CONTRATOS AUTENTICOS › ESTADO CIVIL…); the most specific match first
+const CAT_EMOJI: [RegExp, string][] = [
+  [/notifica/i, "📨"], [/aviso/i, "📢"], [/demanda/i, "⚖️"], [/recurso/i, "📑"], [/instancia|escrito/i, "🏛️"],
+  [/estado civil|matrimon|divorc/i, "💍"], [/natalidad/i, "👶"], [/herencia|familiar|testament|sucesi/i, "🕊️"],
+  [/poder|autoriza/i, "✍️"], [/protocolo/i, "🧾"], [/financier/i, "💰"], [/laboral/i, "💼"], [/renta|alquiler/i, "🔑"],
+  [/agrimensura/i, "📐"], [/embarcaci|maritim/i, "🚤"], [/ganado/i, "🐄"], [/maquina/i, "⚙️"], [/punto comercial/i, "🏪"],
+  [/vehicul/i, "🚗"], [/inmueble|inmobiliari/i, "🏠"], [/traslativ/i, "🔁"], [/comercial/i, "🏢"], [/acuerdo/i, "🤝"],
+  [/autentic/i, "🖋️"], [/firma privada/i, "📝"], [/declara/i, "📜"], [/contrat/i, "📜"],
+];
+export const catEmoji = (c: string) => (c === OTROS ? "🗂️" : CAT_EMOJI.find(([re]) => re.test(c))?.[1] ?? "📄");
+
+// Folder names come in capitals and without accents; shown as «Auténticos», «Bajo firma privada»…
+const ACCENTS: Record<string, string> = {
+  autenticos: "auténticos", autentico: "auténtico", embarcacion: "embarcación", maritima: "marítima", vehiculos: "vehículos",
+  maquina: "máquina", notificacion: "notificación",
+};
+// A subfolder repeats its parent's first word (CONTRATOS CIVILES › CONTRATOS AUTENTICOS): it is left out
+export function folderLabel(name: string, parent?: string) {
+  let n = name.trim();
+  const first = parent?.trim().split(/\s+/)[0];
+  if (first && n.toUpperCase().startsWith(first.toUpperCase() + " ")) n = n.slice(first.length + 1);
+  if (n !== n.toUpperCase()) return n;
+  const words = n.toLowerCase().split(/(\s+|[()])/).map((w) => ACCENTS[w] ?? w).join("");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+const SEP = " › ";
+
 // Mis documentos: a grid with one card per document in the user's scope; a card opens its versions right below its row. Each digitador sees only theirs;
 // the admin sees everyone's and filters by digitador, with the same colored chips as Casos.
 // ?client= (from the search, or after personalizing) narrows the list to that client until it is cleared.
@@ -42,7 +71,33 @@ export default function History() {
   const [personalize, setPersonalize] = useState<{ doc: PortfolioDocument; version: DocVersion } | null>(null);
   const [approving, setApproving] = useState<{ doc: PortfolioDocument; version: DocVersion } | null>(null);
   const [sending, setSending] = useState(false);
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
+  const cat = params.get("cat");
+  const setCat = (c: string | null) =>
+    setParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (c) next.set("cat", c);
+      else next.delete("cat");
+      return next;
+    });
+  // A document lives in its model's folder (the whole path of the model tree); uploaded and AI documents go to «Otros documentos»
+  const [modelCats, setModelCats] = useState<Map<number, string[]>>(new Map());
+  useEffect(() => {
+    documentosAPI
+      .models()
+      .then(({ data }) =>
+        setModelCats(
+          new Map(
+            data.models
+              .map((m) => [m.id, (m.category_path?.length ? m.category_path : m.category ? [m.category] : []).map((c) => c.trim())] as const)
+              .filter(([, p]) => p.length > 0),
+          ),
+        ),
+      )
+      .catch(() => {});
+  }, []);
+  const pathOf = (d: PortfolioDocument) => (d.template_id != null && modelCats.get(d.template_id)) || [OTROS];
+  const catOf = (d: PortfolioDocument) => pathOf(d)[pathOf(d).length - 1];
   // «Sin cliente» is id 0; ?doc= opens that document once the list is in
   const [clientFilter, setClientFilter] = useState<number | null>(params.has("client") ? Number(params.get("client")) : null);
   const wantedDoc = Number(params.get("doc")) || null;
@@ -77,7 +132,26 @@ export default function History() {
       (clientFilter === null || (d.client_id ?? 0) === clientFilter) &&
       (!term || [d.title, d.client_name, d.client_phone, d.created_by_name].some((x) => x?.toLowerCase().includes(term))),
   );
-  const visible = narrowed.filter((d) => (owner === "all" ? true : owner === "none" ? d.created_by == null : d.created_by === owner));
+  const mine = narrowed.filter((d) => (owner === "all" ? true : owner === "none" ? d.created_by == null : d.created_by === owner));
+  // Gurú OS flow: big category tiles first; a search, a client or a document link goes straight to the cards
+  // ?cat= is the open folder's path ("CONTRATOS CIVILES › CONTRATOS AUTENTICOS"); «todos» lists everything
+  const folder = cat && cat !== TODOS ? cat.split(SEP) : [];
+  const inFolder = (d: PortfolioDocument) => folder.every((f, i) => pathOf(d)[i] === f);
+  const folderDocs = cat === TODOS ? mine : mine.filter(inFolder);
+  // The subfolders of the open folder with their counts ("" = documents sitting right in it, shown as cards under the tiles)
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    folderDocs.forEach((d) => {
+      const next = pathOf(d)[folder.length] ?? "";
+      counts.set(next, (counts.get(next) ?? 0) + 1);
+    });
+    return [...counts].sort(([a], [b]) => (a === OTROS ? 1 : b === OTROS ? -1 : a.localeCompare(b, "es")));
+  }, [folderDocs, modelCats, cat]); // eslint-disable-line react-hooks/exhaustive-deps
+  const hasSubfolders = categories.some(([c]) => c !== "");
+  // Gurú OS flow: folder tiles until a folder has no subfolders; a search, a client or a document link goes straight to the cards
+  const showTiles = cat !== TODOS && (documents === null ? !cat : hasSubfolders) && clientFilter === null && !wantedDoc && !term;
+  const visible = folderDocs.filter((d) => !showTiles || pathOf(d).length === folder.length);
+  const openFolder = (sub: string) => setCat([...folder, sub].join(SEP));
   // Digitadores always get a chip; anyone else who made a document too, so no document is out of reach
   const chips = useMemo<Array<[Owner, string, number]>>(() => {
     const people = new Map<number, string>();
@@ -226,6 +300,62 @@ export default function History() {
         </div>
       )}
 
+      {cat && (
+        <div className="gos-crumbs flex min-w-0 items-center gap-3">
+          <button type="button" onClick={() => setCat(cat === TODOS || folder.length <= 1 ? null : folder.slice(0, -1).join(SEP))} className="gos-back">
+            <span aria-hidden="true">←</span> Volver
+          </button>
+          <nav aria-label="Ruta" className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1 font-heading text-lg font-black text-white">
+            <button type="button" onClick={() => setCat(null)} className="gos-crumb-up gos-muted text-sm font-bold hover:text-white">
+              Carpetas
+            </button>
+            {(cat === TODOS ? ["Todos"] : folder).map((f, i, list) => (
+              <span key={i} className={`flex shrink-0 items-center gap-1${i < list.length - 1 ? " gos-crumb-up" : ""}`}>
+                <span aria-hidden="true" className="gos-crumb-sep gos-muted text-sm">›</span>
+                {i === list.length - 1 ? (
+                  <span className="flex min-w-0 items-center gap-2" aria-current="page">
+                    <span aria-hidden="true">{cat === TODOS ? "📂" : catEmoji(f)}</span>
+                    <span>{cat === TODOS ? "Todos" : folderLabel(f, folder[i - 1])}</span>
+                  </span>
+                ) : (
+                  <button type="button" onClick={() => setCat(folder.slice(0, i + 1).join(SEP))} className="gos-muted text-sm font-bold hover:text-white">
+                    {folderLabel(f, folder[i - 1])}
+                  </button>
+                )}
+              </span>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      {showTiles &&
+        (documents === null ? (
+          <p className="gos-muted text-sm">Cargando…</p>
+        ) : (
+          <ul aria-label="Categorías" className="gos-grid">
+            {folder.length === 0 && (
+              <li className="flex">
+                <button type="button" onClick={() => setCat(TODOS)} className="gos-tile-big group w-full">
+                  <span className="gos-emoji" aria-hidden="true">📂</span>
+                  <span className="gos-tile-label text-sm">Todos</span>
+                  <span className="gos-tile-hint">{countLabel(mine.length)}</span>
+                </button>
+              </li>
+            )}
+            {categories
+              .filter(([c]) => c !== "")
+              .map(([c, n]) => (
+                <li key={c} className="flex">
+                  <button type="button" onClick={() => openFolder(c)} className="gos-tile-big group w-full">
+                    <span className="gos-emoji" aria-hidden="true">{catEmoji(c)}</span>
+                    <span className="gos-tile-label text-sm">{folderLabel(c, folder[folder.length - 1])}</span>
+                    <span className="gos-tile-hint">{countLabel(n)}</span>
+                  </button>
+                </li>
+              ))}
+          </ul>
+        ))}
+      {(!showTiles || (documents !== null && visible.length > 0)) && (
       <div className="flex min-w-0 flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="gos-muted text-xs font-bold">
@@ -248,24 +378,31 @@ export default function History() {
               return (
                 <Fragment key={d.id}>
                   <li className="gos-doc-card" data-open={open}>
-                    <button type="button" onClick={() => toggleDoc(d)} aria-expanded={open} title={d.title} className="flex h-full w-full flex-col items-center gap-2 p-5 text-center">
-                      <span className="gos-doc-icon" style={madeBy ? { backgroundColor: `color-mix(in srgb, ${madeBy.color.bg} 40%, #16213a)` } : undefined}>
-                        <FileText size={28} aria-hidden="true" />
-                      </span>
-                      <span className="gos-doc-title">{d.title}</span>
-                      <span className="gos-doc-sub">{d.client_name || "Sin cliente"}</span>
-                      {isAdmin && madeBy && d.created_by_name && (
-                        <span className="inline-flex max-w-full items-center gap-1.5 text-xs font-bold text-white">
-                          <UserAvatar appearance={madeBy} size="xs" />
-                          <span className="truncate">{d.created_by_name}</span>
+                    {/* Product-card layout (Leandro's reference): a big tile with the status on it, the details below */}
+                    <button type="button" onClick={() => toggleDoc(d)} aria-expanded={open} title={d.title} className="group flex h-full w-full flex-col gap-3 text-left">
+                      <span className="gos-card-tile">
+                        <span className="gos-card-badges">
+                          <StatusBadge approved={d.approved_version} />
+                          {d.prepared_by_bot && (
+                            <span className="gos-pill gos-pill-orange" title="Preparado por el bot">
+                              <span aria-hidden="true">🤖</span> Bot
+                            </span>
+                          )}
                         </span>
-                      )}
-                      <span className="gos-muted text-xs">
-                        {d.versions_count} {d.versions_count === 1 ? "versión" : "versiones"} · {fmt(d.updated_at)}
+                        <span className="gos-emoji" aria-hidden="true">{catEmoji(catOf(d))}</span>
                       </span>
-                      <span className="mt-auto flex flex-wrap items-center justify-center gap-1.5 pt-1">
-                        {d.prepared_by_bot && <BotBadge />}
-                        <StatusBadge approved={d.approved_version} />
+                      <span className="gos-card-info">
+                        <span className="gos-doc-title">{d.title}</span>
+                        <span className="gos-doc-sub">{d.client_name || "Sin cliente"}</span>
+                        {isAdmin && madeBy && d.created_by_name && (
+                          <span className="inline-flex max-w-full items-center gap-1.5 text-xs font-bold text-white">
+                            <UserAvatar appearance={madeBy} size="xs" />
+                            <span className="truncate">{d.created_by_name}</span>
+                          </span>
+                        )}
+                        <span className="gos-card-meta">
+                          {d.versions_count} {d.versions_count === 1 ? "versión" : "versiones"} · {fmt(d.updated_at)}
+                        </span>
                       </span>
                     </button>
                   </li>
@@ -375,6 +512,7 @@ export default function History() {
           </p>
         )}
       </div>
+      )}
 
       {upload && (
         <UploadDialog
@@ -425,6 +563,8 @@ function deliveryLine(d: PortfolioDocument): { text: string; warn: boolean } | n
   if (d.send_mode === "al_pagar" && d.approved_version) return { text: "Se enviará cuando el cliente pague", warn: false };
   return null;
 }
+
+const countLabel = (n: number) => `${n} ${n === 1 ? "documento" : "documentos"}`;
 
 function BotBadge() {
   return (

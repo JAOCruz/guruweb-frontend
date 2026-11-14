@@ -166,18 +166,18 @@ describe("Documentos — Biblioteca de modelos", () => {
 
 describe("Documentos — Mis documentos", () => {
   it("la pestaña se llama «Mis documentos»", async () => {
-    renderAt("/documents?tab=historial");
+    renderAt("/documents?tab=historial&cat=todos");
     expect(await screen.findByRole("heading", { name: /mis documentos/i })).toBeTruthy();
     expect(screen.queryByText(/historial/i)).toBeNull();
   });
 
   it("a document made from a model can become the model's next version; an uploaded one cannot", async () => {
     api.document.mockResolvedValueOnce({ data: { document: { ...DOC, template_id: 3, versions: VERSIONS } } });
-    renderAt("/documents?tab=historial");
+    renderAt("/documents?tab=historial&cat=todos");
     fireEvent.click(await screen.findByRole("button", { name: /contrato de alquiler/i }));
     expect(await screen.findByText("como-modelo:10")).toBeTruthy();
     cleanup();
-    renderAt("/documents?tab=historial");
+    renderAt("/documents?tab=historial&cat=todos");
     fireEvent.click(await screen.findByRole("button", { name: /contrato de alquiler/i }));
     expect(await screen.findByText("v2")).toBeTruthy();
     expect(screen.queryByText(/^como-modelo:/)).toBeNull();
@@ -190,7 +190,7 @@ describe("Documentos — Mis documentos", () => {
   });
 
   it("lists every document right away, without choosing a client; employees cannot approve or filter by digitador", async () => {
-    renderAt("/documents?tab=historial");
+    renderAt("/documents?tab=historial&cat=todos");
     fireEvent.click(await screen.findByRole("button", { name: /contrato de alquiler/i }));
     await waitFor(() => expect(api.documents).toHaveBeenCalledWith({ sort: "recent" }));
     expect(api.clients).not.toHaveBeenCalledWith("");
@@ -198,6 +198,85 @@ describe("Documentos — Mis documentos", () => {
     expect(screen.getAllByText(/borrador/i).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /^aprobar v/i })).toBeNull();
     expect(screen.queryByRole("group", { name: /digitador/i })).toBeNull();
+  });
+
+  describe("Mis documentos por categoría (estilo Gurú OS)", () => {
+    const DOCS = [
+      { ...DOC, id: 30, title: "Declaración de soltería", template_id: 1 },
+      { ...DOC, id: 31, title: "Declaración de ingresos", template_id: 1, approved_version: 1 },
+      { ...DOC, id: 32, title: "Poder para viaje", template_id: 3 },
+      { ...DOC, id: 33, title: "Carta subida", template_id: null },
+    ];
+    const tiles = () => screen.getByRole("list", { name: /categorías/i });
+    beforeEach(() => api.documents.mockResolvedValue({ data: { documents: DOCS } }));
+
+    // The real model tree: CONTRATOS CIVILES › CONTRATOS AUTENTICOS › ESTADO CIVIL…
+    const PATHS = [
+      { ...MODELS[0], category: "ESTADO CIVIL", category_path: ["CONTRATOS CIVILES", "CONTRATOS AUTENTICOS", "ESTADO CIVIL"] },
+      { ...MODELS[1], category: "PODERES Y AUTORIZACIONES ESPECIALES", category_path: ["CONTRATOS CIVILES", "CONTRATOS AUTENTICOS", "PODERES Y AUTORIZACIONES ESPECIALES"] },
+      { id: 5, name: "NOTIFICACIÓN DE SENTENCIA", file_name: "n.docx", category: "NOTIFICACIONES", category_path: ["NOTIFICACIONES"] },
+    ];
+    const tile = (name: RegExp) => within(tiles()).getByRole("button", { name });
+    beforeEach(() => {
+      api.models.mockResolvedValue({ data: { models: PATHS } });
+      api.documents.mockResolvedValue({ data: { documents: [...DOCS, { ...DOC, id: 34, title: "Notificación a Pedro", template_id: 5 }] } });
+    });
+
+    it("opens on the top folders of the model tree with their counts; documents not made from a model go to «Otros documentos»", async () => {
+      renderAt("/documents?tab=historial");
+      await waitFor(() => expect(tile(/contratos civiles/i).textContent).toMatch(/3 documentos/));
+      expect(tile(/notificaciones/i).textContent).toMatch(/1 documento\b/);
+      expect(tile(/otros documentos/i).textContent).toMatch(/1 documento\b/);
+      expect(tile(/todos/i).textContent).toMatch(/5 documentos/);
+      expect(within(tiles()).queryByRole("button", { name: /estado civil/i })).toBeNull();
+      expect(screen.queryByRole("button", { name: /declaración de soltería/i })).toBeNull();
+    });
+
+    it("folders open like in Gurú OS down to the documents, with a path to go back up", async () => {
+      renderAt("/documents?tab=historial");
+      await waitFor(() => expect(tile(/contratos civiles/i).textContent).toMatch(/3/));
+      fireEvent.click(tile(/contratos civiles/i));
+      await waitFor(() => expect(tile(/auténticos/i).textContent).toMatch(/3 documentos/));
+      fireEvent.click(tile(/auténticos/i));
+      await waitFor(() => expect(tile(/estado civil/i).textContent).toMatch(/2 documentos/));
+      expect(tile(/poderes y autorizaciones especiales/i).textContent).toMatch(/1 documento\b/);
+      const path = screen.getByRole("navigation", { name: /ruta/i });
+      expect(path.textContent).toMatch(/contratos civiles.*auténticos/i);
+      fireEvent.click(tile(/estado civil/i));
+      const grid = await screen.findByRole("list", { name: /^documentos$/i });
+      expect(within(grid).getByRole("button", { name: /declaración de soltería/i })).toBeTruthy();
+      expect(within(grid).getByRole("button", { name: /declaración de ingresos/i })).toBeTruthy();
+      expect(within(grid).queryByRole("button", { name: /poder para viaje/i })).toBeNull();
+      fireEvent.click(within(screen.getByRole("navigation", { name: /ruta/i })).getByRole("button", { name: /contratos civiles/i }));
+      await waitFor(() => expect(tile(/auténticos/i)).toBeTruthy());
+      fireEvent.click(screen.getByRole("button", { name: /^volver$/i }));
+      await waitFor(() => expect(tile(/notificaciones/i)).toBeTruthy());
+    });
+
+    it("a folder with no subfolders goes straight to its documents", async () => {
+      renderAt("/documents?tab=historial");
+      await waitFor(() => expect(tile(/notificaciones/i).textContent).toMatch(/1/));
+      fireEvent.click(tile(/notificaciones/i));
+      const grid = await screen.findByRole("list", { name: /^documentos$/i });
+      expect(within(grid).getByRole("button", { name: /notificación a pedro/i })).toBeTruthy();
+      expect(within(grid).getAllByRole("button")).toHaveLength(1);
+    });
+
+    it("each card has a big tile with the status on it and the details below", async () => {
+      renderAt("/documents?tab=historial&cat=todos");
+      const card = await screen.findByRole("button", { name: /declaración de ingresos/i });
+      const tile = card.querySelector(".gos-card-tile")!;
+      expect(tile.textContent).toMatch(/✅\s*v1/);
+      expect(card.querySelector(".gos-card-info")!.textContent).toMatch(/juan pérez/i);
+    });
+
+    it("typing a search skips the tiles and lists the matching documents", async () => {
+      renderAt("/documents?tab=historial");
+      await screen.findByRole("list", { name: /categorías/i });
+      fireEvent.change(screen.getByLabelText(/buscar documento/i), { target: { value: "poder" } });
+      expect(await screen.findByRole("button", { name: /poder para viaje/i })).toBeTruthy();
+      expect(screen.queryByRole("list", { name: /categorías/i })).toBeNull();
+    });
   });
 
   describe("el admin filtra por digitador", () => {
@@ -216,7 +295,7 @@ describe("Documentos — Mis documentos", () => {
     });
 
     it("chips with counts: Todos, Sin asignar, digitadores and anyone else with documents; no administracion", async () => {
-      renderAt("/documents?tab=historial");
+      renderAt("/documents?tab=historial&cat=todos");
       await screen.findByRole("button", { name: /poder especial/i });
       expect(chip(/todos/i).textContent).toContain("4");
       expect(chip(/sin asignar/i).textContent).toContain("1");
@@ -227,7 +306,7 @@ describe("Documentos — Mis documentos", () => {
     });
 
     it("a chip narrows the list and wears the digitador's color", async () => {
-      renderAt("/documents?tab=historial");
+      renderAt("/documents?tab=historial&cat=todos");
       await screen.findByRole("button", { name: /poder especial/i });
       fireEvent.click(chip(/hengi/i));
       expect(chip(/hengi/i).getAttribute("aria-pressed")).toBe("true");
@@ -240,7 +319,7 @@ describe("Documentos — Mis documentos", () => {
     });
 
     it("searches by client name and shows the client on each row; the chips count the search", async () => {
-      renderAt("/documents?tab=historial");
+      renderAt("/documents?tab=historial&cat=todos");
       await screen.findByRole("button", { name: /poder especial/i });
       fireEvent.change(screen.getByLabelText(/buscar documento/i), { target: { value: "ana" } });
       expect(row(/poder especial/i)).toBeTruthy();
@@ -253,7 +332,7 @@ describe("Documentos — Mis documentos", () => {
 
     it("shows one card per document and opens the versions in a block of their own, next to the card", async () => {
       api.document.mockResolvedValue({ data: { document: { ...DOC, versions: VERSIONS } } });
-      renderAt("/documents?tab=historial");
+      renderAt("/documents?tab=historial&cat=todos");
       const grid = await screen.findByRole("list", { name: /^documentos$/i });
       expect(within(grid).getAllByRole("listitem")).toHaveLength(4);
       expect(screen.getByText(/^4 documentos$/)).toBeTruthy();
@@ -268,20 +347,20 @@ describe("Documentos — Mis documentos", () => {
     });
 
     it("?client= narrows to that client until it is cleared; 0 is «Sin cliente»", async () => {
-      renderAt("/documents?tab=historial&client=2");
+      renderAt("/documents?tab=historial&cat=todos&client=2");
       await screen.findByRole("button", { name: /poder especial/i });
       expect(row(/contrato de alquiler/i)).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: /quitar filtro de cliente/i }));
       expect(row(/contrato de alquiler/i)).toBeTruthy();
       cleanup();
-      renderAt("/documents?tab=historial&client=0");
+      renderAt("/documents?tab=historial&cat=todos&client=0");
       await screen.findByRole("button", { name: /borrador del bot/i });
       expect(row(/poder especial/i)).toBeNull();
     });
 
     it("?doc= opens that document even when it is someone else's", async () => {
       api.document.mockResolvedValue({ data: { document: { ...OTHERS[1], versions: VERSIONS } } });
-      renderAt("/documents?tab=historial&client=2&doc=11");
+      renderAt("/documents?tab=historial&cat=todos&client=2&doc=11");
       expect(await screen.findByText("v2")).toBeTruthy();
       expect(api.document).toHaveBeenCalledWith(11);
     });
@@ -291,7 +370,7 @@ describe("Documentos — Mis documentos", () => {
     auth.isAdmin = true;
     render(<DialogHost />);
     api.approve.mockResolvedValue({ data: { document: { ...DOC, approved_version: 2, versions: [{ ...VERSIONS[0], status: "approved" }, VERSIONS[1]] } } });
-    renderAt("/documents?tab=historial");
+    renderAt("/documents?tab=historial&cat=todos");
     fireEvent.click(await screen.findByRole("button", { name: /contrato de alquiler/i }));
     fireEvent.click(await screen.findByRole("button", { name: /^aprobar v2/i }));
     const confirm = await screen.findByRole("dialog", { name: /¿aprobar v2\?/i });
@@ -302,7 +381,7 @@ describe("Documentos — Mis documentos", () => {
 
   it("uploads a document for the client in the filter (title from the file name)", async () => {
     api.upload.mockResolvedValue({ data: { document: { ...DOC, id: 11, title: "poder firmado", versions: [] } } });
-    renderAt("/documents?tab=historial&client=1");
+    renderAt("/documents?tab=historial&cat=todos&client=1");
     await screen.findByRole("button", { name: /contrato de alquiler/i });
     fireEvent.click(await screen.findByRole("button", { name: /subir documento/i }));
     const dialog = await screen.findByRole("dialog");
@@ -357,7 +436,7 @@ describe("Documentos — enviado por el bot", () => {
   const openBotDoc = async (doc: Record<string, unknown>) => {
     api.documents.mockResolvedValue({ data: { documents: [doc] } });
     api.document.mockResolvedValue({ data: { document: { ...doc, versions: VERSIONS } } });
-    renderAt("/documents?tab=historial");
+    renderAt("/documents?tab=historial&cat=todos");
     fireEvent.click(await screen.findByRole("button", { name: /contrato de alquiler/i }));
     await screen.findByText("v2");
   };
