@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
 
 const { authAPI, avatarsAPI, refreshUser, auth } = vi.hoisted(() => ({
-  authAPI: { updateAppearance: vi.fn(), changePassword: vi.fn(), updateProfile: vi.fn() },
+  authAPI: { updateAppearance: vi.fn(), changePassword: vi.fn(), updateProfile: vi.fn(), setEarningsPin: vi.fn() },
   avatarsAPI: { getEnabled: vi.fn(), setEnabled: vi.fn() },
   refreshUser: vi.fn(),
   auth: { isAdmin: false, avatar: null as string | null },
@@ -101,5 +101,53 @@ describe("Mi cuenta — otro color (paleta libre)", () => {
     fireEvent.change(screen.getByLabelText(/otro color/i), { target: { value: "#ec4890" } });
     fireEvent.click(screen.getByRole("button", { name: /^guardar$/i }));
     expect(await screen.findByText(/se parece mucho al color de marleni/i)).toBeTruthy();
+  });
+});
+
+describe("Mi cuenta — PIN de ganancias (solo admin)", () => {
+  const fill = (label: RegExp, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
+
+  it("un digitador no ve la sección", () => {
+    render(<MiCuenta />);
+    expect(screen.queryByText(/PIN de ganancias/i)).toBeNull();
+  });
+
+  it("el admin crea su PIN con la contraseña actual", async () => {
+    auth.isAdmin = true;
+    authAPI.setEarningsPin.mockResolvedValue({ data: {} });
+    render(<MiCuenta />);
+    fill(/contraseña para el pin/i, "secret1");
+    fill(/^pin nuevo/i, "4821");
+    fill(/repite el pin/i, "4821");
+    fireEvent.click(screen.getByRole("button", { name: /guardar pin/i }));
+    await waitFor(() => expect(authAPI.setEarningsPin).toHaveBeenCalledWith("secret1", "4821"));
+    expect(await screen.findByText(/PIN guardado/i)).toBeTruthy();
+    expect(refreshUser).toHaveBeenCalled();
+  });
+
+  it("no guarda si el PIN no es de 4 números o no coincide", async () => {
+    auth.isAdmin = true;
+    render(<MiCuenta />);
+    fill(/contraseña para el pin/i, "secret1");
+    fill(/^pin nuevo/i, "4821");
+    fill(/repite el pin/i, "4822");
+    fireEvent.click(screen.getByRole("button", { name: /guardar pin/i }));
+    expect(await screen.findByText(/no coinciden/i)).toBeTruthy();
+    fill(/^pin nuevo/i, "48");
+    fill(/repite el pin/i, "48");
+    fireEvent.click(screen.getByRole("button", { name: /guardar pin/i }));
+    expect(await screen.findByText(/debe tener 4 números/i)).toBeTruthy();
+    expect(authAPI.setEarningsPin).not.toHaveBeenCalled();
+  });
+
+  it("muestra el error del servidor (contraseña equivocada)", async () => {
+    auth.isAdmin = true;
+    authAPI.setEarningsPin.mockRejectedValue({ response: { status: 400, data: { error: "La contraseña actual es incorrecta" } } });
+    render(<MiCuenta />);
+    fill(/contraseña para el pin/i, "mala");
+    fill(/^pin nuevo/i, "4821");
+    fill(/repite el pin/i, "4821");
+    fireEvent.click(screen.getByRole("button", { name: /guardar pin/i }));
+    expect(await screen.findByText("La contraseña actual es incorrecta")).toBeTruthy();
   });
 });

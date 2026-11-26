@@ -19,6 +19,7 @@ interface User {
   isActive?: boolean;
   inPayroll?: boolean;
   birthDate?: string | null;
+  hasEarningsPin?: boolean;
 }
 
 interface AuthContextType {

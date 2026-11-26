@@ -87,6 +87,10 @@ export const authAPI = {
 
   changePassword: (currentPassword: string, newPassword: string) =>
     api.put("/auth/change-password", { currentPassword, newPassword }),
+
+  // Admin: 4-digit PIN that unlocks the earnings cards of the dashboard
+  setEarningsPin: (currentPassword: string, pin: string) => api.put("/auth/me/earnings-pin", { currentPassword, pin }),
+  verifyEarningsPin: (pin: string) => api.post("/auth/me/earnings-pin/verify", { pin }),
 };
 export const servicesAPI = {
   getServices: (startDate?: string, endDate?: string) =>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 import type { PaletteColor } from "../../lib/userColors";
 
 type StatsVariant =
@@ -28,6 +28,9 @@ interface StatsCardProps {
   /** tapping the card (e.g. opens that digitador's services) */
   onClick?: () => void;
   actionLabel?: string;
+  /** earnings PIN: while locked the amount stays hidden and the eye asks for the PIN */
+  locked?: boolean;
+  onRequestUnlock?: () => void;
 }
 
 const variantStyles: Record<StatsVariant, string> = {
@@ -115,6 +118,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
   icon,
   onClick,
   actionLabel,
+  locked = false,
+  onRequestUnlock,
 }) => {
   const hiddenValue = "••••••";
   const [revealed, setRevealed] = useState(visible);
@@ -123,7 +128,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
     setRevealed(visible);
   }, [visible]);
 
-  const isVisible = revealed;
+  const isVisible = revealed && !locked;
 
   const cls = accent
     ? {
@@ -170,12 +175,13 @@ const StatsCard: React.FC<StatsCardProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setRevealed((v) => !v);
+              if (locked) onRequestUnlock?.();
+              else setRevealed((v) => !v);
             }}
             className={`rounded-base border-2 p-1 transition-all ${cls.button}`}
-            title={isVisible ? "Ocultar monto" : "Mostrar monto"}
+            title={locked ? "Desbloquear con PIN" : isVisible ? "Ocultar monto" : "Mostrar monto"}
           >
-            {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+            {locked ? <Lock size={14} /> : isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
           </button>
         )}
       </div>

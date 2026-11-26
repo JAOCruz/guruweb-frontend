@@ -29,3 +29,20 @@ describe("StatsCard", () => {
     expect(screen.queryByRole("button")).toBeNull();
   });
 });
+
+describe("StatsCard con el PIN de ganancias", () => {
+  it("bloqueada: el monto queda oculto y el ojito pide el PIN en vez de mostrarlo", () => {
+    const onRequestUnlock = vi.fn();
+    render(<StatsCard label="TOTAL" value="RD$ 9,999" sensitive visible locked onRequestUnlock={onRequestUnlock} />);
+    expect(screen.queryByText("RD$ 9,999")).toBeNull();
+    fireEvent.click(screen.getByTitle("Desbloquear con PIN"));
+    expect(onRequestUnlock).toHaveBeenCalled();
+    expect(screen.queryByText("RD$ 9,999")).toBeNull();
+  });
+
+  it("desbloqueada funciona como siempre", () => {
+    render(<StatsCard label="TOTAL" value="RD$ 9,999" sensitive visible={false} locked={false} />);
+    fireEvent.click(screen.getByTitle("Mostrar monto"));
+    expect(screen.getByText("RD$ 9,999")).toBeTruthy();
+  });
+});

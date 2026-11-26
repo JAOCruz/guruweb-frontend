@@ -29,7 +29,9 @@ import { NeoDateInput } from "@guru/ui";
 import { servicesAPI, settingsAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useUserColors } from "../context/UserColorsContext";
-import { Zap, Eye, EyeOff } from "lucide-react";
+import { Zap, Eye, EyeOff, Lock, KeyRound } from "lucide-react";
+import EarningsPinDialog from "../components/dashboard/EarningsPinDialog";
+import { useEarningsLock } from "../lib/earningsLock";
 import { payrollColumns } from "../lib/payroll";
 import { formatCurrency } from "../utils";
 import Documentos from "./Documentos";
@@ -51,6 +53,10 @@ const Dashboard: React.FC = () => {
   // Fetch employee percentage from settings
   const [employeePercentage, setEmployeePercentage] = useState(50);
   const [showEarnings, setShowEarnings] = useState(false);
+  // Admin with an earnings PIN: the amount cards stay locked until the PIN is typed
+  const hasPin = isAdmin && !!user?.hasEarningsPin;
+  const earnings = useEarningsLock(user?.id, hasPin);
+  const [pinOpen, setPinOpen] = useState(false);
   // tapping a card opens the services done by that digitador (or everyone's) below
   const [servicesFocus, setServicesFocus] = useState<{ worker: string; at: number } | null>(null);
   const openServices = (worker: string) => setServicesFocus({ worker, at: Date.now() });
@@ -205,12 +211,37 @@ const Dashboard: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-2">
                     <NeoButton
                       variant="default"
-                      onClick={() => setShowEarnings((v) => !v)}
+                      onClick={() => (earnings.locked ? setPinOpen(true) : setShowEarnings((v) => !v))}
                       className="text-xs"
                     >
-                      {showEarnings ? <EyeOff size={14} /> : <Eye size={14} />}
-                      {showEarnings ? "Ocultar" : "Mostrar"} Ganancias
+                      {earnings.locked ? <Lock size={14} /> : showEarnings ? <EyeOff size={14} /> : <Eye size={14} />}
+                      {showEarnings && !earnings.locked ? "Ocultar" : "Mostrar"} Ganancias
                     </NeoButton>
+                    {hasPin && !earnings.locked && (
+                      <NeoButton
+                        variant="neutral"
+                        onClick={() => {
+                          earnings.lock();
+                          setShowEarnings(false);
+                        }}
+                        className="text-xs"
+                        title="Vuelve a pedir el PIN para ver las ganancias"
+                      >
+                        <Lock size={14} />
+                        Bloquear
+                      </NeoButton>
+                    )}
+                    {isAdmin && !hasPin && (
+                      <NeoButton
+                        variant="neutral"
+                        onClick={() => navigate("/mi-cuenta")}
+                        className="text-xs"
+                        title="Pon un PIN de 4 números para que las ganancias pidan el PIN"
+                      >
+                        <KeyRound size={14} />
+                        Poner PIN
+                      </NeoButton>
+                    )}
                     <NeoButton
                       variant="neutral"
                       onClick={() => navigate("/ai-insights")}
@@ -273,6 +304,17 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
+              {pinOpen && (
+                <EarningsPinDialog
+                  onUnlocked={() => {
+                    earnings.unlock();
+                    setShowEarnings(true);
+                    setPinOpen(false);
+                  }}
+                  onClose={() => setPinOpen(false)}
+                />
+              )}
+
               {/* STATS SECTION */}
               {isAdmin && (
                 <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
@@ -290,6 +332,8 @@ const Dashboard: React.FC = () => {
                     delay={0.1}
                     sensitive
                     visible={showEarnings}
+                    locked={earnings.locked}
+                    onRequestUnlock={() => setPinOpen(true)}
                     onClick={() => openServices("all")}
                     actionLabel="Ver todos los servicios hechos"
                   />
@@ -317,6 +361,8 @@ const Dashboard: React.FC = () => {
                     delay={0.15}
                     sensitive
                     visible={showEarnings}
+                    locked={earnings.locked}
+                    onRequestUnlock={() => setPinOpen(true)}
                     onClick={() => openServices("all")}
                     actionLabel="Ver los servicios de los digitadores"
                   />
@@ -344,6 +390,8 @@ const Dashboard: React.FC = () => {
                         delay={0.2 + idx * 0.1}
                         sensitive
                         visible={showEarnings}
+                        locked={earnings.locked}
+                        onRequestUnlock={() => setPinOpen(true)}
                         onClick={() => openServices(worker)}
                         actionLabel={`Ver los servicios de ${worker.replace("_", " ")}`}
                       />

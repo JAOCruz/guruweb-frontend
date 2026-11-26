@@ -7,6 +7,7 @@ import { authAPI, avatarsAPI } from "../services/api";
 import { todayISO } from "../lib/dates";
 import UserAvatar from "../components/UserAvatar";
 import TakeAvatarDialog from "../components/users/TakeAvatarDialog";
+import EarningsPinSection from "../components/users/EarningsPinSection";
 import {
   ADMIN_ONLY_AVATAR, AVATARS, AVATAR_KEYS, COLOR_KEYS, COLOR_PALETTE, isCustomColor, resolveColor, toAppearance,
   type AvatarKey,
@@ -281,6 +282,8 @@ export default function MiCuenta() {
           </div>
         </form>
       </section>
+
+      {isAdmin && <EarningsPinSection card={card} inputCls={inputCls} />}
 
       <section className={card}>
         <div className="border-b-2 border-border bg-main px-5 py-3 font-heading text-lg font-black text-main-foreground">
