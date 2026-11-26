@@ -92,8 +92,13 @@ describe("themeFor (sidebar and top bar in the user's color)", () => {
     expect(themeFor({ isAdmin: false, color: "yellow" })).toEqual({ main: "#facc15", mainForeground: "#000000" });
   });
 
-  it("admin, blue or no color keep the Gurú blue", () => {
-    expect(themeFor({ isAdmin: true, color: "teal" })).toBeNull();
+  it("the admin also gets the color they picked (palette or their own)", () => {
+    expect(themeFor({ isAdmin: true, color: "green" })).toEqual({ main: "#22c55e", mainForeground: "#ffffff" });
+    expect(themeFor({ isAdmin: true, color: "#123456" })).toEqual({ main: "#123456", mainForeground: "#ffffff" });
+  });
+
+  it("blue or no color keep the Gurú blue", () => {
+    expect(themeFor({ isAdmin: true, color: null })).toBeNull();
     expect(themeFor({ isAdmin: false, color: "blue" })).toBeNull();
     expect(themeFor({ isAdmin: false, color: null })).toBeNull();
     expect(themeFor({ isAdmin: false, color: "fucsia" })).toBeNull();

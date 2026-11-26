@@ -207,10 +207,10 @@ export function toAppearance(
   };
 }
 
-// Sidebar and top bar in the employee's own color (identity and diversity). The admin,
-// people who picked blue, and anyone without a color keep the Gurú blue.
-export function themeFor({ isAdmin, color }: { isAdmin: boolean; color?: string | null }): { main: string; mainForeground: string } | null {
-  if (isAdmin || !color || color === "blue" || !(color in COLOR_PALETTE || isCustomColor(color))) return null;
+// Sidebar and top bar in each user's own color (identity and diversity), the admin included.
+// People who picked blue, and anyone without a color, keep the Gurú blue.
+export function themeFor({ color }: { isAdmin?: boolean; color?: string | null }): { main: string; mainForeground: string } | null {
+  if (!color || color === "blue" || !(color in COLOR_PALETTE || isCustomColor(color))) return null;
   const c = resolveColor(color);
   return { main: c.bg, mainForeground: c.text };
 }

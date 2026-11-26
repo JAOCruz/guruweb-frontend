@@ -43,10 +43,10 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const { user, logout, isAdmin } = useAuth();
   useTarifas(); // the editable foja rates for every page (Cotizaciones, Mensajes), not only Catálogo
-  // Every Gurú-blue element takes the employee's color; the admin keeps the Gurú blue.
+  // Every Gurú-blue element takes the user's own color (the admin's too).
   // Applied while rendering (before the pages below read the colors, e.g. charts).
-  const themeKey = isAdmin ? "admin" : user?.color ?? "";
-  useMemo(() => applyRootTheme(themeFor({ isAdmin, color: user?.color })), [themeKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const themeKey = user?.color ?? "";
+  useMemo(() => applyRootTheme(themeFor({ color: user?.color })), [themeKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => applyRootTheme(null), []);
   const location = useLocation();
   const pageKey = useNotificationPageKey();
