@@ -88,6 +88,7 @@ export const TIPS: Tip[] = [
     { text: "Puedes cotizar sin salir del chat: el documento toma el nombre y el teléfono del cliente de la conversación.", pages: ["/bot-messages"] },
     { text: "Antes de cotizar, confirma en el chat el nombre completo del cliente tal como aparece en su cédula.", pages: ["/bot-messages"] },
     { text: "En «Mis datos» puedes agregar tu fecha de nacimiento, y arriba elegir tu animal y tu color.", pages: ["/mi-cuenta"] },
+    { text: "Cuando pidas el Uber, marca el envío como «Enviado»; cuando llegue, como «Entregado». Así nadie pregunta dos veces.", pages: ["/envios"] },
     { text: "Si alguien deja el equipo, desactívalo y reasigna sus clientes: su historial se conserva.", pages: ["/usuarios"], role: "admin" },
     { text: "En «Actividad» ves quién hizo cada cambio. Úsalo para aclarar dudas sin buscar culpables.", pages: ["/actividad"], role: "admin" },
     "¿Te tapo algo? Arrástrame a cualquier parte de la pantalla.",

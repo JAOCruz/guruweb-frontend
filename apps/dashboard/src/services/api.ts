@@ -231,3 +231,35 @@ export const activityAPI = {
     return api.get<{ items: ActivityItem[]; total: number; page: number; page_size: number }>("/admin/activity", { params });
   },
 };
+
+// Envíos: documentos que se mandan al cliente (Uber). Sin montos: el pago lo maneja el equipo.
+export type DeliveryStatus = "por_enviar" | "enviado" | "entregado" | "cancelado";
+export interface Delivery {
+  id: number;
+  status: DeliveryStatus;
+  client_id?: number | null;
+  client_name?: string | null;
+  client_phone?: string | null;
+  case_number?: string | null;
+  document?: string | null;
+  address: string;
+  reference?: string | null;
+  recipient_name?: string | null;
+  recipient_phone?: string | null;
+  note?: string | null;
+  source: string;
+  created_by_name?: string | null;
+  created_at: string;
+  sent_at?: string | null;
+  delivered_at?: string | null;
+  cancelled_at?: string | null;
+}
+export type DeliveryFields = Partial<Pick<Delivery, "document" | "address" | "reference" | "recipient_name" | "recipient_phone" | "note">>;
+
+export const deliveriesAPI = {
+  list: (status: DeliveryStatus) =>
+    api.get<{ deliveries: Delivery[]; counts: Record<DeliveryStatus, number> }>("/deliveries", { params: { status } }),
+  create: (data: DeliveryFields) => api.post<{ delivery: Delivery }>("/deliveries", data),
+  update: (id: number, data: DeliveryFields) => api.put<{ delivery: Delivery }>(`/deliveries/${id}`, data),
+  setStatus: (id: number, status: DeliveryStatus) => api.post<{ delivery: Delivery }>(`/deliveries/${id}/status`, { status }),
+};

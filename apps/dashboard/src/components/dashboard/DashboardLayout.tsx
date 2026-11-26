@@ -26,6 +26,7 @@ import {
   Users,
   BarChart2,
   Briefcase,
+  Truck,
   FileText,
   Brain,
   Bot,
@@ -281,6 +282,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             sidebarOpen={sidebarOpen}
             isMobile={isMobile}
             badge={isAdmin ? pendingApprovalCount : null}
+          />
+          <NavItem
+            to="/envios"
+            icon={<Truck size={18} />}
+            label="Envíos"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
           />
           <NavItem
             to="/cases"

@@ -22,6 +22,7 @@ import MotherBrain from "./MotherBrain";
 import BotSimulator from "./BotSimulator";
 import SimulatorReview from "./SimulatorReview";
 import MiCuenta from "./MiCuenta";
+import Envios from "./Envios";
 import Usuarios from "./Usuarios";
 import Actividad from "./Actividad";
 import { NeoButton } from "@guru/ui";
@@ -459,6 +460,7 @@ const Dashboard: React.FC = () => {
         />
         <Route path="/ai-guru" element={<AIGuru />} />
         <Route path="/mi-cuenta" element={<MiCuenta />} />
+        <Route path="/envios" element={<Envios />} />
         <Route
           path="/actividad"
           element={isAdmin ? <Actividad /> : <div className="text-center text-slate-400 py-8">No tienes acceso a esta página</div>}
