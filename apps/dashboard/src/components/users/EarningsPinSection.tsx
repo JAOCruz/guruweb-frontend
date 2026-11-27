@@ -23,7 +23,7 @@ export default function EarningsPinSection({ card, inputCls }: Props) {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg(null);
-    if (!password) return setMsg({ ok: false, text: "Escribe tu contraseña" });
+    if (!password) return setMsg({ ok: false, text: "Escribe tu contraseña de entrar al dashboard" });
     if (!/^\d{4}$/.test(pin)) return setMsg({ ok: false, text: "El PIN debe tener 4 números" });
     if (pin !== pin2) return setMsg({ ok: false, text: "Los PIN no coinciden" });
     setSaving(true);
@@ -50,10 +50,10 @@ export default function EarningsPinSection({ card, inputCls }: Props) {
         <p className="text-sm">
           {hasPin
             ? "Tu PIN está activo. Para cambiarlo (o si lo olvidaste), pon tu contraseña y uno nuevo."
-            : "Pon un PIN de 4 números: las tarjetas de ganancias del dashboard lo pedirán para mostrarse."}
+            : "Pon un PIN de 4 números: las tarjetas de ganancias del dashboard lo pedirán para mostrarse. Para guardarlo, confirma con tu contraseña de entrar."}
         </p>
         <label className="block text-sm font-bold">
-          Contraseña para el PIN
+          Tu contraseña (la misma con que entras al dashboard)
           <input type="password" autoComplete="current-password" className={inputCls} value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         <label className="block text-sm font-bold">

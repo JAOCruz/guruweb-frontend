@@ -116,7 +116,7 @@ describe("Mi cuenta — PIN de ganancias (solo admin)", () => {
     auth.isAdmin = true;
     authAPI.setEarningsPin.mockResolvedValue({ data: {} });
     render(<MiCuenta />);
-    fill(/contraseña para el pin/i, "secret1");
+    fill(/tu contraseña \(la misma con que entras/i, "secret1");
     fill(/^pin nuevo/i, "4821");
     fill(/repite el pin/i, "4821");
     fireEvent.click(screen.getByRole("button", { name: /guardar pin/i }));
@@ -128,7 +128,7 @@ describe("Mi cuenta — PIN de ganancias (solo admin)", () => {
   it("no guarda si el PIN no es de 4 números o no coincide", async () => {
     auth.isAdmin = true;
     render(<MiCuenta />);
-    fill(/contraseña para el pin/i, "secret1");
+    fill(/tu contraseña \(la misma con que entras/i, "secret1");
     fill(/^pin nuevo/i, "4821");
     fill(/repite el pin/i, "4822");
     fireEvent.click(screen.getByRole("button", { name: /guardar pin/i }));
@@ -144,7 +144,7 @@ describe("Mi cuenta — PIN de ganancias (solo admin)", () => {
     auth.isAdmin = true;
     authAPI.setEarningsPin.mockRejectedValue({ response: { status: 400, data: { error: "La contraseña actual es incorrecta" } } });
     render(<MiCuenta />);
-    fill(/contraseña para el pin/i, "mala");
+    fill(/tu contraseña \(la misma con que entras/i, "mala");
     fill(/^pin nuevo/i, "4821");
     fill(/repite el pin/i, "4821");
     fireEvent.click(screen.getByRole("button", { name: /guardar pin/i }));
