@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { SeguimientoCliente } from "../components/dashboard/Seguimiento";
 import UserBadge from "../components/UserBadge";
 import { botAPI, getBotApiBaseURL, catalogUnitPrice, type ServiceCatalogItem, type Invoice, type ClientMedia } from "../services/botApi";
 import { getAuthToken, fetchAuthenticatedFile, formatCurrency, preventDecimalInput } from "../utils";
@@ -1916,6 +1917,7 @@ const BotMessages: React.FC = () => {
                     Bot pausado
                   </span>
                 )}
+                <SeguimientoCliente clientId={selectedConv?.client_id} />
 
                 {!isAdmin && selectedConv?.client_assigned_to != null && (
                   <UserBadge userId={selectedConv.client_assigned_to} size="sm" />

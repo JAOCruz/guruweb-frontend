@@ -140,6 +140,15 @@ export const settingsAPI = {
     api.post("/settings/percentage", { percentage, effectiveDate }),
 
   deleteSetting: (id: number) => api.delete(`/settings/${id}`),
+
+  // Seguimiento automático de cotizaciones: interruptor general (solo el admin lo cambia)
+  getSeguimiento: () => api.get<{ activo: boolean; horas: number }>("/settings/seguimiento"),
+  setSeguimiento: (activo: boolean) => api.put<{ activo: boolean; horas: number }>("/settings/seguimiento", { activo }),
+
+  // ...and per client, from the chat
+  getClientFollowup: (clientId: number) => api.get<{ followup_off: boolean }>(`/clients/${clientId}/followup`),
+  setClientFollowup: (clientId: number, followup_off: boolean) =>
+    api.put<{ followup_off: boolean }>(`/clients/${clientId}/followup`, { followup_off }),
 };
 
 export default api;

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { SeguimientoGeneral } from "../components/dashboard/Seguimiento";
 import { motion } from "framer-motion";
 import {
   MessageCircle,
@@ -503,6 +504,12 @@ const WhatsAppBot: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Divider */}
+            <div className="mb-5 mt-6 border-t-2 border-border" />
+
+            {/* the bot page is admin-only (Dashboard.tsx route) */}
+            <SeguimientoGeneral isAdmin />
 
             {/* Divider */}
             <div className="mb-5 mt-6 border-t-2 border-border" />
