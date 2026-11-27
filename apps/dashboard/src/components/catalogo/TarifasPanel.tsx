@@ -113,7 +113,7 @@ export default function TarifasPanel({ onSaved }: { onSaved?: () => void } = {})
         <div>
           <h3 id="tarifas-trad" className="text-lg font-black">Traducciones (precio por página)</h3>
           <p className="text-xs font-bold opacity-60">
-            El precio por página baja con la cantidad: al llegar a un tramo, todas las páginas pasan a ese precio. Total = precio del tramo × páginas.
+            El precio por página baja con el volumen del pedido: se suman las páginas de todos los documentos de la factura y, al llegar a un tramo, todas pasan a ese precio (2 actas de 2 páginas = 4 páginas). Total = precio del tramo × páginas.
           </p>
         </div>
         <div className="flex flex-col gap-4">
