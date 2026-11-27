@@ -27,6 +27,7 @@ import {
   BarChart2,
   Briefcase,
   Truck,
+  Scale,
   FileText,
   Brain,
   Bot,
@@ -308,6 +309,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             to="/services-catalog"
             icon={<Database size={18} />}
             label="Catálogo Precios"
+            sidebarOpen={sidebarOpen}
+            isMobile={isMobile}
+          />
+          <NavItem
+            to="/biblioteca-legal"
+            icon={<Scale size={18} />}
+            label="Biblioteca legal"
             sidebarOpen={sidebarOpen}
             isMobile={isMobile}
           />

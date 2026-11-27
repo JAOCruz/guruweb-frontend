@@ -263,3 +263,42 @@ export const deliveriesAPI = {
   update: (id: number, data: DeliveryFields) => api.put<{ delivery: Delivery }>(`/deliveries/${id}`, data),
   setStatus: (id: number, status: DeliveryStatus) => api.post<{ delivery: Delivery }>(`/deliveries/${id}/status`, { status }),
 };
+
+// Biblioteca legal: lo que el bot puede citar (leyes por artículo, temas e instituciones). Solo el admin escribe.
+export interface LegalTopic {
+  id: number;
+  kind: "tema" | "institucion";
+  title: string;
+  keywords?: string | null;
+  body: string;
+  legal_basis?: string | null;
+  url?: string | null;
+  active: boolean;
+  source: string;
+  updated_at?: string;
+  updated_by_name?: string | null;
+}
+export interface LegalLaw {
+  code: string;
+  short: string;
+  title: string;
+  source_name?: string | null;
+  source_url?: string | null;
+  fetched_at?: string | null;
+  article_count: number;
+}
+export interface LegalSearch {
+  temas: { tipo: string; titulo: string; explicacion: string; base_legal: string | null; enlace: string | null }[];
+  articulos: { ley: string; articulo: string; seccion: string | null; texto: string; fuente: string | null }[];
+  nota?: string;
+  error?: string;
+}
+export type LegalTopicFields = Partial<Pick<LegalTopic, "kind" | "title" | "keywords" | "body" | "legal_basis" | "url" | "active">>;
+
+export const legalAPI = {
+  laws: () => api.get<{ laws: LegalLaw[] }>("/legal/laws"),
+  topics: () => api.get<{ topics: LegalTopic[] }>("/legal/topics"),
+  search: (q: string) => api.get<LegalSearch>("/legal/search", { params: { q } }),
+  createTopic: (data: LegalTopicFields) => api.post<{ topic: LegalTopic }>("/legal/topics", data),
+  updateTopic: (id: number, data: LegalTopicFields) => api.put<{ topic: LegalTopic }>(`/legal/topics/${id}`, data),
+};

@@ -89,6 +89,8 @@ export const TIPS: Tip[] = [
     { text: "Antes de cotizar, confirma en el chat el nombre completo del cliente tal como aparece en su cédula.", pages: ["/bot-messages"] },
     { text: "En «Mis datos» puedes agregar tu fecha de nacimiento, y arriba elegir tu animal y tu color.", pages: ["/mi-cuenta"] },
     { text: "Cuando pidas el Uber, marca el envío como «Enviado»; cuando llegue, como «Entregado». Así nadie pregunta dos veces.", pages: ["/envios"] },
+    { text: "Lo que escribas en «Temas» lo usa el bot para explicar trámites. Pon la ley y el artículo solo si los revisaste.", pages: ["/biblioteca-legal"], role: "admin" },
+    { text: "Usa «Probar» para ver qué le contestaría el bot a un cliente que pregunta por qué le piden un requisito.", pages: ["/biblioteca-legal"] },
     { text: "Si alguien deja el equipo, desactívalo y reasigna sus clientes: su historial se conserva.", pages: ["/usuarios"], role: "admin" },
     { text: "En «Actividad» ves quién hizo cada cambio. Úsalo para aclarar dudas sin buscar culpables.", pages: ["/actividad"], role: "admin" },
     "¿Te tapo algo? Arrástrame a cualquier parte de la pantalla.",
