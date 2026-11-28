@@ -68,6 +68,15 @@ interface MsgRow {
   ai_generated?: boolean;
   /** tools the bot used for this reply (outbound bot messages only) */
   tools?: { herramienta: string; ok: boolean }[];
+  /** the message this one answers in WhatsApp; id null = not in the panel */
+  reply_to?: QuotedMsg | null;
+}
+
+interface QuotedMsg {
+  id: string | number | null;
+  direction?: "inbound" | "outbound";
+  content?: string;
+  media_url?: string | null;
 }
 
 interface ClientDetail {
@@ -556,9 +565,56 @@ const FAILED_NOTES: Record<string, string> = {
   failed: "No enviado: WhatsApp no pudo entregarlo",
 };
 
+// ─── Quoted message (reply, like WhatsApp) ────────────────────────────────────
+
+const QUOTED_KINDS: Record<string, string> = {
+  audio: "🎤 Audio", foto: "📷 Foto", image: "📷 Foto", imagen: "📷 Foto", documento: "📄 Documento", document: "📄 Documento",
+  video: "🎥 Video", sticker: "Sticker", adjunto: "📎 Archivo", archivo: "📎 Archivo",
+};
+
+/** "[📎 audio]" → "🎤 Audio"; a text keeps its words; a text with a file says both */
+function quotedLabel(content = ""): { kind: string | null; text: string } {
+  const only = content.match(/^\[📎 ([^\]]+)\]$/);
+  if (only) return { kind: only[1].toLowerCase(), text: QUOTED_KINDS[only[1].toLowerCase()] ?? `📎 ${only[1]}` };
+  const withFile = content.match(/\n\[📎 [^\]]+\]$/);
+  return { kind: withFile ? "adjunto" : null, text: withFile ? content.slice(0, withFile.index) : content };
+}
+
+const QuotedThumb: React.FC<{ apiPath: string }> = ({ apiPath }) => {
+  const { blobUrl, mimeType } = useMediaBlob(apiPath);
+  if (!blobUrl || !mimeType.startsWith("image/")) return null;
+  return <img src={blobUrl} alt="" className="h-10 w-10 flex-shrink-0 rounded-base border border-border object-cover" />;
+};
+
+const QuotedPreview: React.FC<{ quoted: QuotedMsg; isOut: boolean; onJump: (id: string | number) => void }> = ({ quoted, isOut, onJump }) => {
+  const box = `mb-1.5 flex w-full items-center gap-2 rounded-base border-l-4 px-2 py-1 text-left text-xs ${
+    isOut ? "border-main-foreground/60 bg-black/10" : "border-main bg-main/10"
+  }`;
+  if (quoted.id == null) {
+    return <div className={`${box} italic opacity-70`}>↩️ Responde a un mensaje que no está en el panel</div>;
+  }
+  const { kind, text } = quotedLabel(quoted.content);
+  const showThumb = quoted.media_url && (kind === "foto" || kind === "image" || kind === "imagen" || kind === "sticker");
+  return (
+    <button
+      type="button"
+      aria-label="Ir al mensaje citado"
+      title="Ir al mensaje citado"
+      onClick={() => onJump(quoted.id!)}
+      className={`${box} cursor-pointer hover:opacity-80`}
+    >
+      <span className="min-w-0 flex-1">
+        <span className="block font-bold">{quoted.direction === "outbound" ? "Nosotros" : "Cliente"}</span>
+        <span className="line-clamp-2 whitespace-pre-line break-words opacity-80">{text}</span>
+      </span>
+      {showThumb && <QuotedThumb apiPath={quoted.media_url!} />}
+    </button>
+  );
+};
+
 // ─── Message Bubble ───────────────────────────────────────────────────────────
 
-const MessageBubble: React.FC<{ msg: MsgRow; isHighlighted?: boolean }> = ({ msg, isHighlighted }) => {
+const MessageBubble: React.FC<{ msg: MsgRow; isHighlighted?: boolean; onJump?: (id: string | number) => void }> = ({ msg, isHighlighted, onJump }) => {
   const isOut = msg.direction === "outbound";
   // Real field is "content"; fallback to "message" for safety
   const text = msg.content ?? msg.message ?? "";
@@ -595,6 +651,7 @@ const MessageBubble: React.FC<{ msg: MsgRow; isHighlighted?: boolean }> = ({ msg
             : "rounded-br-base rounded-tl-base rounded-tr-base border-2 border-border bg-background text-foreground"
         }`}
       >
+        {msg.reply_to && <QuotedPreview quoted={msg.reply_to} isOut={isOut} onJump={(id) => onJump?.(id)} />}
         {/* Authenticated media */}
         {media && <MediaAttachment apiPath={media} isOut={isOut} />}
         {/* Text content */}
@@ -992,6 +1049,22 @@ const BotMessages: React.FC = () => {
     const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
     userScrolledRef.current = distFromBottom > 80;
   }, []);
+
+  // Clic en la miniatura de una respuesta: lleva al mensaje citado y lo resalta un momento (como WhatsApp)
+  const jumpHighlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const jumpToMessage = useCallback((id: string | number) => {
+    const el = document.getElementById(`msg-${id}`);
+    if (!el) {
+      notify("Ese mensaje es más antiguo que los que se muestran en este chat.");
+      return;
+    }
+    userScrolledRef.current = true; // que la llegada de mensajes no lo devuelva al final
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightMessageId(id);
+    if (jumpHighlightTimer.current) clearTimeout(jumpHighlightTimer.current);
+    jumpHighlightTimer.current = setTimeout(() => setHighlightMessageId((cur) => (cur === id ? null : cur)), 1600);
+  }, []);
+  useEffect(() => () => { if (jumpHighlightTimer.current) clearTimeout(jumpHighlightTimer.current); }, []);
 
   // Scroll to highlighted message (search result) — wait for messages to load
   useEffect(() => {
@@ -2016,7 +2089,7 @@ const BotMessages: React.FC = () => {
                   <div key={group.date}>
                     <DateSeparator label={group.date} />
                     {group.msgs.map((msg) => (
-                      <MessageBubble key={msg.id} msg={msg} isHighlighted={msg.id === highlightMessageId} />
+                      <MessageBubble key={msg.id} msg={msg} isHighlighted={msg.id === highlightMessageId} onJump={jumpToMessage} />
                     ))}
                   </div>
                 ))
